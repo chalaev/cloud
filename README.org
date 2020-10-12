@@ -1,0 +1,29 @@
+* Description
+Synchronizing text files between different computers using
+1. emacs,
+2. some sort of a cloud that can be mounted to a directory, for example
+   a. ssh- or an ftp-server, or
+   b. some public cloud service like (Russian [[https://disk.yandex.com/][Yandex Disk]] or Swiss [[https://www.pcloud.com][pCloud]]) that can be mounted in linux
+      using standard open-source utilities,
+   and
+3. symmetric encryption.
+
+Intended for people who have =emacs= always open.
+
+* Motivation
+I like cloud file storages: they are cheap (or even free) and reliable.
+
+However, some evil companies and governments are trying to spy on people using the information
+that they extract from private data stored in the cloud.
+
+Most of my important files (for example, emails or document scans) are not regularly changed;
+for those I use [[https://github.com/gkiefer/backup2l][backup2l]] with gpg encryption, and store encrypted archives
+using one of cloud services that allow ~WebDav~ access to the storage directory (Russian [[https://disk.yandex.com/][Yandex Disk]] or Swiss [[https://www.pcloud.com][pCloud]]).
+
+This does not work so well for regularly changed files.
+Since emacs is my only text editor, it is enough to write eLisp code that
+1. Saves unencrypted file locally and simulteneously saves its encrypted copy on the cloud.
+2. Every file opened in emacs can be added to the "clouded" list or removed from it.
+3. Encrypted files are stored under randomly generated names and modification dates/times.
+4. Remotely stored files are periodically syncronized with the local ones.
+5. Dired-compatible: whatever I do with a file in dired (delete, rename), will be automatically done on other computers.
