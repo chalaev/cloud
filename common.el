@@ -4,19 +4,6 @@
 
 ;; I try to get rid of loop and other common-lisp stuff here
 
-(unless (functionp 'gensym)
-(let ((counter 0))
-  (defun gensym(&optional starts-with)
-    "for those who miss gensym from Common Lisp"
-    (unless starts-with (setf starts-with "gs"))
-    (let (sym)
-      (while (progn
-               (setf sym (make-symbol (concat starts-with (number-to-string counter))))
-               (or (special-form-p sym) (functionp sym) (macrop sym) (boundp sym)))
-        (incf counter))
-      (incf counter)
-      sym))))
-
 (defun firstN(lista N)
   "returning first N elments of the list"
   (when (and (< 0 N) (car lista))

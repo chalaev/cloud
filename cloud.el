@@ -1,8 +1,9 @@
 ;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 
-(mapcar #'require '(cl epg dired-aux timezone)) ;(require 'diary-lib)
+;; generated from cloud.org
+(mapcar #'require '(cl epg dired-aux timezone diary-lib))
 
-(dolist (FN '("0" "macros" "common" "other"))
+(dolist (FN '("0" "macros" "functions" "common" "other"))
   (let ((full-name (concat default-directory FN ".el")))
     (clog :debug "loading %s" full-name)
     (load full-name)))
@@ -11,22 +12,22 @@
 (defvar *pending-actions* nil "actions to be saved in the cloud")
 (defvar *important-msgs* nil "these messages will be typically printed at the end of the process")
 
-(defvar cloud-file-hooks nil "when special files (e.g., diary or bookmarks) are renewed one should call, e.g., diary-view-entries or bookmark-load")
+(defvar cloud-file-hooks nil "for special files treatment")
 (unless (boundp '*emacs-d*) (defvar *emacs-d* "/home/shalaev/.emacs.d/"))
 (defvar *local-dir* (concat *emacs-d* "cloud/"))
 
 (defvar *local-config* (concat *local-dir* "config"))
 
 (defvar *contents-name* nil)
-(defvar *cloud-dir*  "/mnt/cloud/"); was: "/mnt/lws/" – to be loaded from config files
+(defvar *cloud-dir*  "/mnt/cloud/")
 
-(defvar *file-DB* nil); ← to be synced with the cloud
+(defvar *file-DB* nil "")
 (defvar *password* nil); to be read from config or generated
 ;;(defvar *catalogue* nil); randomly generated name of the catalogue
 ;;(defvar *encrypted-files* nil "list of the files after they are encrypted")
-(defvar DB-fields; индексы различных полей массива
-(list 'plain; исходное (незашифрованное) полное имя файла
-'cipher; зашифрованное имя файла (base name)
+(defvar DB-fields; indices numerating array fields
+(list 'plain; original (local) file name
+'cipher; encrypted file name (base name)
 'mtime; modification time
 'modes; permissions
 'uname; user name (obsolete and unused)
@@ -71,13 +72,13 @@
 
 (defun end-log (fstr &rest args)
   "message + time"
-(push
-  (apply #'format (cons (concat
-     (format-time-string "%H:%M:%S "
-(apply 'encode-time (butlast (decode-time (current-time)) 3)))
-fstr)
-args))
-*important-msgs*))
+  (push
+   (apply #'format
+          (cons (concat
+                 (format-time-string "%H:%M:%S " (apply 'encode-time (butlast (decode-time (current-time)) 3)))
+                 fstr)
+                args))
+   *important-msgs*))
 
 (defun post-decrypt (FN)
   "special treatment for certain files"
@@ -85,14 +86,15 @@ args))
         (name (file-name-base FN)))
     (when (string= FN (expand-file-name diary-file))
       (with-current-buffer (find-file-noselect (diary-check-diary-file))
-        (clog :debug "diary buffer opened or updated")))
+        (clog :info "diary buffer opened or updated")))
      (when (member FN *emacs-configs*)
-(end-log "*configuration changed, consider reloading emacs*")
+       (end-log "*configuration changed, consider reloading emacs*")
     (clog :warning "consider reloading configuration file %s" FN)
     ;;   (load-file FN))
 )))
 
 (defvar do-not-encrypt '("gpg"))
+
 (defun cloud-encrypt (plain-file cipher-file password)
 (let ((cloud-name (concat *cloud-dir* cipher-file ".gpg")))
 (if (member (file-name-extension plain-file) do-not-encrypt)
@@ -161,18 +163,17 @@ args))
 (delete-char -1) (newline)
 
 (dolist (action *pending-actions*)
-(insert (format-action action)) (delete-char -1) (newline))
+  (insert (format-action action)) (delete-char -1) (newline))
 
 (newline)
 
 (dolist (file-record *file-DB*)
-(insert (format-file file-record)) (newline))))
+  (insert (format-file file-record)) (newline))))
 
 (defun clouded(CN) (concat *cloud-dir* CN ".gpg"))
 
 (defun read-fileDB* (DBname)
   "reads content (text) file into the database *file-DB*"
-(clog :debug "read-fileDB (%s)" DBname)
   (find-file DBname) (goto-char (point-min))
 (macrolet ((read-line() '(setf str (buffer-substring-no-properties (point) (line-end-position)))))
   (let ((BN (buffer-name)) str)
@@ -227,32 +228,20 @@ args))
 (bad-column "file" 6 mtime-str)
 (aset CF mtime (parse-time mtime-str))))
 
-(when-let ((LF (cloud-locate-FN FN)))
-  (clog :error "read-fileDB duplicate DB record for %s" FN)
-  (drop *file-DB* LF))
+(let ((CLFN (cloud-locate-FN FN)))
+  (if-let ((LF (or CLFN (get-file-properties FN))))
+(progn
+(aset LF write-me (cond
+ ((time< (aref LF mtime) (aref CF mtime)) from-cloud)
+ ((time< (aref CF mtime) (aref LF mtime)) to-cloud)
+ (t 0)))
 
-(if-let ((LF (get-file-properties FN)))
+(unless CLFN 
+  (aset LF cipher (aref CF cipher))
+  (push LF *file-DB*)))
 
-(let ((CN (clouded (aset LF cipher (aref CF cipher)))))
-(cond
- ((not (file-exists-p CN))
-    (clog :warning "file %s is marked as clouded, but %s is missing" FN CN)
-    (aset CF write-me to-cloud)
-    (push CF *file-DB*))
-
-((cloud-locate-CN CN)
- (clog :error "read-fileDB: will ignore %s because it is among *different* local files having the same cloud name %s.gpg" FN CN))
-
-((time< (aref LF mtime) (aref CF mtime))
-(clog :debug "pizdets 1")
- (aset CF write-me from-cloud) (push CF *file-DB*))
- ((time< (aref CF mtime) (aref LF mtime)) (aset LF write-me to-cloud) (push LF *file-DB*))
- (t (aset LF write-me 0)
-(push LF *file-DB*))))
-
-(clog :debug "pizdets 2")
- (aset CF write-me from-cloud)
- (push CF *file-DB*))
+(aset CF write-me from-cloud)
+(push CF *file-DB*)))
 
 (forward-line))))))
 (kill-buffer BN))))
@@ -277,22 +266,39 @@ args))
   (let ((ok t))
   (ifn (cloud-connected-p)
       (clog :error "cloud-sync header failed")
-    (when (boundp 'clog-flush) (clog-flush))
+    (when (functionp 'clog-flush) (clog-flush))
 
+(read-fileDB)
 (dolist (FD *file-DB*)
-  (when ok
-(unless (file-exists-p (plain-name FD))
-(clog :debug "pizdets 3")
- (aset FD write-me from-cloud))
+  
+(progn
+(when (string= "/home/shalaev/bus.txt" (plain-name FD))
+(clog :debug "0 *** cloud: %s-->%s" (cipher-name FD) (plain-name FD))) t)
+
+(when ok
+
+(progn
+(when (string= "/home/shalaev/bus.txt" (plain-name FD))
+(clog :debug "1 *** cloud: %s-->%s" (cipher-name FD) (plain-name FD))) t)
+
+  
 (case= (aref FD write-me)
   (from-cloud
-   (when 
+(progn
+(when (string= "/home/shalaev/bus.txt" (plain-name FD))
+(clog :debug "2 *** cloud: %s-->%s" (cipher-name FD) (plain-name FD))) t)
+
+(when 
   (and
 
 (if (= 0 *log-level*) (yes-or-no-p (format "replace the file %s from the cloud?" (aref FD plain))) t)
 
-(cloud-decrypt (cipher-name FD) (plain-name FD) *password*))
-   (clog :debug "cloud/%s.gpg --> %s" (cipher-name FD) (plain-name FD))
+(progn
+(when (string= "/home/shalaev/bus.txt" (plain-name FD))
+(clog :debug "3 *** cloud: %s-->%s" (cipher-name FD) (plain-name FD))) t)
+
+(cloud-decrypt (cipher-name FD) (plain-name FD) *password*)); +
+   (clog :info "cloud/%s.gpg --> %s" (cipher-name FD) (plain-name FD))
    (set-file-modes (plain-name FD) (aref FD modes))
    (set-file-times (plain-name FD) (aref FD mtime))
    (chgrp (aref FD gname) (plain-name FD)); I have to call external program in order to change the group
@@ -303,7 +309,7 @@ args))
 
 (to-cloud
    (when (cloud-encrypt (plain-name FD) (cipher-name FD) *password*)
-     (clog :debug "%s (%s) --> cloud:%s.gpg"
+     (clog :info "%s (%s) --> cloud:%s.gpg"
        (plain-name FD)
        (format-time-string "%04Y-%02m-%02d %H:%M:%S %Z" (aref FD mtime))
        (cipher-name FD))
@@ -318,28 +324,18 @@ args))
 (dolist (msg (reverse *important-msgs*)) (message msg))
 ok)))
 
-(unless (boundp 'DRF) (defvar DRF (indirect-function (symbol-function 'dired-rename-file)) "original dired-rename-file function"))
-(unless (boundp 'DDF) (defvar DDF (indirect-function (symbol-function 'dired-delete-file)) "original dired-delete-file function"))
-
-(defun cloud-forget-file (local-FN); called *after* the file has already been sucessfully deleted
-  (needs ((DB-rec (cloud-locate-FN local-FN) (clog :info "doing nothing since %s is not clouded" local-FN))
-          (cloud-FN (concat  *cloud-dir* (aref DB-rec cipher) ".gpg") (clog :error "in DB entry for %s" local-FN)))
-   (drop *file-DB* DB-rec)
-   (safe-delete-file cloud-FN)))
-(defun cloud-forget(args)
-(interactive) 
-  (dolist (arg args) (cloud-forget-file arg)))
-
 (defvar action-fields '(i-time i-ID i-args i-hostnames i-Nargs))
-
 (let ((i 0)) (dolist (AF action-fields) (setf i (1+ (set AF i)))))
+
 (defvar action-IDs '(i-forget i-delete i-rename i-host-add i-host-forget))
 (let ((i 0)) (dolist (AI action-IDs) (setf i (1+ (set AI i)))))
+
 (defun new-action (a-ID &rest args)
   (let ((action (make-vector (length action-fields) nil)))
+    (aset action i-ID a-ID)
     (aset action i-time (current-time))
     (aset action i-args args)
-    (aset action i-hostnames *clouded-hosts*)
+    (aset action i-hostnames (remove (system-name) *clouded-hosts*))
     (push action *pending-actions*)))
 
 (defun perform(action)
@@ -359,6 +355,32 @@ ok)))
           (length (aref action i-args)))
   (dolist (arg (aref action i-args)) (format "%S " arg))
   (dolist (HN (aref action i-hostnames)) (format "%S " HN)))
+
+(unless (boundp 'DRF) (defvar DRF (indirect-function (symbol-function 'dired-rename-file)) "original dired-rename-file function"))
+(unless (boundp 'DDF) (defvar DDF (indirect-function (symbol-function 'dired-delete-file)) "original dired-delete-file function"))
+
+(defun dired-delete-file (FN &optional dirP TRASH)
+  (let (failure)
+
+(condition-case err (funcall DDF FN dirP TRASH)
+  (file-error
+   (clog :error "in DDF: %s" (error-message-string err))
+   (setf failure t)))
+(unless failure
+
+(when (cloud-forget-file FN) (new-action i-delete FN))
+
+(when dirP
+  (dolist (sub-FN (mapcar #'plain-name (contained-in FN)))
+    (when (cloud-forget-file sub-FN) (new-action i-delete sub-FN)))))))
+
+(defun contained-in(dir-name); dir-name must end with a slash /
+  (when (file-directory-p dir-name)
+    (let (res)
+      (dolist (DB-rec *file-DB*)
+        (when(string=(substring-no-properties (aref DB-rec plain) 0 (length dir-name)) dir-name)
+          (push DB-rec res)))
+      res)))
 
 (defun add-to-actions(hostname)
   (dolist (action *pending-actions*)
@@ -385,6 +407,16 @@ ok)))
       (if (cloud-sync)
           (safe-delete-file *local-config*)
         (clog :error "sync failed, so I will not erase local configuration")))))
+
+(defun cloud-forget-file (local-FN); called *after* the file has already been sucessfully deleted
+  (needs ((DB-rec (cloud-locate-FN local-FN) (clog :info "doing nothing since %s is not clouded" local-FN))
+          (cloud-FN (concat  *cloud-dir* (aref DB-rec cipher) ".gpg") (clog :error "in DB entry for %s" local-FN)))
+   (drop *file-DB* DB-rec)
+   (safe-delete-file cloud-FN) t))
+
+(defun cloud-forget(args)
+(interactive) 
+  (dolist (arg args) (cloud-forget-file arg)))
 
 (defun cloud-rename-file (old new); called *after* the file has already been sucessfully renamed
   (let ((source (cloud-locate-FN old))
@@ -413,28 +445,6 @@ ok)))
       (cloud-rename-file old-FN new-FN)
       (new-action i-rename old-FN new-FN))))
 
-(defun contained-in(dir-name)
-(when (file-directory-p dir-name)
-(let (res)
-(dolist (DB-rec *file-DB*)
-(when(string=(substring-no-properties (aref DB-rec plain) 0 (length dir-name)) dir-name)
-(push DB-rec res)))
-res)))
-
-(defun dired-delete-file (FN &optional dirP TRASH)
-  (let (failure)
-
-(condition-case err (funcall DDF FN dirP TRASH)
-        (file-error
-         (clog :error "in DDF: %s" (error-message-string err))
-         (setf failure t)))
-      (unless failure
-(clog :debug "will now forget %s" FN)
-        (cloud-forget-file FN)
-        (when dirP
-          (dolist (sub-FN (mapcar #'plain-name (contained-in FN)))
-            (cloud-forget-file sub-FN))))))
-
 (defun cloud-start()
   (interactive) (save-some-buffers)
 (clog :debug "cloud-start: *local-config* = %s" *local-config*)
@@ -444,9 +454,7 @@ res)))
                   (setf *cloud-dir* CD); "/mnt/lws/cloud/"
                   (setf *cloud-dir* (read-string "cloud directory=" *cloud-dir*))
                   (write-conf) t)
-          (clog :debug "cloud-start: *cloud-dir* = %s" *cloud-dir*)
           (setf *contents-name* (cdr (assoc "contents-name" conf)))
-          (clog :debug "cloud-start: *contents-name* = %s" *contents-name*)
           (setf *password*  (cdr (assoc "password" conf))))
          (clog :error "cloud-start header failed, consider (re)mounting %s or running (cloud-init)" *cloud-dir*)
          (read-fileDB)
@@ -474,7 +482,7 @@ res)))
             (< 0 (length str)))
      (if (string-match "^\\(\\ca+\\)=\\(\\ca+\\)$" str)
          (push (cons (match-string 1 str) (match-string 2 str)) res)
-       (clog :debug "garbage string in configuration file: %s" str))
+       (clog :error "garbage string in configuration file: %s" str))
 (forward-line))
 (kill-buffer BN)
     res))

@@ -1,6 +1,8 @@
 ;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 
-;; some of these macros are published on https://github.com/chalaev/elisp-goodies
+;; Instead of using this file, one could use macros.el
+;; generated from org-file in elisp-goodies project, see
+;; https://github.com/chalaev/elisp-goodies
 
 (defmacro case= (var &rest cases)
   "case with integer equality (=) as a test function"
@@ -26,18 +28,6 @@ cases)))))
       `(when ,(cadar vars)
 	     ,(macroexpand-1 `(when-let ,(cdr vars) ,@body)))
     (append `(when ,(cadar vars)) body))))
-
-;; 2020-10-13 update when-let on github with example:
-;; (print (macroexpand-1
-;;  `(when-let ((CN (clouded (aref newDBrec cipher))) (nil (not (file-exists-p CN))))
-;;     (+ 1 2)
-;;     (- 1 2))))
-
-;; (let ((CN (clouded (aref newDBrec cipher))))
-;;   (when CN
-;;     (when (not (file-exists-p CN))
-;;       (+ 1 2) (- 1 2))))
-  
 
 (defmacro when-set (vars &rest body)
   "when with let using stndard let-notation"
@@ -137,5 +127,5 @@ cases)))))
 (defmacro drop (from-where what)
   `(setf ,from-where (remove ,what ,from-where)))
 
-(let ((x '("b")))
-  (drop x "b"))
+;; (let ((x '("b")))
+;;   (drop x "b"))

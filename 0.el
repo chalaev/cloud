@@ -19,6 +19,8 @@
 ;; specifying Moscow time zone (do this for other important unspecified time zones)
 (unless (assoc "MSK" timezone-world-timezones)
   (push '("MSK". 300) timezone-world-timezones))
+(unless (assoc "MSD" timezone-world-timezones)
+  (push '("MSD". 400) timezone-world-timezones))
 
 (defun parse-time(str)
   (let* ((TPD (timezone-parse-date str)) (TZ (aref TPD 4))) ;["2020" "10" "10" "14:54:40" "MSK"]
