@@ -8,6 +8,7 @@
     (clog :debug "loading %s" full-name)
     (load full-name)))
 
+(defvar cloud-delete-contents t "if decrypted contents file must be erased")
 (defvar *clouded-hosts* nil "host names participating in file syncronization")
 (defvar *pending-actions* nil "actions to be saved in the cloud")
 (defvar *important-msgs* nil "these messages will be typically printed at the end of the process")
@@ -133,6 +134,7 @@
 
 (defun write-conf()
 (with-temp-file *local-config*
+  (insert (format "delete-contents=%s" (if cloud-delete-contents "yes" "no"))) (newline)
   (insert (format "contents-name=%s" *contents-name*)) (newline)
   (insert (format "password=%s" *password*)) (newline)
   (insert (format "cloud-directory=%s" *cloud-dir*)) (newline)))
@@ -211,10 +213,10 @@
 (forward-line)))))
 
 (forward-line)
-(while (< 10 (length (read-line))) ;(clog :debug "another file line = %s" str)
+(while (< 10 (length (read-line)))
 (let ((CF (make-vector (length DB-fields) nil)))
-(ifn (string-match "\"\\(.+\\)\"\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([[:digit:]]+\\)\s+\"\\(.+\\)\"" str)
-(clog :error "ignoring invalid file-line %s in the contents file %s" str DBname)
+  (ifn (string-match "\"\\(.+\\)\"\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([[:digit:]]+\\)\s+\"\\(.+\\)\"" str)
+  (clog :error "ignoring invalid file-line %s in the contents file %s" str DBname)
 
 (let* ((FN (match-string 1 str)))
   (aset CF plain FN)
@@ -227,23 +229,23 @@
 (ifn (string-match "[0-9]\\{4\\}-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9] [[:upper:]]\\{3\\}" mtime-str)
 (bad-column "file" 6 mtime-str)
 (aset CF mtime (parse-time mtime-str))))
+(ifn-let ((LF (cloud-locate-FN FN)))
+(push (setf LF CF) *file-DB*)
 
-(let ((CLFN (cloud-locate-FN FN)))
-  (if-let ((LF (or CLFN (get-file-properties FN))))
-(progn
+(let ((local-exists (file-exists-p FN)) (remote-exists (file-exists-p (clouded (cipher-name CF)))))
+(cond
+((not (or local-exists remote-exists))
+ (clog :error "forgetting file %s which is marked as clouded but is neither on local disk nor in the cloud" FN)
+ (drop *file-DB* LF CF))
+((and local-exists remote-exists)
 (aset LF write-me (cond
  ((time< (aref LF mtime) (aref CF mtime)) from-cloud)
  ((time< (aref CF mtime) (aref LF mtime)) to-cloud)
- (t 0)))
+ (t 0))))
+(local-exists  (aset LF write-me to-cloud))
+(remote-exists (aset LF write-me to-cloud))))))))
 
-(unless CLFN 
-  (aset LF cipher (aref CF cipher))
-  (push LF *file-DB*)))
-
-(aset CF write-me from-cloud)
-(push CF *file-DB*)))
-
-(forward-line))))))
+(forward-line)))
 (kill-buffer BN))))
 
 (defmacro bad-column (cType N &optional str)
@@ -262,42 +264,23 @@
 (add-hook 'after-save-hook 'on-current-buffer-save)
 
 (defun cloud-sync()
-(interactive) 
-  (let ((ok t))
+(interactive)
+(let ((ok t))
   (ifn (cloud-connected-p)
       (clog :error "cloud-sync header failed")
     (when (functionp 'clog-flush) (clog-flush))
 
 (read-fileDB)
+
 (dolist (FD *file-DB*)
-  
-(progn
-(when (string= "/home/shalaev/bus.txt" (plain-name FD))
-(clog :debug "0 *** cloud: %s-->%s" (cipher-name FD) (plain-name FD))) t)
-
 (when ok
-
-(progn
-(when (string= "/home/shalaev/bus.txt" (plain-name FD))
-(clog :debug "1 *** cloud: %s-->%s" (cipher-name FD) (plain-name FD))) t)
-
-  
+(unless (aref FD write-me) (aset FD write-me 0))
 (case= (aref FD write-me)
-  (from-cloud
-(progn
-(when (string= "/home/shalaev/bus.txt" (plain-name FD))
-(clog :debug "2 *** cloud: %s-->%s" (cipher-name FD) (plain-name FD))) t)
-
-(when 
-  (and
-
+(from-cloud
+(when (and
 (if (= 0 *log-level*) (yes-or-no-p (format "replace the file %s from the cloud?" (aref FD plain))) t)
-
-(progn
-(when (string= "/home/shalaev/bus.txt" (plain-name FD))
-(clog :debug "3 *** cloud: %s-->%s" (cipher-name FD) (plain-name FD))) t)
-
-(cloud-decrypt (cipher-name FD) (plain-name FD) *password*)); +
+(progn (clog :debug "Next call = cloud-decrypt(%s,%s)" (cipher-name FD) (plain-name FD)) t)
+(setf ok (cloud-decrypt (cipher-name FD) (plain-name FD) *password*)))
    (clog :info "cloud/%s.gpg --> %s" (cipher-name FD) (plain-name FD))
    (set-file-modes (plain-name FD) (aref FD modes))
    (set-file-times (plain-name FD) (aref FD mtime))
@@ -314,11 +297,11 @@
        (format-time-string "%04Y-%02m-%02d %H:%M:%S %Z" (aref FD mtime))
        (cipher-name FD))
      (aset FD write-me 0))))))
-  (when ok
+(ifn ok (clog :error "error (en/de)crypting files, cloud-sync aborted")
 (let ((tmp-CCN (concat *local-dir* "CCN")))
    (write-fileDB tmp-CCN)
    (if (setf ok (cloud-encrypt tmp-CCN *contents-name* *password*))
-       (safe-delete-file tmp-CCN)
+       (when cloud-delete-contents (safe-delete-file tmp-CCN))
      (clog :error "failed to encrypt content file %s to %s!" tmp-CCN *contents-name*))))
 
 (dolist (msg (reverse *important-msgs*)) (message msg))
@@ -454,10 +437,11 @@ ok)))
                   (setf *cloud-dir* CD); "/mnt/lws/cloud/"
                   (setf *cloud-dir* (read-string "cloud directory=" *cloud-dir*))
                   (write-conf) t)
+(progn (when-let ((delete-contents (cdr (assoc "delete-contents" conf))))
+          (setf cloud-delete-contents (if (string= "no" delete-contents) nil t)))t)
           (setf *contents-name* (cdr (assoc "contents-name" conf)))
           (setf *password*  (cdr (assoc "password" conf))))
          (clog :error "cloud-start header failed, consider (re)mounting %s or running (cloud-init)" *cloud-dir*)
-         (read-fileDB)
          (cloud-sync))
     (clog :warning "could not read local configuration file")
     (when (yes-or-no-p "(Re)create configuration?")
@@ -469,7 +453,8 @@ ok)))
 (and 
          (cloud-connected-p)
          (cloud-decrypt *contents-name* tmp-CCN *password*)
-         (progn (read-fileDB* tmp-CCN) (safe-delete-file tmp-CCN)))
+         (progn (read-fileDB* tmp-CCN)
+(when cloud-delete-contents (safe-delete-file tmp-CCN))))
 (progn (clog :error "cloud-start header failed") nil))))
 
 (defun read-conf (file-name)

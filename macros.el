@@ -37,7 +37,6 @@ cases)))))
 	     ,(macroexpand-1 `(when-set ,(cdr vars) ,@body)))
 	(append `(when ,(caar vars)) body))))
 
-
 (defmacro if-let (vars &rest body)
   "if with let using stndard let-notation"
   (let ((if-true (gensym "it")) (result (gensym "r")))
@@ -48,7 +47,6 @@ cases)))))
        (if ,if-true
 	   ,result
 	 ,@(cdr body)))))
-
 
 (defmacro ifn-let (vars &rest body)
   `(if-let ,vars
@@ -123,9 +121,3 @@ cases)))))
 
 (defmacro ifn (test ifnot &rest ifyes)
 `(if (not ,test) ,ifnot ,@ifyes))
-
-(defmacro drop (from-where what)
-  `(setf ,from-where (remove ,what ,from-where)))
-
-;; (let ((x '("b")))
-;;   (drop x "b"))

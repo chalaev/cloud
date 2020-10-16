@@ -142,3 +142,11 @@
 ;; (defun grab-parameter (str parname); (grab-parameter "contentsName=z12"  "contentsName") => "z12"
 ;;   (when (string-match (concat parname "=\\(\\ca+\\)$") str)
 ;;       (match-string 1 str)))
+
+
+(defun drop (from-where &rest what)
+  (if (cdr what)
+      (drop
+       (apply #'drop (cons from-where (cdr what)))
+       (car what))
+    (remove (car what) from-where)))
