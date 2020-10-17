@@ -23,7 +23,7 @@
   (push '("MSD". 400) timezone-world-timezones))
 
 (defun parse-time(str)
-  (let* ((TPD (timezone-parse-date str)) (TZ (aref TPD 4))) ;["2020" "10" "10" "14:54:40" "MSK"]
+  (let* ((TPD (timezone-parse-date str)) (TZ (aref TPD 4)))
     (unless (assoc TZ timezone-world-timezones)
       (clog :error "Unknown time zone abbreviation %s, update 'timezone-world-timezones' variable" TZ))
     (apply #'encode-time (append

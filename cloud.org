@@ -16,18 +16,20 @@ gpg --pinentry-mode loopback --passphrase "somepass" -o ~/tmp-c.txt --decrypt /t
 #+END_SRC
 
 * Initialization
-[[https://stallman.org/][Stallman]] recoomends not to use  ~CL~, but for now I am still requiring it:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el :shebang ";;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+[[https://stallman.org/][Stallman]] recomends not to use  ~CL~, but for now I am still requiring it.
+
+The following block is only only needed if we want to evaluate ~main.el~
+which, in its turn, will require and load other files:
+#+BEGIN_SRC emacs-lisp  :shebang ";;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
 ;; generated from cloud.org
-(mapcar #'require '(cl epg dired-aux timezone diary-lib))
+(mapcar #'require '(cl epg dired-aux timezone diary-lib subr-x))
+(unless (boundp '*loaded*) (load-file "github.el"))
+(mapcar #'load-file* '("0" "macros" "functions" "logging" "1" "2"))
 #+END_SRC
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
-(dolist (FN '("0" "macros" "functions" "common" "other"))
-  (let ((full-name (concat default-directory FN ".el")))
-    (clog :debug "loading %s" full-name)
-    (load full-name)))
-#+END_SRC
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+Since 10/16 this code became a package, and
+now we just merge all these into one (see ~Makefile~).
+#+BEGIN_SRC emacs-lisp :tangle main.el
+;; generated from cloud.org
 (defvar cloud-delete-contents t "if decrypted contents file must be erased")
 (defvar *clouded-hosts* nil "host names participating in file syncronization")
 (defvar *pending-actions* nil "actions to be saved in the cloud")
@@ -36,21 +38,20 @@ gpg --pinentry-mode loopback --passphrase "somepass" -o ~/tmp-c.txt --decrypt /t
 
 =cloud-file-hooks= is used for special files (e.g., diary or bookmarks);
 When those are copied from the cloud to the local hard drive, one should call, e.g., =diary-view-entries= or =bookmark-load=:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defvar cloud-file-hooks nil "for special files treatment")
-(unless (boundp '*emacs-d*) (defvar *emacs-d* "/home/shalaev/.emacs.d/"))
 (defvar *local-dir* (concat *emacs-d* "cloud/"))
 #+END_SRC
 
 Instead of storing configuration in =~/.emacs= I prefer to store it in a separate file:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defvar *local-config* (concat *local-dir* "config"))
 #+END_SRC
 This is because
 1. sometimes the code will update its configuration, and
 2. in this way configuration data is more separated from other ~elisp~ programs.
 
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defvar *contents-name* nil)
 (defvar *cloud-dir*  "/mnt/cloud/")
 #+END_SRC
@@ -58,7 +59,7 @@ This is because
 
 =*file-DB*= is a list of vectors; each vector corresponds to a clouded file.
 Every time we =M-x cloud-sync=, =*file-DB*= gets synchronized with the cloud through the function 
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defvar *file-DB* nil "")
 (defvar *password* nil); to be read from config or generated
 ;;(defvar *catalogue* nil); randomly generated name of the catalogue
@@ -81,7 +82,7 @@ I was writing this section AFAP using cut-and-paste (from ~epg.el~) approach;
 surelly it can be significantly improved.
 
 In order to launch ~gpg~, we need some useful (slightly changed) functions from ~epg.el~:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun cloud-context-set-process (context process)
 "replaces epg-context-set-process from epg.el"
   (aset context 11 process))
@@ -95,7 +96,7 @@ In order to launch ~gpg~, we need some useful (slightly changed) functions from 
 #+END_SRC
 
 The following is similar to ~epg--start~ from ~epg.el~ (simplified):
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun launch-encryption (context plain-data cipher-data password)
   (let* ((args (list "--pinentry-mode" "loopback"
 			     "--batch" "--yes"
@@ -122,7 +123,7 @@ The following is similar to ~epg--start~ from ~epg.el~ (simplified):
 where we saved (in the context) the information about the process.
 
 ** (En/De)cryption
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun end-log (fstr &rest args)
   "message + time"
   (push
@@ -135,7 +136,7 @@ where we saved (in the context) the information about the process.
 #+END_SRC
 
 Some files require special treatment after they are updated on the local disk from the cloud:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun post-decrypt (FN)
   "special treatment for certain files"
   (let ((ext (file-name-extension FN))
@@ -143,7 +144,7 @@ Some files require special treatment after they are updated on the local disk fr
     (when (string= FN (expand-file-name diary-file))
       (with-current-buffer (find-file-noselect (diary-check-diary-file))
 	(clog :info "diary buffer opened or updated")))
-     (when (member FN *emacs-configs*)
+     (when (member FN *loaded*)
        (end-log "*configuration changed, consider reloading emacs*")
     (clog :warning "consider reloading configuration file %s" FN)
     ;;   (load-file FN))
@@ -154,12 +155,12 @@ where =diary-check-diary-file= will raise an error (exception) in case of inexis
 In order to make this work I've got the following block in my  =~/.emacs= file:
 #+BEGIN_SRC emacs-lisp :tangle dot.emacs
 ;; generated from cloud.org
-(defvar *emacs-configs* (list (file-chase-links "~/.emacs")))
+(defvar *loaded* (list (file-chase-links "~/.emacs")))
 (let ((el-prefix "~/programming/emacs/"))
   (mapcar #'(lambda(x)
 	      (let ((FN (file-chase-links (concat el-prefix x ".el"))))
-		(unless (member FN *emacs-configs*)
-		  (push FN *emacs-configs*))
+		(unless (member FN *loaded*)
+		  (push FN *loaded*))
 		(load-file FN)))
 	  '("macros" "functions" "logging" ....)))
 #+END_SRC
@@ -168,19 +169,19 @@ The files ~macros.el~ ~functions.el~ ~logging.el~ are available from the [[https
 The function =file-chase-links=  allows me to use *different*  =~/.emacs= files on different computers,
 just by making a soft link.
 
-The following block is needed for those who forgot to define =*emacs-configs*= in =~/.emacs=:
-#+BEGIN_SRC lisp :tangle cloud.el
-(unless (boundp '*emacs-configs*)
-  (defvar *emacs-configs* nil)); actually supposed to be diefined in ~/.emacs
+The following block is needed for those who forgot to define =*loaded*= in =~/.emacs=:
+#+BEGIN_SRC lisp :tangle main.el
+(unless (boundp '*loaded*)
+  (defvar *loaded* nil)); actually supposed to be diefined in ~/.emacs
 #+END_SRC
 
 Certain file types are not supposed to be encrypted:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defvar do-not-encrypt '("gpg"))
 #+END_SRC
 
 Here is the main encrypting function:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun cloud-encrypt (plain-file cipher-file password)
 (let ((cloud-name (concat *cloud-dir* cipher-file ".gpg")))
 (if (member (file-name-extension plain-file) do-not-encrypt)
@@ -245,7 +246,7 @@ ServerAliveCountMax 2
 #+END_SRC
 
 We proceed with =cloud-sync= command only if the internet connection is established, which is checked by
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun cloud-connected-p()
   (and
    *cloud-dir* *contents-name*
@@ -258,7 +259,7 @@ We proceed with =cloud-sync= command only if the internet connection is establis
 Contents file is the main one in the cloud; it contains information
 (name, group, modification time) about all clouded files.
 ** Creation
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun write-conf()
 (with-temp-file *local-config*
   (insert (format "delete-contents=%s" (if cloud-delete-contents "yes" "no"))) (newline)
@@ -269,7 +270,7 @@ Contents file is the main one in the cloud; it contains information
 
 Before we start for the very first time, when cloud directory is inexistent or empty, 
 we create the password for encryption by =(cloud-init)=:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun cloud-init() "initializes cloud directory and generates password -- runs only once"
 (interactive)
 (when (yes-or-no-p "Is cloud mounted?")
@@ -278,7 +279,7 @@ we create the password for encryption by =(cloud-init)=:
 (clog :error "could not create/acess directory %s" *cloud-dir*)
 #+END_SRC
 For safety reasons refusing to initialize a directory already containing encrypted files:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (if (directory-files *cloud-dir* nil "^.\+.gpg$" t)
     (clog :error "please clean the directory %s before asking me to initialize it" *cloud-dir*)
 (clog :info "creating (main) contents file in unused directory %s" *cloud-dir*)
@@ -286,14 +287,14 @@ For safety reasons refusing to initialize a directory already containing encrypt
   (clog :error "could not create DB file in the directory %s" *cloud-dir*)
 #+END_SRC
 Generating random password and saving it in the local configuration file:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (setf *password* (rand-str 9))
 #+END_SRC
 – one password for everything – 
 for now this software is designed for single person only, and I do not see why should I use individual passwords for different files.
 This might be changed later if I ever upgrade the code for sharing files within a group of people;
 but if this happens, I will probably have to abandon symmetric encryption and deal with public/private keys.
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (ifn (member (safe-mkdir *local-dir*) '(:exists t))
 (clog :error "could not create/acess directory %s" *local-dir*)
 (write-conf)
@@ -302,7 +303,7 @@ but if this happens, I will probably have to abandon symmetric encryption and de
 ** Writing contents file and understanding its format.
 *** The first line: list of all hostnames without quotes, separated by spaces.
 In the following, ~DBname~ is the name of _decrypted_ contents file:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun write-fileDB (DBname)
   (with-temp-file DBname
 (dolist (hostname *clouded-hosts*) (insert (format "%s " hostname)))
@@ -310,35 +311,37 @@ In the following, ~DBname~ is the name of _decrypted_ contents file:
 #+END_SRC
 В следующие несколько строк записываем
 *** Pending actions
-IOn this block, every line is has the following fields (columns):
-1. (integer) action ID,
-2. (integer) number of arguments for this action (one column),
-3. [arguments+] (several columns),
-4. hostnames, where the action has to be performed (several columns).
+In this block, every line is has the following fields (columns):
+1. Time stamp,
+2. (integer) action ID,
+3. (integer) number of arguments for this action (one column),
+4. [arguments+] (several columns),
+5. hostnames, where the action has to be performed (several columns).
    Gets updated by =cloud-host-add= and =cloud-host-forget=.
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (dolist (action *pending-actions*)
   (insert (format-action action)) (delete-char -1) (newline))
 #+END_SRC
 Pending actions block is ended by an empty line separating it from the rest of the file:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (newline)
 #+END_SRC
 *** List of clouded files
 This is the last and the largest block of lines.
 Here every line corresponds to one file:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (dolist (file-record *file-DB*)
   (insert (format-file file-record)) (newline))))
 #+END_SRC
 ** Reading and parsing
 *** list of host names
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun clouded(CN) (concat *cloud-dir* CN ".gpg"))
 #+END_SRC
 Below we define =read-fileDB*= intended for reading (previously decrypted) configuration file
 during the start of this code. =read-fileDB*= always returns =nil=.
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+(Try to optimize =read-fileDB*= because for 280 files it takes up to 5 seconds which is annoying.)
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun read-fileDB* (DBname)
   "reads content (text) file into the database *file-DB*"
   (find-file DBname) (goto-char (point-min))
@@ -352,7 +355,7 @@ during the start of this code. =read-fileDB*= always returns =nil=.
 In case =read-fileDB*= is launched on an unknown computer
 (that is, its hostname is not yet mentioned in the first line of the file =DBname=),
 it is automatically added to the cloud network:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (unless (member (system-name) *clouded-hosts*) (cloud-host-add))
 (forward-line)
 #+END_SRC
@@ -360,22 +363,28 @@ it is automatically added to the cloud network:
 The concept of actions is explained in the [[Actions][corresponding section]].
 
 Keep reading one action after another until we encounter an empty line:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (while (< 0 (length (read-line)))
-(clog :debug "another action line = %S" str)
 (let ((action (make-vector (length action-fields) nil)))
 #+END_SRC
 An action string has unknown number of fields (columns); some of them are quoted and may contain spaces, others are not.
 We use =begins-with= from ~common.el~ to read the fields.
 
 Let us parse the string =str= and save extracted parameters (values) in the vector =action=:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (dolist (column (list
-		 '(:string . i-time)
-		 '(:int . i-ID)
-		 '(:int . i-Nargs)
-		 `((:strings . ,(aref action i-Nargs)) . i-args)
-		 '(:strings . i-hostnames)))
+                 `(:time-stamp . ,i-time)
+                 `(:int . ,i-ID)
+                 `(:int . ,i-Nargs)))
+  (needs ((col-value (begins-with str (car column)) (bad-column "action" (cdr column))))
+     (aset action (cdr column) (car col-value))
+     (setf str (cdr col-value))))
+#+END_SRC
+=(aref action i-Nargs)= must be evaluated _after_ =`(:int . ,i-Nargs)=, but _before_ we proceed with =(cons (cons  :string  (aref action i-Nargs)) i-args)=:
+#+BEGIN_SRC emacs-lisp :tangle main.el
+(dolist (column (list
+                 (cons (cons  :string  (aref action i-Nargs)) i-args)
+                 `(:strings . ,i-hostnames)))
   (needs ((col-value (begins-with str (car column)) (bad-column "action" (cdr column))))
      (aset action (cdr column) (car col-value))
      (setf str (cdr col-value))))
@@ -384,7 +393,7 @@ So, we have just got information about pending action.
 We perform it immediately if our hostname is in the list =(aref action i-hostnames)=.
 
 In this sigle-user code action's time stamp =AID= may serve as its unique ID:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (let ((AID (format-time-string "%02m/%02d %H:%M:%S" (aref action i-time))))
   (ifn (member (system-name) (aref action i-hostnames))
       (clog :info "this host is unaffected by action %s" AID)
@@ -395,10 +404,10 @@ In this sigle-user code action's time stamp =AID= may serve as its unique ID:
 ← even if the action failed, we wash our hands and not retry it.
 If the action is still pending on some hosts, we will store it in =*pending-actions*=
 which is going later to be saved into the [[Contents file][contents file]]:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (when (drop (aref action i-hostnames) (system-name))
-  (push action *pending-actions*))
-(forward-line)))))
+  (push action *pending-actions*)))))
+  (forward-line))
 #+END_SRC
 where the last =(forward-line)= moved the pointer (cursor)
 either to the next action line or to an empty line.
@@ -407,7 +416,7 @@ An empty line ends the action reading loop;
 the next thing to do is to read/parse the files' block of lines.
 
 *** list of (clouded) files
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (forward-line)
 (while (< 10 (length (read-line)))
 (let ((CF (make-vector (length DB-fields) nil)))
@@ -416,7 +425,7 @@ the next thing to do is to read/parse the files' block of lines.
 #+END_SRC
 We've got a valid string describing a clouded file, now let us parse it.
 The first column is the file name:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (let* ((FN (match-string 1 str)))
   (aset CF plain FN)
   (aset CF cipher (match-string 2 str))
@@ -426,7 +435,7 @@ The first column is the file name:
 (Later I will get rid of this field or replace it with another one.)
 
 We syncronize gname (name of the group), modes (permissions), and modification time for every file:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
   (aset CF gname (match-string 4 str))
   (aset CF modes (string-to-int (match-string 5 str)))
   (let ((mtime-str (match-string 6 str)))
@@ -442,7 +451,7 @@ and then – every time when we =cloud-sync=.
 Ideally if =*file-DB*= contains a file, it must exist on a local hard disk.
 In reality either file, the local one, or remote one, or both, might be absent,
 and we have to adress such situation:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (let ((local-exists (file-exists-p FN)) (remote-exists (file-exists-p (clouded (cipher-name CF)))))
 (cond
 ((not (or local-exists remote-exists))
@@ -457,14 +466,14 @@ and we have to adress such situation:
 (remote-exists (aset LF write-me to-cloud))))))))
 #+END_SRC
 Moving to the next line describing another file:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (forward-line)))
 (kill-buffer BN))))
 #+END_SRC
 =(defun read-fileDB* ...)= ends here.
 
 * On saving files in emacs
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defmacro bad-column (cType N &optional str)
 (if str
 `(clog :error "invalid %dth column in %s line = %s" ,N ,cType ,str)
@@ -472,7 +481,7 @@ Moving to the next line describing another file:
 #+END_SRC
 When the file is saved in emacs (=C-x s=), we mark it so that it is going
 to be uploaded to the cloud when the user calls =cloud-sync= next time:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun on-current-buffer-save ()
   "attention: this function might be called many times within a couple of seconds!"
   (let ((plain-file (file-chase-links (buffer-file-name))))
@@ -489,25 +498,26 @@ to be uploaded to the cloud when the user calls =cloud-sync= next time:
 
 We assume that files are changed only within emacs, so that
 =*file-DB*= always contains the most actual information about clouded files.
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun cloud-sync()
 (interactive)
 (let ((ok t))
   (ifn (cloud-connected-p)
       (clog :error "cloud-sync header failed")
+(clog :debug "cloud-sync")
     (when (functionp 'clog-flush) (clog-flush))
 #+END_SRC
 ← here I've inserted flushing log file before syncing.
 
 =read-fileDB= is needed here in case the user (cloud owner)
 is changing the files on another host:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (read-fileDB)
 #+END_SRC
 – it will determine if some local file must be replaced with more recent one on the cloud,
 or if any action on local files must be performed (e.g., deletion).
 
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (dolist (FD *file-DB*)
 (when ok
 (unless (aref FD write-me) (aset FD write-me 0))
@@ -528,7 +538,7 @@ or if any action on local files must be performed (e.g., deletion).
 #+END_SRC
 ← Hooks are not ready for now, but we need them because certain files indeed require special treatment.
 
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
   (to-cloud
    (when (cloud-encrypt (plain-name FD) (cipher-name FD) *password*)
      (clog :info "%s (%s) --> cloud:%s.gpg"
@@ -544,7 +554,7 @@ or if any action on local files must be performed (e.g., deletion).
      (clog :error "failed to encrypt content file %s to %s!" tmp-CCN *contents-name*))))
 #+END_SRC
 Finally let us print stored messages:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (dolist (msg (reverse *important-msgs*)) (message msg))
 ok)))
 #+END_SRC
@@ -570,6 +580,8 @@ Let it wait for about 30 seconds, and it quits without syncing.
 (The waiting time might depend on your [[ssh-config][ssh-configuration]].)
 
 * Actions
+By "action" I mean pending order issued by another host.
+
 Suppoose I applied some action (forget, delete or rename) on the file in the dired buffer.
 For my current host (e.g., my office desktop), the action is perfomed immediately.
 For other hosts (e.g., my laptop that might be sleeping or shut down) this action remains pending
@@ -583,19 +595,19 @@ This will allow users, e.g., to delete or to rename files in linux shell using
 ** Definitions
 Acctions can be applied to both files and directories.
 =(i-time i-ID i-args i-hostnames i-Nargs)= are integer indices, each pointing to a field in an action (which is a vector):
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defvar action-fields '(i-time i-ID i-args i-hostnames i-Nargs))
 (let ((i 0)) (dolist (AF action-fields) (setf i (1+ (set AF i)))))
 #+END_SRC
 where =i-Nargs= is used only when parsing action lines from the contents file.
 
 =(i-forget i-delete i-rename i-host-add i-host-forget)= are integer IDs, each identifying some kind of action (e.g., "forget file" or "delete file"):
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defvar action-IDs '(i-forget i-delete i-rename i-host-add i-host-forget))
 (let ((i 0)) (dolist (AI action-IDs) (setf i (1+ (set AI i)))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun new-action (a-ID &rest args)
   (let ((action (make-vector (length action-fields) nil)))
     (aset action i-ID a-ID)
@@ -604,16 +616,12 @@ where =i-Nargs= is used only when parsing action lines from the contents file.
     (aset action i-hostnames (remove (system-name) *clouded-hosts*))
     (push action *pending-actions*)))
 #+END_SRC
-Потом буду использовать также и другие действия:
-1. =i-reset-pass= для (постепенного) обновления пароля
-2. =i-reset-names= для постепенного переименования файлов в облаке.
+Later more actions will be introduced:
+1. =i-reset-pass= for (gradual – not for all files at once) password renewal
+2. =i-reset-names= for gradual renaming of the files in the cloud.
 
-Есть два вида действий: 
-1. Выполнение указаний других хостов в функции =read-fileDB= (напр., удаление локального файла).
-2. Действия, инициированные локальным пользователем с последующим приказом другим хостам сделать то же самое.
-
-Функция =perform= выполняет указания других хостов:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+The function =perform= performs an action:
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun perform(action)
   (let ((arguments (aref action i-args)))
     (case= (aref action i-ID)
@@ -623,29 +631,40 @@ where =i-Nargs= is used only when parsing action lines from the contents file.
       (i-delete (cloud-rm arguments))
       (i-rename (funcall DRF (first arguments) (second arguments) t))
       (otherwise (clog :error "unknown action %d" (aref action i-ID)))))
-  (drop *pending-actions* action))
+   (drop *pending-actions* action))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+We must inform other hosts about actions they have to perform; for that we write list of actions
+to the contents file using the function
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun format-action (action)
-  (format "%S %d %d " (format-time-string "%04Y-%02m-%02d %H:%M:%S %Z" (aref action i-time))
-	  (aref action i-ID)
-	  (length (aref action i-args)))
-  (dolist (arg (aref action i-args)) (format "%S " arg))
-  (dolist (HN (aref action i-hostnames)) (format "%S " HN)))
+  (format "%S %d %d %s %s"
+(format-time-string "%04Y-%02m-%02d %H:%M:%S %Z" (aref action i-time)); 1. Time stamp,
+(aref action i-ID); 2. (integer) action ID,
+(length (aref action i-args)); 3. (integer) number of arguments for this action (one column),
+(apply #'concat (mapcar #'(lambda(arg) (format "%S " arg)) (aref action i-args))); 4. [arguments+] (several columns),
+(apply #'concat (mapcar #'(lambda(HN) (format "%S " HN)) (aref action i-hostnames))))); 5. hostnames, where the action has to be performed (several columns).
 #+END_SRC
+In this block, every line is has the following fields (columns):
 
-Since there is no hook on renaming files, we overwrite dired functions for renaming and deleting;
+2. (integer) number of arguments for this action (one column),
+3. [arguments+] (several columns),
+4. hostnames, where the action has to be performed (several columns).
+
+
+
+Since there is no hook on renaming or deleting files, we overwrite dired functions for renaming and deleting;
 their new versions will now contain standard code plus mine.
+
 Saving standard definition of the function =dired-rename-file=:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (unless (boundp 'DRF) (defvar DRF (indirect-function (symbol-function 'dired-rename-file)) "original dired-rename-file function"))
 (unless (boundp 'DDF) (defvar DDF (indirect-function (symbol-function 'dired-delete-file)) "original dired-delete-file function"))
 #+END_SRC
 
 ** Delete
 We ovewrite standard emacs =dired-delete-file= function:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun dired-delete-file (FN &optional dirP TRASH)
   (let (failure)
 #+END_SRC
@@ -653,7 +672,7 @@ Note that ~FN~ might be a directory.
 
 IMHO, when ~FN~ is a directory, ~RECURSIVE~ (denoted by ~dirP~ here) must always be t!
 #+END_SRC
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
       (condition-case err (funcall DDF FN dirP TRASH)
 	(file-error
 	 (clog :error "in DDF: %s" (error-message-string err))
@@ -661,18 +680,17 @@ IMHO, when ~FN~ is a directory, ~RECURSIVE~ (denoted by ~dirP~ here) must always
       (unless failure
 #+END_SRC
 =*file-DB*= does *not* contain any directories, so if =FN= is a directory, the following block will do nothing:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
   (when (cloud-forget-file FN) (new-action i-delete FN))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (when dirP
   (dolist (sub-FN (mapcar #'plain-name (contained-in FN)))
     (when (cloud-forget-file sub-FN) (new-action i-delete sub-FN)))))))
 #+END_SRC
 
-Пока что (2020-09-25) =recursive-delete-file= и =cloud-forgets= – просто заглушки,
-но в октябре они должны научиться рекурсивно удалять/забывать каталоги:
+The following function is used to perform pending delete ordered by another host:
 #+BEGIN_SRC 
 (defun cloud-rm (args)
 (interactive) 
@@ -686,9 +704,9 @@ IMHO, when ~FN~ is a directory, ~RECURSIVE~ (denoted by ~dirP~ here) must always
     (safe-delete-file (concat *cloud-dir* (aref DB-rec cipher) ".gpg"))))
 #+END_SRC
 
-
-Для рекурсивности (см. ниже) необходима функция, выделяющая из БД файлы, содержащиеся в заданном каталоге:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+When we rename or delete a folder, we have to perform similar action on every cloud file contained inside the folder.
+The following function helps us finding such files:
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun contained-in(dir-name); dir-name must end with a slash /
   (when (file-directory-p dir-name)
     (let (res)
@@ -698,10 +716,8 @@ IMHO, when ~FN~ is a directory, ~RECURSIVE~ (denoted by ~dirP~ here) must always
       res)))
 #+END_SRC
 
-*Разбираемся* с функциями =dired-do-delete= и =dired-do-flagged-delete=
-
 ** Add/forget hosts
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun add-to-actions(hostname)
   (dolist (action *pending-actions*)
     (unless (member hostname (aref action i-hostnames))
@@ -712,7 +728,7 @@ IMHO, when ~FN~ is a directory, ~RECURSIVE~ (denoted by ~dirP~ here) must always
       (aset action i-hostnames (remove hostname (aref action i-hostnames))))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun cloud-host-add ()
   "adding THIS host to the cloud sync-system"
 (let ((hostname (system-name)))
@@ -722,7 +738,7 @@ IMHO, when ~FN~ is a directory, ~RECURSIVE~ (denoted by ~dirP~ here) must always
   (add-to-actions hostname)))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun cloud-host-forget (); to be tested
   "remove host from the cloud sync-system"
   (let ((hostname (system-name)))
@@ -733,7 +749,7 @@ IMHO, when ~FN~ is a directory, ~RECURSIVE~ (denoted by ~dirP~ here) must always
 	(clog :error "sync failed, so I will not erase local configuration")))))
 #+END_SRC
 ** Add/forget files
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun cloud-forget-file (local-FN); called *after* the file has already been sucessfully deleted
   (needs ((DB-rec (cloud-locate-FN local-FN) (clog :info "doing nothing since %s is not clouded" local-FN))
 	  (cloud-FN (concat  *cloud-dir* (aref DB-rec cipher) ".gpg") (clog :error "in DB entry for %s" local-FN)))
@@ -742,7 +758,7 @@ IMHO, when ~FN~ is a directory, ~RECURSIVE~ (denoted by ~dirP~ here) must always
 #+END_SRC
 ← returns t if the file was clouded; otherwise does nothing and returns nil.
 
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun cloud-forget(args)
 (interactive) 
   (dolist (arg args) (cloud-forget-file arg)))
@@ -750,7 +766,7 @@ IMHO, when ~FN~ is a directory, ~RECURSIVE~ (denoted by ~dirP~ here) must always
 
 ** Rename
 Потом (после России?) *предстоит реализовать переименование каталогов, а также их рекурсивное удаление*
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun cloud-rename-file (old new); called *after* the file has already been sucessfully renamed
   (let ((source (cloud-locate-FN old))
         (target (cloud-locate-FN new)))
@@ -760,7 +776,7 @@ IMHO, when ~FN~ is a directory, ~RECURSIVE~ (denoted by ~dirP~ here) must always
       (loop for property in (list mtime modes uname gname write-me) do
             (aset target property (aref source property)))
       (clog :debug "CRF case 1")
-      (drop *file-DB* source)); удаление из БД
+      (drop *file-DB* source))
      (source (aset source plain new))
      (target (setf target (get-file-properties new))))))
 #+END_SRC
@@ -768,7 +784,7 @@ IMHO, when ~FN~ is a directory, ~RECURSIVE~ (denoted by ~dirP~ here) must always
 (см. уже сделанную рекурсию для =dired-delete-file=) →
 
 Updating =dired-rename-file= by overwriting it:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun dired-rename-file (old-FN new-FN ok-if-already-exists)
   (let (failure)
     (clog :debug "DRF")
@@ -794,7 +810,7 @@ Updating =dired-rename-file= by overwriting it:
 3. Я не понимаю, почему в случае перезагрузки куча файлов копируется в облако!
 
 I suggest running =(cloud-start)= from =~/.emacs= every time you restart ~emacs~:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun cloud-start()
   (interactive) (save-some-buffers)
 (clog :debug "cloud-start: *local-config* = %s" *local-config*)
@@ -815,19 +831,20 @@ I suggest running =(cloud-start)= from =~/.emacs= every time you restart ~emacs~
       (cloud-init))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun read-fileDB()
   (let ((tmp-CCN (concat *local-dir* "CCN")))
 (or
-(and 
-	 (cloud-connected-p)
-	 (cloud-decrypt *contents-name* tmp-CCN *password*)
-	 (progn (read-fileDB* tmp-CCN)
-(when cloud-delete-contents (safe-delete-file tmp-CCN))))
+(and
+ (cloud-connected-p)
+ (cloud-decrypt *contents-name* tmp-CCN *password*)
+ (progn (read-fileDB* tmp-CCN)
+	(if cloud-delete-contents
+	    (safe-delete-file tmp-CCN) t)))
 (progn (clog :error "cloud-start header failed") nil))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun read-conf (file-name)
   "reads configuration file"
 (clog :debug "read-conf")
@@ -842,7 +859,6 @@ I suggest running =(cloud-start)= from =~/.emacs= every time you restart ~emacs~
 (forward-line))
 (kill-buffer BN)
     res))
-(cloud-start)
 #+END_SRC
 
 Для добавления нескольких файлов в облако:
@@ -853,7 +869,7 @@ I suggest running =(cloud-start)= from =~/.emacs= every time you restart ~emacs~
 #+END_SRC
 Если же нужно добавить всего один файл, отмечать его не нужно.
 Переделываем эту строчку в команду:
-#+BEGIN_SRC emacs-lisp :tangle cloud.el
+#+BEGIN_SRC emacs-lisp :tangle main.el
 (defun cloud-add (&optional FN)
   (interactive)
   (if (string= major-mode "dired-mode")
@@ -895,11 +911,11 @@ I suggest running =(cloud-start)= from =~/.emacs= every time you restart ~emacs~
 ;; End:
 ;;; cloud-pkg.el ends here
 #+END_SRC
-Next: append ~header.el~ to the beginning of ~cloud.el~.
+Next: append ~header.el~ to the beginning of ~main.el~.
 
 * Bugs
-1. 2020-10-15 "/home/shalaev/bus.txt" is clouded, but locally absent.
-   It should be downloaded from the clouded, but somehow this does not happen.
-
+  1. added ~/61.txt, then =cloud-sync=
+     => Error: let: Wrong type argument: char-or-string-p, nil
+     – Reproducible error
 * Support
 You can [[https://liberapay.com/shalaev/donate][support]] this project.

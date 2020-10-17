@@ -13,6 +13,30 @@ Synchronizing text files between different computers using
    and
 3. symmetric encryption.
 
+* Quick start
+1. Mount remote directory. The mounting point is arbitrary, the default one is ~/mnt/cloud/~.
+2. ~Makefile~ merges all the code into one file ~cloud.el~ which I load at start by placing the following lines
+   #+BEGIN_SRC emacs-lisp
+   (mapcar #'require '(cl epg dired-aux timezone diary-lib))
+   (load-file "/path-to/cloud.el")
+   (cloud-start)
+   #+END_SRC
+   into my =~/.emacs= file. (Later the code will be transformed into package.)
+   Then open a directory =C-x d=, mark several files, and cloud them =M-x cloud-add=. Then run
+   #+BEGIN_SRC emacs-lisp
+   (cloud-sync)
+   #+END_SRC
+3. Open dired: =C-x d=. Mark files you want to cloud (synchronize), and =M-x cloud-add=.
+4. Every time we =M-x cloud-sync=, local files get synchronized with the cloud. For this purpose I have a line in my ~crontab~:
+   =40 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null=
+
+* Files
+1. ~README.org~ is README for ~github~.
+2. ~cloud.org~ contains the code from ~cloud.el~ together with explanations.
+3. ~cloud.el~ is the main file to be launched when ~emacs~ starts.
+4. ~0.el~, ~1.el~, and ~2.el~ contain some pieces of code which are too dull to be included in ~cloud.org~.
+5. ~macros.el~, ~functions.el~, and ~logging.el~ are generated in [[https://github.com/chalaev/elisp-goodies/blob/master/goodies.org][goodies.org]] from [[https://github.com/chalaev/elisp-goodies][the elisp-goodies]] project.
+
 * Motivation
 I like cloud file storages: they are cheap (or even free) and reliable.
 
@@ -31,17 +55,17 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 4. Remotely stored files are periodically syncronized with the local ones.
 5. Dired-compatible: whatever I do with a file in dired (delete, rename), will be automatically done on other computers.
 
-* Prerequisites
-The code uses logging system defined in [[https://github.com/chalaev/elisp-goodies][elisp-goodies]].
+* To do
+  1. renaming files is untested, to be fixed.
+  2. clouded files must be marked in ~dired~. Probably the fastest way to implement this is to write a small (hopefully 10 times smaller) replacement for ~dired~.
+     I am going to name it ~tired~ :)
+  3. Write simple shell scripts ~cloud~ and ~cloud-sed-i~ which will use ~emacs-client~ to inform ~emacs~ about operations performed on files in the shell:
+   #+BEGIN_SRC shell
+   cloud rm file.txt
+   cloud mv file-1.txt file-2.txt
+   cloud-sed-i "s/abc/def/g" file.txt
+   #+END_SRC
+   where the last line would be equivalent to =sed -i=
 
-* Quick start
-1. Mount remote directory. The mounting point is arbitrary, the default one is ~/mnt/cloud/~.
-2. Open [[https://github.com/chalaev/elisp-goodies/blob/master/goodies.org][goodies.org]] in emacs, then =M-x org-babel-tangle=; this will produce several files, evaluate
-   ~macros.el~, ~functions.el~, and ~logging.el~.
-3. Evaluate ~cloud.el~; during the first run the code will generate gpg-password used for encryption.
-   [You should evaluate ~cloud.el~ every time you (re)start ~emacs~.]
-4. Open dired: =C-x d=. Mark files you want to cloud (synchronize), and =M-x cloud-add=.
-5. Every time we =M-x cloud-sync=, local files get synchronized with the cloud. For this purpose I have a line in my ~crontab~:
-   =40 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null=
-
-You can [[https://www.paypal.com/paypalme/chalaev][support]] this project.
+* Support
+You can [[https://liberapay.com/shalaev/donate][support]] this project.

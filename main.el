@@ -1,20 +1,11 @@
-;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 
 ;; generated from cloud.org
-(mapcar #'require '(cl epg dired-aux timezone diary-lib))
-
-(dolist (FN '("0" "macros" "functions" "common" "other"))
-  (let ((full-name (concat default-directory FN ".el")))
-    (clog :debug "loading %s" full-name)
-    (load full-name)))
-
 (defvar cloud-delete-contents t "if decrypted contents file must be erased")
 (defvar *clouded-hosts* nil "host names participating in file syncronization")
 (defvar *pending-actions* nil "actions to be saved in the cloud")
 (defvar *important-msgs* nil "these messages will be typically printed at the end of the process")
 
 (defvar cloud-file-hooks nil "for special files treatment")
-(unless (boundp '*emacs-d*) (defvar *emacs-d* "/home/shalaev/.emacs.d/"))
 (defvar *local-dir* (concat *emacs-d* "cloud/"))
 
 (defvar *local-config* (concat *local-dir* "config"))
@@ -88,7 +79,7 @@
     (when (string= FN (expand-file-name diary-file))
       (with-current-buffer (find-file-noselect (diary-check-diary-file))
         (clog :info "diary buffer opened or updated")))
-     (when (member FN *emacs-configs*)
+     (when (member FN *loaded*)
        (end-log "*configuration changed, consider reloading emacs*")
     (clog :warning "consider reloading configuration file %s" FN)
     ;;   (load-file FN))
@@ -192,11 +183,16 @@
 (let ((action (make-vector (length action-fields) nil)))
 
 (dolist (column (list
-                 '(:string . i-time)
-                 '(:int . i-ID)
-                 '(:int . i-Nargs)
-                 `((:strings . ,(aref action i-Nargs)) . i-args)
-                 '(:strings . i-hostnames)))
+                 `(:time-stamp . ,i-time)
+                 `(:int . ,i-ID)
+                 `(:int . ,i-Nargs)))
+  (needs ((col-value (begins-with str (car column)) (bad-column "action" (cdr column))))
+     (aset action (cdr column) (car col-value))
+     (setf str (cdr col-value))))
+
+(dolist (column (list
+                 (cons (cons  :string  (aref action i-Nargs)) i-args)
+                 `(:strings . ,i-hostnames)))
   (needs ((col-value (begins-with str (car column)) (bad-column "action" (cdr column))))
      (aset action (cdr column) (car col-value))
      (setf str (cdr col-value))))
@@ -209,8 +205,8 @@
       (clog :error " action %s failed, will NOT retry it" AID))
 
 (when (drop (aref action i-hostnames) (system-name))
-  (push action *pending-actions*))
-(forward-line)))))
+  (push action *pending-actions*)))))
+  (forward-line))
 
 (forward-line)
 (while (< 10 (length (read-line)))
@@ -268,6 +264,7 @@
 (let ((ok t))
   (ifn (cloud-connected-p)
       (clog :error "cloud-sync header failed")
+(clog :debug "cloud-sync")
     (when (functionp 'clog-flush) (clog-flush))
 
 (read-fileDB)
@@ -330,14 +327,15 @@ ok)))
       (i-delete (cloud-rm arguments))
       (i-rename (funcall DRF (first arguments) (second arguments) t))
       (otherwise (clog :error "unknown action %d" (aref action i-ID)))))
-  (drop *pending-actions* action))
+   (drop *pending-actions* action))
 
 (defun format-action (action)
-  (format "%S %d %d " (format-time-string "%04Y-%02m-%02d %H:%M:%S %Z" (aref action i-time))
-          (aref action i-ID)
-          (length (aref action i-args)))
-  (dolist (arg (aref action i-args)) (format "%S " arg))
-  (dolist (HN (aref action i-hostnames)) (format "%S " HN)))
+  (format "%S %d %d %s %s"
+(format-time-string "%04Y-%02m-%02d %H:%M:%S %Z" (aref action i-time)); 1. Time stamp,
+(aref action i-ID); 2. (integer) action ID,
+(length (aref action i-args)); 3. (integer) number of arguments for this action (one column),
+(apply #'concat (mapcar #'(lambda(arg) (format "%S " arg)) (aref action i-args))); 4. [arguments+] (several columns),
+(apply #'concat (mapcar #'(lambda(HN) (format "%S " HN)) (aref action i-hostnames))))); 5. hostnames, where the action has to be performed (several columns).
 
 (unless (boundp 'DRF) (defvar DRF (indirect-function (symbol-function 'dired-rename-file)) "original dired-rename-file function"))
 (unless (boundp 'DDF) (defvar DDF (indirect-function (symbol-function 'dired-delete-file)) "original dired-delete-file function"))
@@ -410,7 +408,7 @@ ok)))
       (loop for property in (list mtime modes uname gname write-me) do
             (aset target property (aref source property)))
       (clog :debug "CRF case 1")
-      (drop *file-DB* source)); удаление из БД
+      (drop *file-DB* source))
      (source (aset source plain new))
      (target (setf target (get-file-properties new))))))
 
@@ -450,11 +448,12 @@ ok)))
 (defun read-fileDB()
   (let ((tmp-CCN (concat *local-dir* "CCN")))
 (or
-(and 
-         (cloud-connected-p)
-         (cloud-decrypt *contents-name* tmp-CCN *password*)
-         (progn (read-fileDB* tmp-CCN)
-(when cloud-delete-contents (safe-delete-file tmp-CCN))))
+(and
+ (cloud-connected-p)
+ (cloud-decrypt *contents-name* tmp-CCN *password*)
+ (progn (read-fileDB* tmp-CCN)
+        (if cloud-delete-contents
+            (safe-delete-file tmp-CCN) t)))
 (progn (clog :error "cloud-start header failed") nil))))
 
 (defun read-conf (file-name)
@@ -471,7 +470,6 @@ ok)))
 (forward-line))
 (kill-buffer BN)
     res))
-(cloud-start)
 
 (defun cloud-add (&optional FN)
   (interactive)
@@ -481,5 +479,5 @@ ok)))
         (add-files (read-string "file to be clouded=" (if FN FN "")))
       (clog :error "could not cloud this file"))))
 
-(unless (boundp '*emacs-configs*)
-  (defvar *emacs-configs* nil)); actually supposed to be diefined in ~/.emacs
+(unless (boundp '*loaded*)
+  (defvar *loaded* nil)); actually supposed to be diefined in ~/.emacs

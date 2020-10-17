@@ -1,7 +1,5 @@
 ;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 
-;; some of these functions are published on https://github.com/chalaev/elisp-goodies
-
 ;; I try to get rid of loop and other common-lisp stuff here
 
 (defun firstN(lista N)
@@ -63,12 +61,12 @@
   (needs ((pattern
 	   (case what; [\s-\|$] matches space or EOL
 	     (:time "\s*\"\\([^\"]+\\)\"[\s-\|$]")
-	     (:integer "\s+\\([[:digit:]]+\\)[\s-\|$]")
-	     (:string "\s+\\(\".+\"+\\)[\s-\|$]")
+	     (:int "\s+\\([[:digit:]]+\\)[\s-\|$]")
+	     (:string "[\s-]*\"\\(.+?\\)\"")
 	     (:other "\s+\\([^\s]+\\)[\s-\|$]"))
 	   (clog :error "invalid type %s in begins-with" what))
-	  (string-match pattern str)
-	  (MB (match-begin 1)) (ME (match-end 1))
+	  (MB (when (string-match pattern str) (match-beginning 1)))
+	  (ME (match-end 1))
 	  (matched (match-string 1 str)))
 	 (case what
 	   (:time
@@ -78,13 +76,12 @@
 			(apply #'encode-time PTS)
 			(substring-no-properties str (1+ ME)))
 		  (clog :error "can not parse date/time string: %s"))))
-	   (:integer (cons
+	   (:int (cons
 		      (string-to-int matched)
 		      (substring-no-properties str ME)))
 	   (:string
-	    (cons
-	     (substring-no-properties matched (1+ MB) (1- ME)); убираем кавычки
-	     (substring-no-properties str ME)))
+	    (cons (string-trim matched)
+		  (substring-no-properties str (1+ ME))))
 	   (:other
 	    (cons (string-trim matched)
 		  (substring-no-properties str ME)))))))
@@ -92,12 +89,15 @@
 (defun begins-with (str what)
   (cond
    ((consp what)
-      (let (result (ok t))
+    (let (result (ok t))
 	(dotimes (i (cdr what))
 	  (needs (ok (BW (begins-with str (car what)) (bad-column "N/A (begins-with)" i)))
 		 (push (car BW) result)
 		 (setf str (cdr BW))))
 	(cons (reverse result) str)))
+   ((eql :time-stamp what)
+    (let ((res (begins-with* str :string)))
+    (cons (apply #'encode-time (parse-time-string (car res))) (cdr res))))
    ((eql :strings what)
     (let (BW result)
       (while (setf BW (begins-with* str :string))
@@ -143,10 +143,3 @@
 ;;   (when (string-match (concat parname "=\\(\\ca+\\)$") str)
 ;;       (match-string 1 str)))
 
-
-(defun drop (from-where &rest what)
-  (if (cdr what)
-      (drop
-       (apply #'drop (cons from-where (cdr what)))
-       (car what))
-    (remove (car what) from-where)))
