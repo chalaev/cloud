@@ -8,39 +8,47 @@ Synchronizing text files between different computers using
 1. emacs,
 2. some sort of a cloud that can be mounted to a directory, for example
    a. ssh- or an ftp-server, or
-   b. some public cloud service like (Russian [[https://disk.yandex.com/][Yandex Disk]] or Swiss [[https://www.pcloud.com][pCloud]]) that can be mounted in linux
+   b. some public cloud service (e.g., Russian [[https://disk.yandex.com/][Yandex Disk]] or Swiss [[https://www.pcloud.com][pCloud]]) that can be mounted in linux
       using standard open-source utilities,
    and
 3. symmetric encryption.
 
+The files written in the cloud have randomly generated names to minimize the amount of information Evil Corporations can extract.
+(Later the files will receive random modification times as well.)
+
 * Quick start
-1. Mount remote directory. The mounting point is arbitrary, the default one is ~/mnt/cloud/~.
-2. ~Makefile~ merges all the code into one file ~cloud.el~ which I load at start by placing the following lines
+1. Mount remote directory. The mounting point may be arbitrary (can be changed in =~/.emacs.d/cloud/config=), the default one is ~/mnt/cloud/~.
+2. You can create the file =~/.emacs.d/cloud/config= yoursekf, or it will be generated. Mine looks as follows:
+   #+BEGIN_SRC
+   contents-name=GWG
+   password=*********
+   cloud-directory=/mnt/lws/cloud/
+   delete-contents=no
+   #+END_SRC
+3. Evaluate ~cloud.el~ at start by placing the following lines
    #+BEGIN_SRC emacs-lisp
-   (mapcar #'require '(cl epg dired-aux timezone diary-lib))
+   (mapcar #'require '(cl epg dired-aux timezone diary-lib subr-x))
    (load-file "/path-to/cloud.el")
    (cloud-start)
    #+END_SRC
    into my =~/.emacs= file. (Later the code will be transformed into package.)
-   Then open a directory =C-x d=, mark several files, and cloud them =M-x cloud-add=. Then run
-   #+BEGIN_SRC emacs-lisp
-   (cloud-sync)
-   #+END_SRC
-3. Open dired: =C-x d=. Mark files you want to cloud (synchronize), and =M-x cloud-add=.
-4. Every time we =M-x cloud-sync=, local files get synchronized with the cloud. For this purpose I have a line in my ~crontab~:
+   Then open a directory =C-x d=, mark several files, and cloud them =M-x cloud-add=. Then =M-x cloud-sync=.
+4. Open dired: =C-x d=. Mark files you want to cloud (synchronize), and =M-x cloud-add=.
+5. Every time we =M-x cloud-sync=, local files get synchronized with the cloud. For this purpose I have a line in my ~crontab~:
    =40 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null=
 
 * Files
 1. ~README.org~ is README for ~github~.
 2. ~cloud.org~ contains the code from ~cloud.el~ together with explanations.
-3. ~cloud.el~ is the main file to be launched when ~emacs~ starts.
+3. ~Makefile~ merges all the code into ~non-essential/cloud.el~ which is the main file to be launched when ~emacs~ starts.
 4. ~0.el~, ~1.el~, and ~2.el~ contain some pieces of code which are too dull to be included in ~cloud.org~.
-5. ~macros.el~, ~functions.el~, and ~logging.el~ are generated in [[https://github.com/chalaev/elisp-goodies/blob/master/goodies.org][goodies.org]] from [[https://github.com/chalaev/elisp-goodies][the elisp-goodies]] project.
+5. ~non-essential/{macros,functions,logging.el}~ are generated in [[https://github.com/chalaev/elisp-goodies/blob/master/goodies.org][goodies.org]] from [[https://github.com/chalaev/elisp-goodies][the elisp-goodies]] project.
+6. =~/.emacs.d/elisp.log= is the log file.
 
 * Motivation
 I like cloud file storages: they are cheap (or even free) and reliable.
 
-However, some evil companies and governments are trying to spy on people using the information
+However, some evil corporations and governments are trying to spy on people using the information
 that they extract from private data stored in the cloud.
 
 Most of my important files (for example, emails or document scans) are not regularly changed;
@@ -49,23 +57,31 @@ using one of cloud services that allow ~WebDav~ access to the storage directory 
 
 This does not work so well for regularly changed files.
 Since emacs is my only text editor, it is enough to write eLisp code that
-1. Saves unencrypted file locally and simulteneously saves its encrypted copy on the cloud.
-2. Every file opened in emacs can be added to the "clouded" list or removed from it.
+1. Saves unencrypted file locally and its encrypted copy in the cloud.
+2. Every file in =dired= buffer can be "clouded" (=M-x cloud-add=).
 3. Encrypted files are stored under randomly generated names and modification dates/times.
 4. Remotely stored files are periodically syncronized with the local ones.
 5. Dired-compatible: whatever I do with a file in dired (delete, rename), will be automatically done on other computers.
 
 * To do
-  1. renaming files is untested, to be fixed.
-  2. clouded files must be marked in ~dired~. Probably the fastest way to implement this is to write a small (hopefully 10 times smaller) replacement for ~dired~.
-     I am going to name it ~tired~ :)
-  3. Write simple shell scripts ~cloud~ and ~cloud-sed-i~ which will use ~emacs-client~ to inform ~emacs~ about operations performed on files in the shell:
+  1. Introduce lock: while files are being synchronized on one of the hosts, other have to wait.
+  2. renaming files is untested, to be fixed.
+  3. clouded files must be marked in ~dired~. Probably the fastest way to implement this is to write a small (hopefully 10 times smaller) replacement for ~dired~.
+     I will name it ~tired~ :)
+  4. Write simple shell scripts ~cloud~ and ~cloud-sed-i~ which will use ~emacs-client~ to inform ~emacs~ about operations performed on files in the shell:
    #+BEGIN_SRC shell
    cloud rm file.txt
+   cloud git rm file.txt
    cloud mv file-1.txt file-2.txt
+   cloud git mv file-1.txt file-2.txt
    cloud-sed-i "s/abc/def/g" file.txt
    #+END_SRC
    where the last line would be equivalent to =sed -i=
+  5. Introduce more actions:
+     a. =i-reset-pass= for (gradual – not for all files at once) password change, and
+     c. =i-reset-names= for gradual renaming of the files in the cloud.
 
 * Support
-You can [[https://liberapay.com/shalaev/donate][support]] this project.
+You can support this project by sending
+1. comments and questions to [[mailto:oleg@chalaev.com][oleg@chalaev.com]] and
+2. donations to [[https://liberapay.com/shalaev/donate][liberapay]] or [[https://www.paypal.com/paypalme/chalaev][paypal]].

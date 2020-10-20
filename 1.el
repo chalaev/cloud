@@ -31,11 +31,27 @@
       (file-already-exists (message "Strange, may be the file already exists (but this was checked!). %s" (error-message-string err)) nil); when file exists
       (file-error (message "Probably, you have not permission to create this directory: %s" (error-message-string err)) :permission))))
 
+(defun safe-dired-delete (FN)
+  (let (failure)
+    (condition-case err (funcall DDF FN "always")
+      (file-error
+       (clog :error "in DDF: %s" (error-message-string err))
+       (setf failure t)))
+    (not failure)))
+
 (defun safe-delete-file (FN)
   (let (failed)
   (condition-case err (delete-file FN)
     (file-error
      (clog :info "cannot delete file %s; %s" FN (error-message-string err))
+     (setf failed t)))
+  (not failed)))
+
+(defun safe-delete-dir (FN)
+  (let (failed)
+  (condition-case err (delete-directory FN)
+    (file-error
+     (clog :info "cannot delete directory %s; %s" FN (error-message-string err))
      (setf failed t)))
   (not failed)))
 

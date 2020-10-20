@@ -35,6 +35,22 @@
 (defmacro drop (from-where &rest what)
   `(setf ,from-where (remo ,from-where ,@what)))
 
+(defun perms-from-str (str)
+"parses file mode string into integer"
+  (let ((text-mode (reverse (cdr (append str nil)))) (mode 0) (fac 1))
+    (loop for c in text-mode for i from 0
+          unless (= c ?-) do (incf mode fac)
+          do (setf fac (* 2 fac)))
+    mode))
+
+(defun perms-to-str(file-mode)
+"formats integer file mode into string"
+(let ((ll '((1 . 0))))
+  (apply #'concat (mapcar
+                   #'(lambda(x) (format "%c" (if (= 0 (logand file-mode (car x))) ?- (aref "xwr" (cdr x)))))
+  (dotimes (i 8 ll)
+     (push (cons (* 2 (caar ll)) (mod (1+ i) 3))  ll))))))
+
 (unless (or (boundp 'decf) (functionp 'decf) (macrop 'decf))
 (defmacro decf (var &optional amount)
   (unless amount (setf amount 1))

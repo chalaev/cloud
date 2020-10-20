@@ -18,7 +18,6 @@
 ;; https://github.com/chalaev/cloud/blob/master/cloud.org
   
 ;;; Code:
-(provide 'cloud)
 ;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 
 (defun cadar (x) (car (cdar x)))
@@ -54,7 +53,10 @@
 			   8)
 			  (list (* 60 (timezone-zone-to-minute TZ)))))))
 
-;; test: (format-time-string "%04Y-%02m-%02d %H:%M:%S %Z" (parse-time "2020-10-10 14:54:40 MSK"))
+(defun TS (time)
+  (format-time-string "%02m/%02d %H:%M:%S" time))
+
+;; test: (TS (parse-time "2020-10-10 14:54:40 MSK"))
 
 ;;(parse-time "2019-09-05 16:09:37 EDT")
 ;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
@@ -214,6 +216,22 @@
 (defmacro drop (from-where &rest what)
   `(setf ,from-where (remo ,from-where ,@what)))
 
+(defun perms-from-str (str)
+"parses file mode string into integer"
+  (let ((text-mode (reverse (cdr (append str nil)))) (mode 0) (fac 1))
+    (loop for c in text-mode for i from 0
+          unless (= c ?-) do (incf mode fac)
+          do (setf fac (* 2 fac)))
+    mode))
+
+(defun perms-to-str(file-mode)
+"formats integer file mode into string"
+(let ((ll '((1 . 0))))
+  (apply #'concat (mapcar
+                   #'(lambda(x) (format "%c" (if (= 0 (logand file-mode (car x))) ?- (aref "xwr" (cdr x)))))
+  (dotimes (i 8 ll)
+     (push (cons (* 2 (caar ll)) (mod (1+ i) 3))  ll))))))
+
 (unless (or (boundp 'decf) (functionp 'decf) (macrop 'decf))
 (defmacro decf (var &optional amount)
   (unless amount (setf amount 1))
@@ -306,11 +324,27 @@ fstr)
       (file-already-exists (message "Strange, may be the file already exists (but this was checked!). %s" (error-message-string err)) nil); when file exists
       (file-error (message "Probably, you have not permission to create this directory: %s" (error-message-string err)) :permission))))
 
+(defun safe-dired-delete (FN)
+  (let (failure)
+    (condition-case err (funcall DDF FN "always")
+      (file-error
+       (clog :error "in DDF: %s" (error-message-string err))
+       (setf failure t)))
+    (not failure)))
+
 (defun safe-delete-file (FN)
   (let (failed)
   (condition-case err (delete-file FN)
     (file-error
      (clog :info "cannot delete file %s; %s" FN (error-message-string err))
+     (setf failed t)))
+  (not failed)))
+
+(defun safe-delete-dir (FN)
+  (let (failed)
+  (condition-case err (delete-directory FN)
+    (file-error
+     (clog :info "cannot delete directory %s; %s" FN (error-message-string err))
      (setf failed t)))
   (not failed)))
 
@@ -456,6 +490,7 @@ fstr)
 (defvar cloud-delete-contents t "if decrypted contents file must be erased")
 (defvar *clouded-hosts* nil "host names participating in file syncronization")
 (defvar *pending-actions* nil "actions to be saved in the cloud")
+(defvar *removed-files*  nil "files that were just removed (or renamed) on local host before (cloud-sync)")
 (defvar *important-msgs* nil "these messages will be typically printed at the end of the process")
 
 (defvar cloud-file-hooks nil "for special files treatment")
@@ -479,7 +514,7 @@ fstr)
 'gname; group name
 'write-me))
 (let ((i 0)) (dolist (field-name DB-fields) (setf i (1+ (set field-name i)))))
-(setf to-cloud 1 from-cloud 2); 0 corresponds to nil in older versions
+(setf to-cloud 1 from-cloud 2)
 
 (defun cloud-context-set-process (context process)
 "replaces epg-context-set-process from epg.el"
@@ -609,12 +644,13 @@ fstr)
 (delete-char -1) (newline)
 
 (dolist (action *pending-actions*)
-  (insert (format-action action)) (delete-char -1) (newline))
+  (insert (format-action action)) (drop *pending-actions* action) (delete-char -1) (newline))
 
 (newline)
 
 (dolist (file-record *file-DB*)
-  (insert (format-file file-record)) (newline))))
+  (insert (format-file file-record)) (newline))
+(setf *removed-files* nil)))
 
 (defun clouded(CN) (concat *cloud-dir* CN ".gpg"))
 
@@ -632,7 +668,6 @@ fstr)
 (forward-line)
 
 (while (< 0 (length (read-line)))
-(clog :debug "another action line = %S" str)
 (let ((action (make-vector (length action-fields) nil)))
 
 (dolist (column (list
@@ -653,7 +688,7 @@ fstr)
 (let ((AID (format-time-string "%02m/%02d %H:%M:%S" (aref action i-time))))
   (ifn (member (system-name) (aref action i-hostnames))
       (clog :info "this host is unaffected by action %s" AID)
-    (if (perform action)
+    (when (perform action)
         (clog :debug "sucessfully performed action %s" AID)
       (clog :error " action %s failed, will NOT retry it" AID))
 
@@ -692,7 +727,8 @@ fstr)
  ((time< (aref CF mtime) (aref LF mtime)) to-cloud)
  (t 0))))
 (local-exists  (aset LF write-me to-cloud))
-(remote-exists (aset LF write-me to-cloud))))))))
+(remote-exists (unless (member LF *removed-files*)
+(aset LF write-me from-cloud)))))))))
 
 (forward-line)))
 (kill-buffer BN))))
@@ -714,11 +750,16 @@ fstr)
 
 (defun cloud-sync()
 (interactive)
+(let* ((lockdir (concat *cloud-dir* "now-syncing/"))
+(lockfile (concat lockdir (system-name)))
+(time-stamp (TS (current-time))))
+(ifn (safe-mkdir lockdir)
+(clog :error "lock directory %s exists; someone else might be syncing right now. If this is not the case, remove %s manually" lockdir lockdir)
+(write-region time-stamp nil lockfile)
 (let ((ok t))
   (ifn (cloud-connected-p)
       (clog :error "cloud-sync header failed")
-(clog :debug "cloud-sync")
-    (when (functionp 'clog-flush) (clog-flush))
+    (clog :info "started syncing")
 
 (read-fileDB)
 
@@ -744,18 +785,25 @@ fstr)
    (when (cloud-encrypt (plain-name FD) (cipher-name FD) *password*)
      (clog :info "%s (%s) --> cloud:%s.gpg"
        (plain-name FD)
-       (format-time-string "%04Y-%02m-%02d %H:%M:%S %Z" (aref FD mtime))
+       (TS (aref FD mtime))
        (cipher-name FD))
      (aset FD write-me 0))))))
-(ifn ok (clog :error "error (en/de)crypting files, cloud-sync aborted")
+(ifn ok (progn
+(end-log "error (en/de)crypting files, cloud-sync aborted")
+(clog :error "error (en/de)crypting files, cloud-sync aborted"))
 (let ((tmp-CCN (concat *local-dir* "CCN")))
    (write-fileDB tmp-CCN)
    (if (setf ok (cloud-encrypt tmp-CCN *contents-name* *password*))
-       (when cloud-delete-contents (safe-delete-file tmp-CCN))
+       (when cloud-delete-contents (safe-dired-delete tmp-CCN))
      (clog :error "failed to encrypt content file %s to %s!" tmp-CCN *contents-name*))))
 
 (dolist (msg (reverse *important-msgs*)) (message msg))
-ok)))
+(clog :info "done syncing")
+ok))
+(ifn (and (safe-delete-file lockfile) (safe-delete-dir lockdir))
+(clog :error "could not delete lock file %s and directory %s" lockfile lockdir)
+(write-region (format "%s: %s
+" (system-name) time-stamp) nil (concat *cloud-dir* "history") t)))))
 
 (defvar action-fields '(i-time i-ID i-args i-hostnames i-Nargs))
 (let ((i 0)) (dolist (AF action-fields) (setf i (1+ (set AF i)))))
@@ -774,17 +822,17 @@ ok)))
 (defun perform(action)
   (let ((arguments (aref action i-args)))
     (case= (aref action i-ID)
-      (i-host-forget (dolist (arg arguments) (drop *clouded-hosts* arg)))
-      (i-host-add (dolist (arg arguments) (push arg *clouded-hosts*)))
-      (i-forget (cloud-forget arguments))
-      (i-delete (cloud-rm arguments))
-      (i-rename (funcall DRF (first arguments) (second arguments) t))
+      (i-host-forget (dolist (arg arguments) (drop *clouded-hosts* arg)) t)
+      (i-host-add (dolist (arg arguments) (push arg *clouded-hosts*)) t)
+      (i-forget (cloud-forget-many arguments) t)
+      (i-delete (cloud-rm arguments) t)
+      (i-rename (cloud-rename-file (first arguments) (second arguments)) t)
       (otherwise (clog :error "unknown action %d" (aref action i-ID)))))
-   (drop *pending-actions* action))
+   (drop *pending-actions* action) t)
 
 (defun format-action (action)
   (format "%S %d %d %s %s"
-(format-time-string "%04Y-%02m-%02d %H:%M:%S %Z" (aref action i-time)); 1. Time stamp,
+(TS (aref action i-time)); 1. Time stamp,
 (aref action i-ID); 2. (integer) action ID,
 (length (aref action i-args)); 3. (integer) number of arguments for this action (one column),
 (apply #'concat (mapcar #'(lambda(arg) (format "%S " arg)) (aref action i-args))); 4. [arguments+] (several columns),
@@ -798,23 +846,43 @@ ok)))
 
 (condition-case err (funcall DDF FN dirP TRASH)
   (file-error
-   (clog :error "in DDF: %s" (error-message-string err))
-   (setf failure t)))
+    (clog :error "in DDF: %s" (error-message-string err))
+    (setf failure t)))
 (unless failure
 
-(when (cloud-forget-file FN) (new-action i-delete FN))
-
+(cloud-forget-recursive FN) (new-action i-delete FN)
 (when dirP
   (dolist (sub-FN (mapcar #'plain-name (contained-in FN)))
     (when (cloud-forget-file sub-FN) (new-action i-delete sub-FN)))))))
 
+(defun cloud-rm (args)
+  (interactive) 
+(let ((ok (cloud-forget-many args)))
+  (dolist (arg args)
+    (setf ok (and (safe-dired-delete arg) (cloud-forget-recursive arg) ok)))
+ok))
+
+(defun cloud-forget-many (args)
+  (interactive) 
+(let ((ok t))
+  (dolist (arg args)
+    (setf ok (and (cloud-forget-recursive arg) ok)))
+ok))
+
+(defun cloud-delete-file (local-FN)
+  (needs ((DB-rec (cloud-locate-FN local-FN) (clog :info "delete: doing nothing since %s is not clouded")))
+    (new-action i-delete local-FN)
+    (drop *file-DB* DB-rec)
+    (safe-dired-delete (concat *cloud-dir* (aref DB-rec cipher) ".gpg"))))
+
 (defun contained-in(dir-name); dir-name must end with a slash /
-  (when (file-directory-p dir-name)
     (let (res)
       (dolist (DB-rec *file-DB*)
-        (when(string=(substring-no-properties (aref DB-rec plain) 0 (length dir-name)) dir-name)
+        (when(and
+(< (length dir-name) (length (aref DB-rec plain)))
+(string=(substring-no-properties (aref DB-rec plain) 0 (length dir-name)) dir-name))
           (push DB-rec res)))
-      res)))
+      res))
 
 (defun add-to-actions(hostname)
   (dolist (action *pending-actions*)
@@ -833,34 +901,51 @@ ok)))
   (new-action i-host-add hostname)
   (add-to-actions hostname)))
 
-(defun cloud-host-forget (); to be tested
+(defun cloud-host-forget ()
   "remove host from the cloud sync-system"
   (let ((hostname (system-name)))
     (when (yes-or-no-p (format "Forget the host %s?" hostname))
       (new-action i-host-forget hostname)
       (if (cloud-sync)
-          (safe-delete-file *local-config*)
+          (safe-dired-delete *local-config*)
         (clog :error "sync failed, so I will not erase local configuration")))))
 
+(defun cloud-add (&optional FN)
+  (interactive)
+  (if (string= major-mode "dired-mode")
+      (dired-map-over-marks (add-files (dired-get-filename)) nil)
+    (unless
+        (add-files (read-string "file to be clouded=" (if FN FN "")))
+      (clog :error "could not cloud this file"))))
+
 (defun cloud-forget-file (local-FN); called *after* the file has already been sucessfully deleted
-  (needs ((DB-rec (cloud-locate-FN local-FN) (clog :info "doing nothing since %s is not clouded" local-FN))
+   (push local-FN *removed-files*)
+  (needs ((DB-rec (cloud-locate-FN local-FN) (clog :info "forget: doing nothing since %s is not clouded" local-FN))
           (cloud-FN (concat  *cloud-dir* (aref DB-rec cipher) ".gpg") (clog :error "in DB entry for %s" local-FN)))
    (drop *file-DB* DB-rec)
-   (safe-delete-file cloud-FN) t))
+   (push local-FN *removed-files*)
+   (safe-dired-delete cloud-FN) t))
 
-(defun cloud-forget(args)
-(interactive) 
-  (dolist (arg args) (cloud-forget-file arg)))
+(defun cloud-forget-recursive(FN); called *after* the file has already been sucessfully deleted
+(dolist (sub-FN (mapcar #'plain-name (contained-in FN)))
+(cloud-forget-file sub-FN)))
 
-(defun cloud-rename-file (old new); called *after* the file has already been sucessfully renamed
+(defun cloud-forget (&optional FN)
+  (interactive)
+  (if (string= major-mode "dired-mode")
+      (dired-map-over-marks (cloud-forget-recursive (dired-get-filename)) nil)
+    (unless
+        (cloud-forget-recursive (read-string "file to be forgotten=" (if FN FN "")))
+      (clog :error "could not forget this file"))))
+
+(defun cloud-rename-file (old new)
   (let ((source (cloud-locate-FN old))
         (target (cloud-locate-FN new)))
-    (clog :debug "CRF")
+(cloud-forget-recursive old)
     (cond
      ((and source target); overwriting one cloud file with another one
       (loop for property in (list mtime modes uname gname write-me) do
             (aset target property (aref source property)))
-      (clog :debug "CRF case 1")
       (drop *file-DB* source))
      (source (aset source plain new))
      (target (setf target (get-file-properties new))))))
@@ -906,7 +991,7 @@ ok)))
  (cloud-decrypt *contents-name* tmp-CCN *password*)
  (progn (read-fileDB* tmp-CCN)
         (if cloud-delete-contents
-            (safe-delete-file tmp-CCN) t)))
+            (safe-dired-delete tmp-CCN) t)))
 (progn (clog :error "cloud-start header failed") nil))))
 
 (defun read-conf (file-name)
@@ -924,14 +1009,7 @@ ok)))
 (kill-buffer BN)
     res))
 
-(defun cloud-add (&optional FN)
-  (interactive)
-  (if (string= major-mode "dired-mode")
-      (dired-map-over-marks (add-files (dired-get-filename)) nil)
-    (unless
-        (add-files (read-string "file to be clouded=" (if FN FN "")))
-      (clog :error "could not cloud this file"))))
-
 (unless (boundp '*loaded*)
   (defvar *loaded* nil)); actually supposed to be diefined in ~/.emacs
+(provide 'cloud)
 ;;; cloud.el ends here

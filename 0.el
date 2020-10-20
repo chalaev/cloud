@@ -33,6 +33,9 @@
 			   8)
 			  (list (* 60 (timezone-zone-to-minute TZ)))))))
 
-;; test: (format-time-string "%04Y-%02m-%02d %H:%M:%S %Z" (parse-time "2020-10-10 14:54:40 MSK"))
+(defun TS (time)
+  (format-time-string "%02m/%02d %H:%M:%S" time))
+
+;; test: (TS (parse-time "2020-10-10 14:54:40 MSK"))
 
 ;;(parse-time "2019-09-05 16:09:37 EDT")
