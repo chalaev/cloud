@@ -21,20 +21,20 @@
     (setf *file-acc-buffer* nil)))
 
 (defun file-acc-push(msg)
-  (when (= 0 *log-level*)
-    (push msg *file-acc-buffer*)
-    (when (< 30 (length *file-acc-buffer*)) (clog-flush))))
+  (push msg *file-acc-buffer*)
+  (when (< 30 (length *file-acc-buffer*)) (clog-flush)))
 
 (defun clog (level fstr &rest args)
   "simple logging function" ; level is one of → :debug :info :warning :error
   (when (<= *log-level* (or (pos level '(:debug :info :warning :error)) 0))
-    (let ((log-msg (cons (concat "%s "
-(format-time-string "%H:%M:%S "
-                    (apply 'encode-time (butlast (decode-time (current-time)) 3)))
-fstr)
-(cons (symbol-name level) args))))
-(file-acc-push (apply #'format log-msg))
-(apply #'message log-msg))))
+    (let ((log-msg
+           (cons
+            (concat "%s " (format-time-string "%H:%M:%S "
+(apply 'encode-time (butlast (decode-time (current-time)) 3)))
+                    fstr)
+            (cons (symbol-name level) args))))
+      (file-acc-push (apply #'format log-msg))
+      (apply #'message log-msg))))
 
 (defun on-emacs-exit()
   (clog :debug "flushing comments before quiting emacs")

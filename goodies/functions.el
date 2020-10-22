@@ -51,6 +51,26 @@
   (dotimes (i 8 ll)
      (push (cons (* 2 (caar ll)) (mod (1+ i) 3))  ll))))))
 
+(defun parse-date (str)
+  (mapcar 'string-to-int 
+          (cond
+ ((string-match "\\([0-9]\\{4\\}\\)[/-]\\([0-9][0-9]\\)[/-]\\([0-9][0-9]\\)" str) (mapcar #'(lambda (x) (match-string x str)) '(3 2 1)))
+ ((string-match "\\([0-9][0-9]\\)[/-]\\([0-9][0-9]\\)[/-]\\([0-9]\\{4\\}\\)" str) (mapcar #'(lambda (x) (match-string x str)) '(2 1 3)))
+ ((string-match "\\([0-9][0-9]\\)\\.\\([0-9][0-9]\\)\\.\\([0-9]\\{4\\}\\)" str) (mapcar #'(lambda (x) (match-string x str)) '(1 2 3)))
+ ((string-match "\\([0-9][0-9]\\)/\\([0-9][0-9]\\)/\\([0-9]\\{2\\}\\)" str) (mapcar #'(lambda (x) (match-string x str)) '(2 1 3)))
+ ((string-match "\\([0-9]\\{2\\}\\)[/-]\\([0-9][0-9]\\)" str) (append (mapcar #'(lambda (x) (match-string x str)) '(2 1)) (list (format-time-string "%Y" (current-time)))))
+ (t (clog :error "date format not recognized in %s" str) nil))))
+
+(defun parse-only-time (str)
+  (firstN (parse-time-string str) 3))
+
+(defun parse-date-time(str)
+  (if (string-match "[0-9]\\{4\\}-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]" str)
+      (parse-time-string str)
+    (let ((SS (split-string str)))
+      (append (parse-only-time (cadr SS))
+              (parse-date (car SS))))))
+
 (unless (or (boundp 'decf) (functionp 'decf) (macrop 'decf))
 (defmacro decf (var &optional amount)
   (unless amount (setf amount 1))
@@ -67,3 +87,8 @@
     (if (eql e el)
         (setf r i)
       (incf i)))))
+
+(defun firstN(lista N)
+  "returning first N elments of the list"
+  (when (and (< 0 N) (car lista))
+    (cons (car lista) (firstN (cdr lista) (1- N)))))

@@ -2,11 +2,6 @@
 
 ;; I try to get rid of loop and other common-lisp stuff here
 
-(defun firstN(lista N)
-  "returning first N elments of the list"
-  (when (and (< 0 N) (car lista))
-    (cons (car lista) (firstN (cdr lista) (1- N)))))
-
 (defvar *all-chars*
   (let ((forbidden-symbols '(?! ?@ ?# ?$ ?% ?& ?* ?( ?) ?+ ?= ?/ 
                       ?{ ?} ?[ ?] ?: ?\; ?< ?>
@@ -113,7 +108,8 @@
 	(cons (reverse result) str)))
    ((eql :time-stamp what)
     (let ((res (begins-with* str :string)))
-    (cons (apply #'encode-time (parse-time-string (car res))) (cdr res))))
+;;    (cons (apply #'encode-time (parse-time-string (car res))) (cdr res))))
+    (cons (apply #'encode-time (parse-date-time (car res))) (cdr res))))
    ((eql :strings what)
     (let (BW result)
       (while (setf BW (begins-with* str :string))
@@ -122,9 +118,13 @@
       (cons (reverse result) str)))
    (t (begins-with* str what))))
 
+(defun tilda(x) (replace-regexp-in-string (concat "^" ~) "~" x))
+(defun untilda(x) (replace-regexp-in-string "^~" ~ x))
+
 (defun cloud-locate-FN (name)
   "find file by (true) name"
-  (find name *file-DB* :key #'plain-name :test #'string=))
+  (find name *file-DB* :key #'plain-name
+	:test #'(lambda(x y)(string= (tilda x) (tilda y)))))
 
 (defun cloud-locate-CN (name)
   "find file by (ciper) name"
@@ -132,12 +132,12 @@
 
 (defun format-file (DB-rec)
   (format "%S %s %s %s %d %S"
-	  (aref DB-rec plain)
+	  (tilda (aref DB-rec plain))
 	  (aref DB-rec cipher)
 	  (aref DB-rec uname)
 	  (aref DB-rec gname)
 	  (aref DB-rec modes); integer
-	  (format-time-string "%04Y-%02m-%02d %H:%M:%S %Z" (aref DB-rec mtime))))
+	  (format-time-string "%F %H:%M:%S %Z" (aref DB-rec mtime))))
 
 (defun plain-name  (df)(aref df plain))
 

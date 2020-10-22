@@ -1,3 +1,4 @@
+:;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 
 ;; generated from cloud.org
 (defvar *loaded* (list (file-chase-links "~/.emacs")))

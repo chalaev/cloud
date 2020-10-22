@@ -5,6 +5,7 @@
 (defvar *pending-actions* nil "actions to be saved in the cloud")
 (defvar *removed-files*  nil "files that were just removed (or renamed) on local host before (cloud-sync)")
 (defvar *important-msgs* nil "these messages will be typically printed at the end of the process")
+(defvar ~ (getenv "HOME"))
 
 (defvar cloud-file-hooks nil "for special files treatment")
 (defvar *local-dir* (concat *emacs-d* "cloud/"))
@@ -88,8 +89,9 @@
 
 (defvar do-not-encrypt '("gpg"))
 
-(defun cloud-encrypt (plain-file cipher-file password)
-(let ((cloud-name (concat *cloud-dir* cipher-file ".gpg")))
+(defun cloud-encrypt (PF cipher-file password)
+(let ((cloud-name (concat *cloud-dir* cipher-file ".gpg"))
+(plain-file (untilda PF)))
 (if (member (file-name-extension plain-file) do-not-encrypt)
     (progn (copy-file plain-file cloud-name t) t)
   (let (sucess (context (epg-make-context 'OpenPGP)))
@@ -101,8 +103,9 @@
     (setf sucess (= 0 (process-exit-status (cloud-context-process context))))
     (epg-reset context); closes the buffer (among other things)
     sucess))))
-(defun cloud-decrypt (cipher-file plain-file password)
-  (let ((cloud-name (clouded cipher-file))
+(defun cloud-decrypt (cipher-file PF  password)
+  (let* ((cloud-name (clouded cipher-file))
+(plain-file (untilda PF))
         (dir (file-name-directory plain-file)))
     (unless (file-directory-p dir) (make-directory dir t))
   (if (member (file-name-extension plain-file) do-not-encrypt)
@@ -195,10 +198,11 @@
                  (cons (cons  :string  (aref action i-Nargs)) i-args)
                  `(:strings . ,i-hostnames)))
   (needs ((col-value (begins-with str (car column)) (bad-column "action" (cdr column))))
-     (aset action (cdr column) (car col-value))
+     (aset action (cdr column) (car col-value)); was (mapcar #'untilda (car col-value))
      (setf str (cdr col-value))))
 
 (let ((AID (format-time-string "%02m/%02d %H:%M:%S" (aref action i-time))))
+(clog :debug "action %s stands for " AID str)
   (ifn (member (system-name) (aref action i-hostnames))
       (clog :info "this host is unaffected by action %s" AID)
     (when (perform action)
@@ -215,7 +219,7 @@
   (ifn (string-match "\"\\(.+\\)\"\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([[:digit:]]+\\)\s+\"\\(.+\\)\"" str)
   (clog :error "ignoring invalid file-line %s in the contents file %s" str DBname)
 
-(let* ((FN (match-string 1 str)))
+(let* ((FN (tilda (match-string 1 str))))
   (aset CF plain FN)
   (aset CF cipher (match-string 2 str))
   (aset CF uname (match-string 3 str))
@@ -226,22 +230,28 @@
 (ifn (string-match "[0-9]\\{4\\}-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9] [[:upper:]]\\{3\\}" mtime-str)
 (bad-column "file" 6 mtime-str)
 (aset CF mtime (parse-time mtime-str))))
-(ifn-let ((LF (cloud-locate-FN FN)))
-(push (setf LF CF) *file-DB*)
 
-(let ((local-exists (file-exists-p FN)) (remote-exists (file-exists-p (clouded (cipher-name CF)))))
+(let ((remote-exists (file-exists-p (clouded (cipher-name CF))))
+      (local-exists (or (cloud-locate-FN FN)
+
+(when-let ((LF (get-file-properties FN)))
+(aset LF cipher (aref CF cipher))
+(push LF *file-DB*)
+LF))))
+
 (cond
 ((not (or local-exists remote-exists))
  (clog :error "forgetting file %s which is marked as clouded but is neither on local disk nor in the cloud" FN)
- (drop *file-DB* LF CF))
+ (drop *file-DB* CF))
 ((and local-exists remote-exists)
-(aset LF write-me (cond
- ((time< (aref LF mtime) (aref CF mtime)) from-cloud)
- ((time< (aref CF mtime) (aref LF mtime)) to-cloud)
+(clog :debug "%s: local(%s) cloud(%s)" FN  (full-TS (aref CF mtime)) (full-TS (aref local-exists mtime)))
+(aset local-exists write-me (cond
+ ((time< (aref local-exists mtime) (aref CF mtime)) from-cloud)
+ ((time< (aref CF mtime) (aref local-exists mtime)) to-cloud)
  (t 0))))
-(local-exists  (aset LF write-me to-cloud))
-(remote-exists (unless (member LF *removed-files*)
-(aset LF write-me from-cloud)))))))))
+(local-exists (aset local-exists write-me to-cloud))
+(remote-exists (unless (member local-exists *removed-files*)
+(aset local-exists write-me from-cloud))))))))
 
 (forward-line)))
 (kill-buffer BN))))
@@ -264,15 +274,15 @@
 (defun cloud-sync()
 (interactive)
 (let* ((lockdir (concat *cloud-dir* "now-syncing/"))
-(lockfile (concat lockdir (system-name)))
-(time-stamp (TS (current-time))))
-(ifn (safe-mkdir lockdir)
-(clog :error "lock directory %s exists; someone else might be syncing right now. If this is not the case, remove %s manually" lockdir lockdir)
-(write-region time-stamp nil lockfile)
-(let ((ok t))
-  (ifn (cloud-connected-p)
-      (clog :error "cloud-sync header failed")
-    (clog :info "started syncing")
+       (lockfile (concat lockdir (system-name)))
+       (time-stamp (TS (current-time))))
+  (ifn (safe-mkdir lockdir)
+       (clog :error "lock directory %s exists; someone else might be syncing right now. If this is not the case, remove %s manually" lockdir lockdir)
+       (write-region time-stamp nil lockfile)
+       (let ((ok t))
+         (ifn (cloud-connected-p)
+              (clog :error "cloud-sync header failed")
+           (clog :info "started syncing")
 
 (read-fileDB)
 
@@ -285,7 +295,7 @@
 (if (= 0 *log-level*) (yes-or-no-p (format "replace the file %s from the cloud?" (aref FD plain))) t)
 (progn (clog :debug "Next call = cloud-decrypt(%s,%s)" (cipher-name FD) (plain-name FD)) t)
 (setf ok (cloud-decrypt (cipher-name FD) (plain-name FD) *password*)))
-   (clog :info "cloud/%s.gpg --> %s" (cipher-name FD) (plain-name FD))
+   (clog :info "cloud:%s.gpg --> %s" (cipher-name FD) (plain-name FD))
    (set-file-modes (plain-name FD) (aref FD modes))
    (set-file-times (plain-name FD) (aref FD mtime))
    (chgrp (aref FD gname) (plain-name FD)); I have to call external program in order to change the group
@@ -295,9 +305,9 @@
               (funcall (cdr hook) (car hook))))))
 
 (to-cloud
-   (when (cloud-encrypt (plain-name FD) (cipher-name FD) *password*)
+   (when (cloud-encrypt (untilda (plain-name FD)) (cipher-name FD) *password*)
      (clog :info "%s (%s) --> cloud:%s.gpg"
-       (plain-name FD)
+      (plain-name FD)
        (TS (aref FD mtime))
        (cipher-name FD))
      (aset FD write-me 0))))))
@@ -311,12 +321,13 @@
      (clog :error "failed to encrypt content file %s to %s!" tmp-CCN *contents-name*))))
 
 (dolist (msg (reverse *important-msgs*)) (message msg))
+(setf *important-msgs* nil)
 (clog :info "done syncing")
 ok))
 (ifn (and (safe-delete-file lockfile) (safe-delete-dir lockdir))
-(clog :error "could not delete lock file %s and directory %s" lockfile lockdir)
-(write-region (format "%s: %s
-" (system-name) time-stamp) nil (concat *cloud-dir* "history") t)))))
+     (clog :error "could not delete lock file %s and directory %s" lockfile lockdir)
+     (write-region (format "%s: %s -- %s
+" (system-name) time-stamp (format-time-string "%H:%M:%S" (current-time))) nil (concat *cloud-dir* "history") t)))))
 
 (defvar action-fields '(i-time i-ID i-args i-hostnames i-Nargs))
 (let ((i 0)) (dolist (AF action-fields) (setf i (1+ (set AF i)))))
@@ -345,10 +356,10 @@ ok))
 
 (defun format-action (action)
   (format "%S %d %d %s %s"
-(TS (aref action i-time)); 1. Time stamp,
+(full-TS (aref action i-time)); 1. Time stamp,
 (aref action i-ID); 2. (integer) action ID,
 (length (aref action i-args)); 3. (integer) number of arguments for this action (one column),
-(apply #'concat (mapcar #'(lambda(arg) (format "%S " arg)) (aref action i-args))); 4. [arguments+] (several columns),
+(apply #'concat (mapcar #'(lambda(arg) (format "%S " (tilda arg))) (aref action i-args))); 4. [arguments+] (several columns),
 (apply #'concat (mapcar #'(lambda(HN) (format "%S " HN)) (aref action i-hostnames))))); 5. hostnames, where the action has to be performed (several columns).
 
 (unless (boundp 'DRF) (defvar DRF (indirect-function (symbol-function 'dired-rename-file)) "original dired-rename-file function"))
@@ -523,4 +534,4 @@ ok))
     res))
 
 (unless (boundp '*loaded*)
-  (defvar *loaded* nil)); actually supposed to be diefined in ~/.emacs
+  (defvar *loaded* nil)); actually supposed to be defined in ~/.emacs

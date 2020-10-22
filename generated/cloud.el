@@ -53,12 +53,12 @@
 			   8)
 			  (list (* 60 (timezone-zone-to-minute TZ)))))))
 
+(defun full-TS (time)
+  (format-time-string "%F %H:%M:%S %Z" time))
+
 (defun TS (time)
   (format-time-string "%02m/%02d %H:%M:%S" time))
 
-;; test: (TS (parse-time "2020-10-10 14:54:40 MSK"))
-
-;;(parse-time "2019-09-05 16:09:37 EDT")
 ;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 
 ;; generated from https://github.com/chalaev/elisp-goodies/blob/master/goodies.org
@@ -232,6 +232,26 @@
   (dotimes (i 8 ll)
      (push (cons (* 2 (caar ll)) (mod (1+ i) 3))  ll))))))
 
+(defun parse-date (str)
+  (mapcar 'string-to-int 
+          (cond
+ ((string-match "\\([0-9]\\{4\\}\\)[/-]\\([0-9][0-9]\\)[/-]\\([0-9][0-9]\\)" str) (mapcar #'(lambda (x) (match-string x str)) '(3 2 1)))
+ ((string-match "\\([0-9][0-9]\\)[/-]\\([0-9][0-9]\\)[/-]\\([0-9]\\{4\\}\\)" str) (mapcar #'(lambda (x) (match-string x str)) '(2 1 3)))
+ ((string-match "\\([0-9][0-9]\\)\\.\\([0-9][0-9]\\)\\.\\([0-9]\\{4\\}\\)" str) (mapcar #'(lambda (x) (match-string x str)) '(1 2 3)))
+ ((string-match "\\([0-9][0-9]\\)/\\([0-9][0-9]\\)/\\([0-9]\\{2\\}\\)" str) (mapcar #'(lambda (x) (match-string x str)) '(2 1 3)))
+ ((string-match "\\([0-9]\\{2\\}\\)[/-]\\([0-9][0-9]\\)" str) (append (mapcar #'(lambda (x) (match-string x str)) '(2 1)) (list (format-time-string "%Y" (current-time)))))
+ (t (clog :error "date format not recognized in %s" str) nil))))
+
+(defun parse-only-time (str)
+  (firstN (parse-time-string str) 3))
+
+(defun parse-date-time(str)
+  (if (string-match "[0-9]\\{4\\}-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]" str)
+      (parse-time-string str)
+    (let ((SS (split-string str)))
+      (append (parse-only-time (cadr SS))
+              (parse-date (car SS))))))
+
 (unless (or (boundp 'decf) (functionp 'decf) (macrop 'decf))
 (defmacro decf (var &optional amount)
   (unless amount (setf amount 1))
@@ -248,6 +268,11 @@
     (if (eql e el)
         (setf r i)
       (incf i)))))
+
+(defun firstN(lista N)
+  "returning first N elments of the list"
+  (when (and (< 0 N) (car lista))
+    (cons (car lista) (firstN (cdr lista) (1- N)))))
 ;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 
 ;; generated from https://github.com/chalaev/elisp-goodies/blob/master/goodies.org
@@ -271,20 +296,20 @@
     (setf *file-acc-buffer* nil)))
 
 (defun file-acc-push(msg)
-  (when (= 0 *log-level*)
-    (push msg *file-acc-buffer*)
-    (when (< 30 (length *file-acc-buffer*)) (clog-flush))))
+  (push msg *file-acc-buffer*)
+  (when (< 30 (length *file-acc-buffer*)) (clog-flush)))
 
 (defun clog (level fstr &rest args)
   "simple logging function" ; level is one of → :debug :info :warning :error
   (when (<= *log-level* (or (pos level '(:debug :info :warning :error)) 0))
-    (let ((log-msg (cons (concat "%s "
-(format-time-string "%H:%M:%S "
-                    (apply 'encode-time (butlast (decode-time (current-time)) 3)))
-fstr)
-(cons (symbol-name level) args))))
-(file-acc-push (apply #'format log-msg))
-(apply #'message log-msg))))
+    (let ((log-msg
+           (cons
+            (concat "%s " (format-time-string "%H:%M:%S "
+(apply 'encode-time (butlast (decode-time (current-time)) 3)))
+                    fstr)
+            (cons (symbol-name level) args))))
+      (file-acc-push (apply #'format log-msg))
+      (apply #'message log-msg))))
 
 (defun on-emacs-exit()
   (clog :debug "flushing comments before quiting emacs")
@@ -294,11 +319,6 @@ fstr)
 ;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 
 ;; I try to get rid of loop and other common-lisp stuff here
-
-(defun firstN(lista N)
-  "returning first N elments of the list"
-  (when (and (< 0 N) (car lista))
-    (cons (car lista) (firstN (cdr lista) (1- N)))))
 
 (defvar *all-chars*
   (let ((forbidden-symbols '(?! ?@ ?# ?$ ?% ?& ?* ?( ?) ?+ ?= ?/ 
@@ -406,7 +426,8 @@ fstr)
 	(cons (reverse result) str)))
    ((eql :time-stamp what)
     (let ((res (begins-with* str :string)))
-    (cons (apply #'encode-time (parse-time-string (car res))) (cdr res))))
+;;    (cons (apply #'encode-time (parse-time-string (car res))) (cdr res))))
+    (cons (apply #'encode-time (parse-date-time (car res))) (cdr res))))
    ((eql :strings what)
     (let (BW result)
       (while (setf BW (begins-with* str :string))
@@ -415,9 +436,13 @@ fstr)
       (cons (reverse result) str)))
    (t (begins-with* str what))))
 
+(defun tilda(x) (replace-regexp-in-string (concat "^" ~) "~" x))
+(defun untilda(x) (replace-regexp-in-string "^~" ~ x))
+
 (defun cloud-locate-FN (name)
   "find file by (true) name"
-  (find name *file-DB* :key #'plain-name :test #'string=))
+  (find name *file-DB* :key #'plain-name
+	:test #'(lambda(x y)(string= (tilda x) (tilda y)))))
 
 (defun cloud-locate-CN (name)
   "find file by (ciper) name"
@@ -425,12 +450,12 @@ fstr)
 
 (defun format-file (DB-rec)
   (format "%S %s %s %s %d %S"
-	  (aref DB-rec plain)
+	  (tilda (aref DB-rec plain))
 	  (aref DB-rec cipher)
 	  (aref DB-rec uname)
 	  (aref DB-rec gname)
 	  (aref DB-rec modes); integer
-	  (format-time-string "%04Y-%02m-%02d %H:%M:%S %Z" (aref DB-rec mtime))))
+	  (format-time-string "%F %H:%M:%S %Z" (aref DB-rec mtime))))
 
 (defun plain-name  (df)(aref df plain))
 
@@ -492,6 +517,7 @@ fstr)
 (defvar *pending-actions* nil "actions to be saved in the cloud")
 (defvar *removed-files*  nil "files that were just removed (or renamed) on local host before (cloud-sync)")
 (defvar *important-msgs* nil "these messages will be typically printed at the end of the process")
+(defvar ~ (getenv "HOME"))
 
 (defvar cloud-file-hooks nil "for special files treatment")
 (defvar *local-dir* (concat *emacs-d* "cloud/"))
@@ -575,8 +601,9 @@ fstr)
 
 (defvar do-not-encrypt '("gpg"))
 
-(defun cloud-encrypt (plain-file cipher-file password)
-(let ((cloud-name (concat *cloud-dir* cipher-file ".gpg")))
+(defun cloud-encrypt (PF cipher-file password)
+(let ((cloud-name (concat *cloud-dir* cipher-file ".gpg"))
+(plain-file (untilda PF)))
 (if (member (file-name-extension plain-file) do-not-encrypt)
     (progn (copy-file plain-file cloud-name t) t)
   (let (sucess (context (epg-make-context 'OpenPGP)))
@@ -588,8 +615,9 @@ fstr)
     (setf sucess (= 0 (process-exit-status (cloud-context-process context))))
     (epg-reset context); closes the buffer (among other things)
     sucess))))
-(defun cloud-decrypt (cipher-file plain-file password)
-  (let ((cloud-name (clouded cipher-file))
+(defun cloud-decrypt (cipher-file PF  password)
+  (let* ((cloud-name (clouded cipher-file))
+(plain-file (untilda PF))
         (dir (file-name-directory plain-file)))
     (unless (file-directory-p dir) (make-directory dir t))
   (if (member (file-name-extension plain-file) do-not-encrypt)
@@ -682,10 +710,11 @@ fstr)
                  (cons (cons  :string  (aref action i-Nargs)) i-args)
                  `(:strings . ,i-hostnames)))
   (needs ((col-value (begins-with str (car column)) (bad-column "action" (cdr column))))
-     (aset action (cdr column) (car col-value))
+     (aset action (cdr column) (car col-value)); was (mapcar #'untilda (car col-value))
      (setf str (cdr col-value))))
 
 (let ((AID (format-time-string "%02m/%02d %H:%M:%S" (aref action i-time))))
+(clog :debug "action %s stands for " AID str)
   (ifn (member (system-name) (aref action i-hostnames))
       (clog :info "this host is unaffected by action %s" AID)
     (when (perform action)
@@ -702,7 +731,7 @@ fstr)
   (ifn (string-match "\"\\(.+\\)\"\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([[:digit:]]+\\)\s+\"\\(.+\\)\"" str)
   (clog :error "ignoring invalid file-line %s in the contents file %s" str DBname)
 
-(let* ((FN (match-string 1 str)))
+(let* ((FN (tilda (match-string 1 str))))
   (aset CF plain FN)
   (aset CF cipher (match-string 2 str))
   (aset CF uname (match-string 3 str))
@@ -713,22 +742,28 @@ fstr)
 (ifn (string-match "[0-9]\\{4\\}-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9] [[:upper:]]\\{3\\}" mtime-str)
 (bad-column "file" 6 mtime-str)
 (aset CF mtime (parse-time mtime-str))))
-(ifn-let ((LF (cloud-locate-FN FN)))
-(push (setf LF CF) *file-DB*)
 
-(let ((local-exists (file-exists-p FN)) (remote-exists (file-exists-p (clouded (cipher-name CF)))))
+(let ((remote-exists (file-exists-p (clouded (cipher-name CF))))
+      (local-exists (or (cloud-locate-FN FN)
+
+(when-let ((LF (get-file-properties FN)))
+(aset LF cipher (aref CF cipher))
+(push LF *file-DB*)
+LF))))
+
 (cond
 ((not (or local-exists remote-exists))
  (clog :error "forgetting file %s which is marked as clouded but is neither on local disk nor in the cloud" FN)
- (drop *file-DB* LF CF))
+ (drop *file-DB* CF))
 ((and local-exists remote-exists)
-(aset LF write-me (cond
- ((time< (aref LF mtime) (aref CF mtime)) from-cloud)
- ((time< (aref CF mtime) (aref LF mtime)) to-cloud)
+(clog :debug "%s: local(%s) cloud(%s)" FN  (full-TS (aref CF mtime)) (full-TS (aref local-exists mtime)))
+(aset local-exists write-me (cond
+ ((time< (aref local-exists mtime) (aref CF mtime)) from-cloud)
+ ((time< (aref CF mtime) (aref local-exists mtime)) to-cloud)
  (t 0))))
-(local-exists  (aset LF write-me to-cloud))
-(remote-exists (unless (member LF *removed-files*)
-(aset LF write-me from-cloud)))))))))
+(local-exists (aset local-exists write-me to-cloud))
+(remote-exists (unless (member local-exists *removed-files*)
+(aset local-exists write-me from-cloud))))))))
 
 (forward-line)))
 (kill-buffer BN))))
@@ -751,15 +786,15 @@ fstr)
 (defun cloud-sync()
 (interactive)
 (let* ((lockdir (concat *cloud-dir* "now-syncing/"))
-(lockfile (concat lockdir (system-name)))
-(time-stamp (TS (current-time))))
-(ifn (safe-mkdir lockdir)
-(clog :error "lock directory %s exists; someone else might be syncing right now. If this is not the case, remove %s manually" lockdir lockdir)
-(write-region time-stamp nil lockfile)
-(let ((ok t))
-  (ifn (cloud-connected-p)
-      (clog :error "cloud-sync header failed")
-    (clog :info "started syncing")
+       (lockfile (concat lockdir (system-name)))
+       (time-stamp (TS (current-time))))
+  (ifn (safe-mkdir lockdir)
+       (clog :error "lock directory %s exists; someone else might be syncing right now. If this is not the case, remove %s manually" lockdir lockdir)
+       (write-region time-stamp nil lockfile)
+       (let ((ok t))
+         (ifn (cloud-connected-p)
+              (clog :error "cloud-sync header failed")
+           (clog :info "started syncing")
 
 (read-fileDB)
 
@@ -772,7 +807,7 @@ fstr)
 (if (= 0 *log-level*) (yes-or-no-p (format "replace the file %s from the cloud?" (aref FD plain))) t)
 (progn (clog :debug "Next call = cloud-decrypt(%s,%s)" (cipher-name FD) (plain-name FD)) t)
 (setf ok (cloud-decrypt (cipher-name FD) (plain-name FD) *password*)))
-   (clog :info "cloud/%s.gpg --> %s" (cipher-name FD) (plain-name FD))
+   (clog :info "cloud:%s.gpg --> %s" (cipher-name FD) (plain-name FD))
    (set-file-modes (plain-name FD) (aref FD modes))
    (set-file-times (plain-name FD) (aref FD mtime))
    (chgrp (aref FD gname) (plain-name FD)); I have to call external program in order to change the group
@@ -782,9 +817,9 @@ fstr)
               (funcall (cdr hook) (car hook))))))
 
 (to-cloud
-   (when (cloud-encrypt (plain-name FD) (cipher-name FD) *password*)
+   (when (cloud-encrypt (untilda (plain-name FD)) (cipher-name FD) *password*)
      (clog :info "%s (%s) --> cloud:%s.gpg"
-       (plain-name FD)
+      (plain-name FD)
        (TS (aref FD mtime))
        (cipher-name FD))
      (aset FD write-me 0))))))
@@ -798,12 +833,13 @@ fstr)
      (clog :error "failed to encrypt content file %s to %s!" tmp-CCN *contents-name*))))
 
 (dolist (msg (reverse *important-msgs*)) (message msg))
+(setf *important-msgs* nil)
 (clog :info "done syncing")
 ok))
 (ifn (and (safe-delete-file lockfile) (safe-delete-dir lockdir))
-(clog :error "could not delete lock file %s and directory %s" lockfile lockdir)
-(write-region (format "%s: %s
-" (system-name) time-stamp) nil (concat *cloud-dir* "history") t)))))
+     (clog :error "could not delete lock file %s and directory %s" lockfile lockdir)
+     (write-region (format "%s: %s -- %s
+" (system-name) time-stamp (format-time-string "%H:%M:%S" (current-time))) nil (concat *cloud-dir* "history") t)))))
 
 (defvar action-fields '(i-time i-ID i-args i-hostnames i-Nargs))
 (let ((i 0)) (dolist (AF action-fields) (setf i (1+ (set AF i)))))
@@ -832,10 +868,10 @@ ok))
 
 (defun format-action (action)
   (format "%S %d %d %s %s"
-(TS (aref action i-time)); 1. Time stamp,
+(full-TS (aref action i-time)); 1. Time stamp,
 (aref action i-ID); 2. (integer) action ID,
 (length (aref action i-args)); 3. (integer) number of arguments for this action (one column),
-(apply #'concat (mapcar #'(lambda(arg) (format "%S " arg)) (aref action i-args))); 4. [arguments+] (several columns),
+(apply #'concat (mapcar #'(lambda(arg) (format "%S " (tilda arg))) (aref action i-args))); 4. [arguments+] (several columns),
 (apply #'concat (mapcar #'(lambda(HN) (format "%S " HN)) (aref action i-hostnames))))); 5. hostnames, where the action has to be performed (several columns).
 
 (unless (boundp 'DRF) (defvar DRF (indirect-function (symbol-function 'dired-rename-file)) "original dired-rename-file function"))
@@ -1010,6 +1046,6 @@ ok))
     res))
 
 (unless (boundp '*loaded*)
-  (defvar *loaded* nil)); actually supposed to be diefined in ~/.emacs
+  (defvar *loaded* nil)); actually supposed to be defined in ~/.emacs
 (provide 'cloud)
 ;;; cloud.el ends here
