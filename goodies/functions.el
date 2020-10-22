@@ -1,12 +1,6 @@
 ;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 
 ;; generated from https://github.com/chalaev/elisp-goodies/blob/master/goodies.org
-(defun chgrp(group file-name)
-  (let (process (counter 300) (buffer (generate-new-buffer " *chgrp*")))
-    (setf process (apply #'start-process "cloud-chgrp" buffer "chgrp" (list group file-name)))
-    (while (and (> counter 0) (eq (process-status process) 'run))
-      (decf counter) (sleep-for 0.1))))
-
 (unless (functionp 'gensym)
 (let ((counter 0))
   (defun gensym(&optional starts-with)
@@ -70,6 +64,9 @@
     (let ((SS (split-string str)))
       (append (parse-only-time (cadr SS))
               (parse-date (car SS))))))
+
+(defun chgrp(group file-name)
+  (= 0 (call-process "chgrp" nil nil nil group file-name)))
 
 (unless (or (boundp 'decf) (functionp 'decf) (macrop 'decf))
 (defmacro decf (var &optional amount)

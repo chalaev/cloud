@@ -28,6 +28,5 @@
 	(aset DB-rec gname gid)
 	(aset DB-rec mtime mod-time); list of 4 integers
 	(aset DB-rec modes (perms-from-str ms))
-	(aset DB-rec plain FN)
-	(aset DB-rec write-me to-cloud); might be later adjusted in read-fileDB
+	(aset DB-rec plain FN); (aset DB-rec write-me to-cloud); might be later adjusted in read-fileDB
 	DB-rec))))))

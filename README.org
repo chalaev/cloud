@@ -14,16 +14,16 @@ Synchronizing important text files between two or more computers using
 3. symmetric encryption.
 
 The files written in the cloud have randomly generated names to minimize the amount of information Evil Corporations can extract by monitoring your cloud directory.
-(Later the files will receive random modification times as well.)
 
 * Quick start
 1. Mount remote directory. The mounting point may be arbitrary (can be changed in =~/.emacs.d/cloud/config=), the default one is ~/mnt/cloud/~.
 2. You can create the file =~/.emacs.d/cloud/config= yourself, or it will be generated. Mine looks as follows:
    #+BEGIN_SRC
-   contents-name=XYZ
-   password=*********
-   cloud-directory=/mnt/lws/cloud/
    delete-contents=yes
+   contents-name=GWG
+   password=*********
+   number-or-CPU-cores=8
+   cloud-directory=/mnt/lws/cloud/
    #+END_SRC
 3. Evaluate ~cloud.el~ at start by placing the following lines
    #+BEGIN_SRC emacs-lisp
@@ -49,7 +49,7 @@ The files written in the cloud have randomly generated names to minimize the amo
 * Motivation
 I like cloud file storages: they are cheap (or even free) and reliable.
 
-However, some evil corporations and governments are trying to spy on people using the information
+However, Evil Corporations and governments are trying to spy on people using the information
 that they extract from private data stored in the cloud.
 
 Most of my important files (for example, emails or document scans) are not regularly changed;
@@ -64,6 +64,8 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 4. Remotely stored files are periodically syncronized with the local ones.
 5. Dired-compatible: whatever I do with a file in dired (delete, rename), will be automatically done on other computers.
 
+* Limitations
+After I've started using [[https://www.gnu.org/software/make/][GNU make]] for multithreading, only nicely named files are allowed. No spaces in file names.
 * To do
   1. renaming files is untested, to be fixed.
   2. clouded files must be marked in ~dired~. Probably the fastest way to implement this is to write a small (hopefully 10 times smaller) replacement for ~dired~.
@@ -80,6 +82,7 @@ Since emacs is my only text editor, it is enough to write eLisp code that
   4. Introduce more actions:
      a. =i-reset-pass= for (gradual – not for all files at once) password change, and
      b. =i-reset-names= for gradual renaming of the files in the cloud.
+  5. Create a package ~cloud.el~.
 
 * Support
 You can support this project by sending
