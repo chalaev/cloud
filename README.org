@@ -1,4 +1,4 @@
-Intended for people who have [[https://www.gnu.org/software/emacs/][emacs]] always open.
+Intended for linux users who have [[https://www.gnu.org/software/emacs/][emacs]] always open.
 
 I did not expect this project to grow that much;
 some of the desired functions are not implemented or half-implemented.
@@ -20,14 +20,14 @@ The files written in the cloud have randomly generated names to minimize the amo
 2. You can create the file =~/.emacs.d/cloud/config= yourself, or it will be generated. Mine looks as follows:
    #+BEGIN_SRC
    delete-contents=yes
-   contents-name=GWG
+   contents-name=XYZ
    password=*********
-   number-or-CPU-cores=8
+   number-of-CPU-cores=8
    cloud-directory=/mnt/lws/cloud/
    #+END_SRC
 3. Evaluate ~cloud.el~ at start by placing the following lines
    #+BEGIN_SRC emacs-lisp
-   (mapcar #'require '(cl epg dired-aux timezone diary-lib subr-x))
+   (mapcar #'require '(cl dired-aux timezone diary-lib subr-x))
    (load-file "/path-to/cloud.el")
    (switch-to-buffer "*Messages*")
    (cloud-start)
@@ -65,12 +65,14 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 5. Dired-compatible: whatever I do with a file in dired (delete, rename), will be automatically done on other computers.
 
 * Limitations
-After I've started using [[https://www.gnu.org/software/make/][GNU make]] for multithreading, only nicely named files are allowed. No spaces in file names.
+After I've started using [[https://www.gnu.org/software/make/][GNU make]] for multithreading, only nicely named files are allowed.
+So no spaces in file names for now.
+Later I am going to waive this limitation by creating soft links to badly named files.
+
 * To do
-  1. renaming files is untested, to be fixed.
-  2. clouded files must be marked in ~dired~. Probably the fastest way to implement this is to write a small (hopefully 10 times smaller) replacement for ~dired~.
+  1. clouded files must be marked in ~dired~. Probably the fastest way to implement this is to write a small (hopefully 10 times smaller) replacement for ~dired~.
      I will name it ~tired~ :)
-  3. Write simple shell scripts ~cloud~ and ~cloud-sed-i~ which will use ~emacs-client~ to inform ~emacs~ about operations performed on files in the shell:
+  2. Write simple shell scripts ~cloud~ and ~cloud-sed-i~ which will use ~emacs-client~ to inform ~emacs~ about operations performed on files in the shell:
    #+BEGIN_SRC shell
    cloud rm file.txt
    cloud git rm file.txt
@@ -79,12 +81,12 @@ After I've started using [[https://www.gnu.org/software/make/][GNU make]] for mu
    cloud-sed-i "s/abc/def/g" file.txt
    #+END_SRC
    where the last line would be equivalent to =sed -i=
-  4. Introduce more actions:
+  3. Introduce more actions:
      a. =i-reset-pass= for (gradual – not for all files at once) password change, and
      b. =i-reset-names= for gradual renaming of the files in the cloud.
-  5. Create a package ~cloud.el~.
+  4. Create a package ~cloud.el~.
 
 * Support
 You can support this project by sending
 1. comments and questions to [[mailto:oleg@chalaev.com][oleg@chalaev.com]] and
-2. donations to [[https://liberapay.com/shalaev/donate][liberapay]] or [[https://www.paypal.com/paypalme/chalaev][paypal]].
+2. donations via [[https://liberapay.com/shalaev/donate][liberapay]] or [[https://www.paypal.com/paypalme/chalaev][paypal]].

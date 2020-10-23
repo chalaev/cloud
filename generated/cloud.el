@@ -1,3 +1,4 @@
+;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 ;; -*- lexical-binding: t -*-
 
 ;;;cloud.el --- secure cloud storage and syncronization for text files
@@ -506,6 +507,7 @@
 	(aset DB-rec modes (perms-from-str ms))
 	(aset DB-rec plain FN); (aset DB-rec write-me to-cloud); might be later adjusted in read-fileDB
 	DB-rec))))))
+;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 
 ;; generated from cloud.org
 (defvar cloud-delete-contents t "if decrypted contents file must be erased")
@@ -578,7 +580,7 @@
   (insert (format "delete-contents=%s" (if cloud-delete-contents "yes" "no"))) (newline)
   (insert (format "contents-name=%s" *contents-name*)) (newline)
   (insert (format "password=%s" *password*)) (newline)
-  (insert (format "number-or-CPU-cores=%s" *Ncores**password)) (newline)
+  (insert (format "number-of-CPU-cores=%s" *Ncores**password)) (newline)
   (insert (format "cloud-directory=%s" *cloud-dir*)) (newline)))
 
 (defun cloud-init() "initializes cloud directory and generates password -- runs only once"
@@ -661,78 +663,34 @@
   (push action *pending-actions*)))))
   (forward-line))
 
+(reset-Makefile)
 (forward-line)
-(let (all Makefile)
-(macrolet ((NL () '(push "
-" Makefile))
-(inl (&rest format-pars) `(progn (push ,(cons 'format format-pars) Makefile) (NL))))
-(inl "cloud=%s" *cloud-dir*) (inl "password=%s" *password*)
-(inl "gpg=gpg --pinentry-mode loopback --batch --yes
-enc=$(gpg) --symmetric --passphrase $(password) -o
-dec=$(gpg) --decrypt   --passphrase $(password) -o
-")
 (while (< 10 (length (read-line)))
-(let ((CF (make-vector (length DB-fields) nil)))
-  (ifn (string-match "\"\\(.+\\)\"\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([[:digit:]]+\\)\s+\"\\(.+\\)\"" str)
-(inl "# Ignoring invalid line %s in %s" str DBname)
+(when-let ((CF (str-to-DBrec str)))
 
-(let* ((FN (match-string 1 str)))
-  (aset CF plain FN)
-  (aset CF cipher (match-string 2 str))
-  (aset CF uname (match-string 3 str))
-
-(aset CF gname (match-string 4 str))
-  (aset CF modes (string-to-int (match-string 5 str)))
-  (let ((mtime-str (match-string 6 str)))
-(ifn (string-match "[0-9]\\{4\\}-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9] [[:upper:]]\\{3\\}" mtime-str)
-(bad-column "file" 6 mtime-str)
-(aset CF mtime (parse-time mtime-str))))
-
-(let ((remote-exists (file-exists-p (clouded (cipher-name CF))))
+(let* ((FN (plain-name CF))
+      (remote-exists (file-exists-p (clouded (cipher-name CF))))
       (local-exists (or (cloud-locate-FN FN)
-
 (when-let ((LF (get-file-properties FN)))
-(aset LF cipher (aref CF cipher))
-(push LF *file-DB*)
-LF))))
-
+        (aset LF cipher (aref CF cipher))
+        (push LF *file-DB*)
+        LF))))
 (cond
 ((not (or local-exists remote-exists))
  (clog :error "forgetting file %s which is marked as clouded but is neither on local disk nor in the cloud" FN)
  (drop *file-DB* CF))
 ((or
- (and local-exists remote-exists (time< (aref local-exists mtime) (aref CF mtime)))
- (and (not local-exists) remote-exists))
-    (push (format " %s" FN) all) (inl "%s: $(cloud)%s.gpg
-\t$(dec) $@ $<
-\t-chgrp %s $@
-\t-chmod %o $@
-\t-touch --date=%S $@
-" FN (cipher-name CF) (aref CF gname) (aref CF modes) (full-TS (aref CF mtime))))
+ (and (not local-exists) remote-exists)
+ (and local-exists remote-exists (time< (aref local-exists mtime) (aref CF mtime))))
+(download CF))
 ((or
  (and local-exists remote-exists (time< (aref CF mtime) (aref local-exists mtime)))
  (and local-exists (not remote-exists)))
-(push (format " $(cloud)%s.gpg" (cipher-name CF)) all) (inl
-(concat "$(cloud)%s.gpg: %s
-\t"
-(if (member (file-name-extension FN) do-not-encrypt)
-"cp $< $@"
-"$(enc) $@ $<")
-"
-") (cipher-name CF) FN)))))))
+(upload CF)))))
 
 (forward-line))
 
-(inl "all:%s
-\techo \"background (en/de)cryption finished `date +%%T`\" >> %s
-\t-rm %s
-\t-rmdir %s
-"
-(apply #'concat all) (concat *cloud-dir* "history")
-cloud-lockfile cloud-lockdir)
-(write-region (apply #'concat (reverse Makefile)) nil *cloud-mk*)
-(chgrp "tmp" *cloud-mk*))))
-(kill-buffer BN))))
+(save-Makefile) (kill-buffer BN)))))
 
 (defmacro bad-column (cType N &optional str)
 (if str
@@ -743,38 +701,104 @@ cloud-lockfile cloud-lockdir)
   "attention: this function might be called many times within a couple of seconds!"
   (let ((plain-file (file-chase-links (buffer-file-name))))
 (when (and plain-file (stringp plain-file))
-  (let ((file-data (cloud-locate-FN plain-file)))
-    (when file-data
-      (aset file-data mtime (current-time)))))))
+  (when-let ((file-data (cloud-locate-FN plain-file)))
+  (aset file-data mtime (current-time))))))
 (add-hook 'after-save-hook 'on-current-buffer-save)
+
+(defun str-to-DBrec(str)
+"parses one file line from the contents file"
+(ifn (string-match "\"\\(.+\\)\"\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([[:digit:]]+\\)\s+\"\\(.+\\)\"" str)
+(clog :error "Ignoring invalid file line %s" str)
+
+(let ((CF (make-vector (length DB-fields) nil))
+      (FN (match-string 1 str)))
+  (aset CF plain FN)
+  (aset CF cipher (match-string 2 str))
+  (aset CF uname (match-string 3 str))
+
+(aset CF gname (match-string 4 str))
+  (aset CF modes (string-to-int (match-string 5 str)))
+  (let ((mtime-str (match-string 6 str)))
+(ifn (string-match "[0-9]\\{4\\}-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9] [[:upper:]]\\{3\\}" mtime-str)
+(bad-column "file" 6 mtime-str)
+(aset CF mtime (parse-time mtime-str))
+CF)))))
+
+(let (all Makefile)
+(macrolet ((NL () '(push "
+" Makefile))
+(inl (&rest format-pars) `(progn (push ,(cons 'format format-pars) Makefile) (NL))))
+
+(defun download (file-record)
+(ifn-let ((FN (plain-name file-record)))
+(clog :error "upload: file has no plain name!")
+(push (format " %s" FN) all)
+(inl (concat "%s: $(cloud)%s.gpg
+\t" (if (member (file-name-extension FN) do-not-encrypt)
+"cp $< $@" "$(dec) $@ $<")
+"
+\t-chgrp %s $@
+\t-chmod %o $@
+\t-touch --date=%S $@
+") FN (cipher-name file-record) 
+(aref file-record gname) (aref file-record modes) (full-TS (aref file-record mtime)))))
+
+(defun upload (file-record)
+(ifn-let ((FN (plain-name file-record)))
+(clog :error "upload: file has no plain name!")
+(push (format " $(cloud)%s.gpg" (cipher-name file-record)) all) (inl
+(concat "$(cloud)%s.gpg: %s
+\t"
+(if (member (file-name-extension FN) do-not-encrypt)
+"cp $< $@" "$(enc) $@ $<")
+"
+") (cipher-name file-record) FN)))
+
+(defun reset-Makefile()
+"reseting make file"
+(setf all nil Makefile nil)
+(inl "cloud=%s" *cloud-dir*)
+(inl "password=%s" *password*)
+(inl "gpg=gpg --pinentry-mode loopback --batch --yes")
+(inl "enc=$(gpg) --symmetric --passphrase $(password) -o")
+(inl "dec=$(gpg) --decrypt   --passphrase $(password) -o
+"))
+
+(defun save-Makefile()
+"flushing make file"
+(inl "all:%s
+\techo \"background (en/de)cryption on %s finished `date +%%T`\" >> %s
+\t-rm %s
+\t-rmdir %s
+"
+(apply #'concat all)
+(system-name)
+(concat *cloud-dir* "history")
+cloud-lockfile cloud-lockdir)
+(write-region (apply #'concat (reverse Makefile)) nil *cloud-mk*)
+(chgrp "tmp" *cloud-mk*))))
 
 (defun cloud-sync()
 (interactive)
 (let ((time-stamp (TS (current-time)))
-(mkdir (safe-mkdir cloud-lockdir)))
+      (mkdir (safe-mkdir cloud-lockdir)) (ok t))
 (cond
 ((not mkdir) (clog :error "can not create lock directory %s. Is the remote directory monted?" cloud-lockdir))
 ((member mkdir '(:exists))
        (clog :error "lock directory %s exists; someone else might be syncing right now. If this is not the case, remove %s manually" cloud-lockdir cloud-lockdir))
-(t
-   (write-region time-stamp nil cloud-lockfile)
-   (let ((ok t))
-(ifn (cloud-connected-p)
-      (clog :error "cloud-sync header failed")
-          (clog :info "started syncing")
-
+((and *gpg-process* (process-live-p *gpg-process*))
+(clog :error "I will not start new (en/de) coding process because the previous one is still funning"))
+((not (cloud-connected-p)) (clog :error "remote directory is not mounted"))
+((progn (write-region time-stamp nil cloud-lockfile) (read-fileDB))
+   (clog :info "started syncing")
 (if (and *gpg-process* (process-live-p *gpg-process*))
 (clog :error "I will not start new (en/de) coding process because the previous one is still funning")
-(read-fileDB)
 (setf *gpg-process* (apply #'start-process (append (list
 "cloud-batch" 
 (generate-new-buffer "*cloud-batch*")
 "make")
 (split-string (format "-j%d -f %s all" *Ncores* *cloud-mk*))))))
 
-(ifn ok (progn
-(end-log "error (en/de)crypting files, cloud-sync aborted")
-(clog :error "error (en/de)crypting files, cloud-sync aborted"))
 (let ((tmp-CCN (concat *local-dir* "CCN")))
    (write-fileDB tmp-CCN)
    (if (setf ok 
@@ -785,15 +809,16 @@ cloud-lockfile cloud-lockdir)
 *password* (clouded *contents-name*)  tmp-CCN))))))
        (when cloud-delete-contents (safe-dired-delete tmp-CCN))
      (clog :error "failed to encrypt content file %s to %s!" tmp-CCN *contents-name*))))
+(t (clog :error "unknown error in cloud-sync")))
 
 (dolist (msg (reverse *important-msgs*)) (message msg))
 (setf *important-msgs* nil)
 (clog :info "done syncing")
-ok))
 (ifn (and (safe-delete-file cloud-lockfile) (safe-delete-dir cloud-lockdir))
      (clog :error "could not delete lock file %s and directory %s" cloud-lockfile cloud-lockdir)
      (write-region (format "%s: %s -- %s
-" (system-name) time-stamp (format-time-string "%H:%M:%S" (current-time))) nil (concat *cloud-dir* "history") t))))))
+" (system-name) time-stamp (format-time-string "%H:%M:%S" (current-time))) nil (concat *cloud-dir* "history") t))
+ok))
 
 (defvar action-fields '(i-time i-ID i-args i-hostnames i-Nargs))
 (let ((i 0)) (dolist (AF action-fields) (setf i (1+ (set AF i)))))
@@ -969,7 +994,7 @@ ok))
  (when-let ((delete-contents (cdr (assoc "delete-contents" conf))))
           (setf cloud-delete-contents (if (string= "no" delete-contents) nil t)))t)
           (setf *contents-name* (cdr (assoc "contents-name" conf)))
-(setf *Ncores* (or (cdr (assoc "number-or-CPU-cores" conf)) 1))
+(setf *Ncores* (string-to-number (or (cdr (assoc "number-of-CPU-cores" conf)) "1")))
           (setf *password*  (cdr (assoc "password" conf))))
          (clog :error "cloud-start header failed, consider (re)mounting %s or running (cloud-init)" *cloud-dir*)
          (cloud-sync))
