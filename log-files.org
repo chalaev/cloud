@@ -1,0 +1,53 @@
+*Log Examples*
+
+Note: "kalinin" and "kolmogorov" are host names.
+
+* /mnt/lws/cloud/history
+kolmogorov: 10/23 13:16:44 -- 13:17:23
+background (en/de)cryption on kolmogorov finished 13:18:49
+kalinin: 10/23 13:38:01 -- 13:38:25
+background (en/de)cryption on kalinin finished 13:38:26
+background (en/de)cryption on kalinin finished 14:39:06
+background (en/de)cryption on kalinin finished 15:38:25
+background (en/de)cryption on kalinin finished 16:38:26
+kalinin: 10/23 16:38:01 -- 16:38:26
+background (en/de)cryption on kalinin finished 17:38:25
+kalinin: 10/23 17:38:01 -- 17:38:25
+kalinin: 10/23 17:48:57 -- 17:48:57
+kalinin: 10/23 17:49:25 -- 17:49:51
+background (en/de)cryption on kalinin finished 17:49:51
+background (en/de)cryption on kalinin finished 17:52:58
+kalinin: 10/23 17:52:33 -- 17:52:59
+kalinin: 10/23 18:11:46 -- 18:12:11
+background (en/de)cryption on kalinin finished 18:12:12
+background (en/de)cryption on kalinin finished 18:14:53
+background (en/de)cryption on kalinin finished 18:38:24
+kalinin: 10/23 18:38:01 -- 18:38:24
+
+* ~/.emacs.d/cloud/kalinin.log
+10/23 17:49:48: uploaded ~/cloud/cloud.org
+10/23 17:49:46: downloaded ~/tmp2.max
+10/23 17:49:28: downloaded ~/tmp.max
+10/23 17:49:28: downloaded ~/tmp5.max
+17:52:58: uploaded ~/cloud/cloud.org
+18:12:11: uploaded ~/cloud/cloud.org
+18:12:12: downloaded ~/tmp1.max
+18:38:24: uploaded ~/cloud/cloud.org
+18:38:24: uploaded ~/task.txt
+
+* ~/.emacs.d/elisp.log
+Previous log files were project-specific.
+Apart from them, there is also "global" log file =~/.emacs.d/elisp.log=.
+Its content is created by my [[https://github.com/chalaev/elisp-goodies][logging code]] using =(clog ...)= commands.
+
+=clog= outputs log messages both to ~*Messages*~ buffer and to =~/.emacs.d/elisp.log=.
+When the variable  =*log-level*= is set to =:info= level
+#+BEGIN_SRC emacs-lisp
+(defvar *log-level* 1)
+#+END_SRC
+in =~/.emacs=, only few log messages are output to =~/.emacs.d/elisp.log=.
+
+To see more messages, set =*log-level*=  to =:debug= (zero) level:
+#+BEGIN_SRC emacs-lisp
+(setf *log-level* 0)
+#+END_SRC

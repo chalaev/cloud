@@ -5,15 +5,15 @@ some of the desired functions are not implemented or half-implemented.
 
 * Description
 Synchronizing important text files between two or more computers using
-1. emacs,
-2. some sort of a cloud that can be mounted to a directory, for example
-   a. ssh- or an ftp-server, or
+1. emacs + GNU make,
+2. some sort of a cloud that can be mounted to a directory, for example, an
+   a. ssh-server, or
    b. some public cloud service (e.g., Russian [[https://disk.yandex.com/][Yandex Disk]] or Swiss [[https://www.pcloud.com][pCloud]]) that can be mounted in linux
       using standard open-source utilities,
    and
-3. symmetric encryption.
+3. symmetric encryption with [[https://www.gnupg.org/][gpg]].
 
-The files written in the cloud have randomly generated names to minimize the amount of information Evil Corporations can extract by monitoring your cloud directory.
+The ~.gpg~ files saved in the cloud have randomly generated names to minimize the amount of information Evil Corporations can extract by monitoring your cloud directory.
 
 * Quick start
 1. Mount remote directory. The mounting point may be arbitrary (can be changed in =~/.emacs.d/cloud/config=), the default one is ~/mnt/cloud/~.
@@ -44,7 +44,7 @@ The files written in the cloud have randomly generated names to minimize the amo
 3. ~Makefile~ merges all the code into ~generated/cloud.el~ which is the main file to be launched when ~emacs~ starts.
 4. ~0.el~, ~1.el~, and ~2.el~ contain some pieces of code which are too dull to be included in ~cloud.org~.
 5. ~goodies/{macros,functions,logging.el}~ are generated in [[https://github.com/chalaev/elisp-goodies/blob/master/goodies.org][goodies.org]] from the [[https://github.com/chalaev/elisp-goodies][elisp-goodies]] project.
-6. =~/.emacs.d/elisp.log= is the log file.
+6. =/mnt/cloud/history=, =~/.emacs.d/cloud/hostname.log=, and =~/.emacs.d/elisp.log= are log files described in  ~log-files.org~.
 
 * Motivation
 I like cloud file storages: they are cheap (or even free) and reliable.
@@ -67,24 +67,7 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 * Limitations
 After I've started using [[https://www.gnu.org/software/make/][GNU make]] for multithreading, only nicely named files are allowed.
 So no spaces in file names for now.
-Later I am going to waive this limitation by creating soft links to badly named files.
-
-* To do
-  1. clouded files must be marked in ~dired~. Probably the fastest way to implement this is to write a small (hopefully 10 times smaller) replacement for ~dired~.
-     I will name it ~tired~ :)
-  2. Write simple shell scripts ~cloud~ and ~cloud-sed-i~ which will use ~emacs-client~ to inform ~emacs~ about operations performed on files in the shell:
-   #+BEGIN_SRC shell
-   cloud rm file.txt
-   cloud git rm file.txt
-   cloud mv file-1.txt file-2.txt
-   cloud git mv file-1.txt file-2.txt
-   cloud-sed-i "s/abc/def/g" file.txt
-   #+END_SRC
-   where the last line would be equivalent to =sed -i=
-  3. Introduce more actions:
-     a. =i-reset-pass= for (gradual – not for all files at once) password change, and
-     b. =i-reset-names= for gradual renaming of the files in the cloud.
-  4. Create a package ~cloud.el~.
+Later I am going to circumvent this limitation by creating soft links to badly named files.
 
 * Support
 You can support this project by sending

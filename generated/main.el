@@ -11,6 +11,7 @@
 
 (defvar cloud-file-hooks nil "for special files treatment")
 (defvar *local-dir* (concat *emacs-d* "cloud/"))
+(defvar *local-log* (concat *local-dir* (system-name) ".log"))
 (defvar *cloud-mk* (concat *local-dir* "cloud.mk"))
 (defvar *Ncores* 1)
 (defvar *cloud-dir*  "/mnt/cloud/")
@@ -99,7 +100,7 @@
 (dolist (hostname *clouded-hosts*) (insert (format "%s " hostname)))
 (delete-char -1) (newline)
 
-(dolist (action *pending-actions*)
+(dolist (action (reverse *pending-actions*))
   (insert (format-action action)) (drop *pending-actions* action) (delete-char -1) (newline))
 
 (newline)
@@ -231,8 +232,10 @@ CF)))))
 \t-chgrp %s $@
 \t-chmod %o $@
 \t-touch --date=%S $@
+\t-echo \"`date '+%%m/%%d %%T'`: downloaded %s\" >> %s
 ") FN (cipher-name file-record) 
-(aref file-record gname) (aref file-record modes) (full-TS (aref file-record mtime)))))
+(aref file-record gname) (aref file-record modes) (full-TS (aref file-record mtime))
+FN *local-log*)))
 
 (defun upload (file-record)
 (ifn-let ((FN (plain-name file-record)))
@@ -243,7 +246,9 @@ CF)))))
 (if (member (file-name-extension FN) do-not-encrypt)
 "cp $< $@" "$(enc) $@ $<")
 "
-") (cipher-name file-record) FN)))
+\t-echo \"`date '+%%m/%%d %%T'`: uploaded %s\" >> %s
+") (cipher-name file-record) FN 
+FN *local-log*)))
 
 (defun reset-Makefile()
 "reseting make file"
@@ -258,7 +263,7 @@ CF)))))
 (defun save-Makefile()
 "flushing make file"
 (inl "all:%s
-\techo \"background (en/de)cryption on %s finished `date +%%T`\" >> %s
+\techo \"background (en/de)cryption on %s finished `date '+%%m/%%d %%T'`\" >> %s
 \t-rm %s
 \t-rmdir %s
 "
@@ -305,6 +310,7 @@ cloud-lockfile cloud-lockdir)
 (dolist (msg (reverse *important-msgs*)) (message msg))
 (setf *important-msgs* nil)
 (clog :info "done syncing")
+(clog :debug "will now erase %s and %s" cloud-lockfile cloud-lockdir)
 (ifn (and (safe-delete-file cloud-lockfile) (safe-delete-dir cloud-lockdir))
      (clog :error "could not delete lock file %s and directory %s" cloud-lockfile cloud-lockdir)
      (write-region (format "%s: %s -- %s
@@ -326,6 +332,10 @@ ok))
     (push action *pending-actions*)))
 
 (defun perform(action)
+(write-region
+(format "%s: %s
+" (TS (current-time)) (format-action action))
+nil local-log t)
   (let ((arguments (aref action i-args)))
     (case= (aref action i-ID)
       (i-host-forget (dolist (arg arguments) (drop *clouded-hosts* arg)) t)

@@ -27,18 +27,18 @@
       (file-error (message "Probably, you have not permission to create this directory: %s" (error-message-string err)) :permission))))
 
 (defun safe-dired-delete (FN)
-  (let (failure)
+  (let (failed)
     (condition-case err (funcall DDF FN "always")
       (file-error
        (clog :error "in DDF: %s" (error-message-string err))
-       (setf failure t)))
-    (not failure)))
+       (setf failed t)))
+    (not failed)))
 
 (defun safe-delete-file (FN)
   (let (failed)
   (condition-case err (delete-file FN)
     (file-error
-     (clog :info "cannot delete file %s; %s" FN (error-message-string err))
+     (clog :error "cannot delete file %s; %s" FN (error-message-string err))
      (setf failed t)))
   (not failed)))
 
