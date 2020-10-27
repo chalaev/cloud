@@ -1,8 +1,8 @@
 ;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 
-;; generated from https://github.com/chalaev/elisp-goodies/blob/master/goodies.org
-(defmacro case= (var &rest cases)
-  "case with integer equality (=) as a test function"
+;; generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
+(defmacro case* (var test &rest cases)
+  "case with arbitrary test function"
   (let ((v (gensym "v")))
     `(let ((,v ,var))
        (cond
@@ -10,7 +10,7 @@
 (let ((val (car VR)) (rest (cdr VR)))
   (if (eql val 'otherwise)
       `(t ,@rest)
-    `((= ,v ,val) ,@rest))))
+    `((,test ,v ,val) ,@rest))))
  cases)))))
 
 (defmacro when-let (vars &rest body)

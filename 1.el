@@ -11,20 +11,25 @@
      (loop for i from ?a to ?z unless (member i forbidden-symbols) collect i)
      (loop for i from ?0 to ?9 unless (member i forbidden-symbols) collect i))))
 
+(defun rand-str (N)
+  (apply #'concat
+         (loop repeat N collect (string (nth (random (length *all-chars*)) *all-chars*)))))
+
 (defun time< (t1 t2)
   (and
     (time-less-p (time-add t1 1) t2)
     (not (time-less-p (time-add t2 1) t1))))
 
 (defun safe-mkdir (dirname)
+  (clog :debug "mkdir %s" dirname)
   (if (file-exists-p dirname)
       (if (file-directory-p dirname)
-          (progn (message "not creating already existing directory %s" dirname) :exists)
-        (message "file exists with the same name as working directory %s" dirname) :file)
+          (progn (clog :warning "not creating already existing directory %s" dirname) :exists)
+        (clog :warning "file exists with the same name as working directory %s" dirname) :file)
     (condition-case err
         (progn (make-directory dirname) t)
-      (file-already-exists (message "Strange, may be the file already exists (but this was checked!). %s" (error-message-string err)) nil); when file exists
-      (file-error (message "Probably, you have not permission to create this directory: %s" (error-message-string err)) :permission))))
+      (file-already-exists (clog :warning "Strange, may be the file already exists (but this was checked!). %s" (error-message-string err)) nil); when file exists
+      (file-error (clog :warning "Probably, you have no permission to create this directory: %s" (error-message-string err)) :permission))))
 
 (defun safe-dired-delete (FN)
   (let (failed)
@@ -50,22 +55,11 @@
      (setf failed t)))
   (not failed)))
 
-(defun rand-str (N)
-  (apply #'concat
-         (loop repeat N collect (string (nth (random (length *all-chars*)) *all-chars*)))))
-
 (defun new-file-name (cloud-dir)
   (let (new-fname error-exists); экзистенциальная ошибка: какое бы имя я не выдумывал, а такой файл уже существует!
     (loop repeat 10 do (setf new-fname (rand-str 3))
           while (setf error-exists (file-exists-p (concat cloud-dir new-fname))))
     (if error-exists nil new-fname)))
-
-(defun perms-from-str (str); e.g., (perms-from-str "-rw-rw----") => #o660
-  (let ((text-mode (reverse (cdr (append str nil)))) (mode 0) (fac 1))
-    (loop for c in text-mode for i from 0
-          unless (= c ?-) do (incf mode fac)
-          do (setf fac (* 2 fac)))
-    mode))
 
 (defun begins-with* (str what)
   (let ((ok t))
@@ -123,12 +117,12 @@
 
 (defun cloud-locate-FN (name)
   "find file by (true) name"
-  (find name *file-DB* :key #'plain-name
+  (find name file-DB :key #'plain-name
 	:test #'(lambda(x y)(string= (tilda x) (tilda y)))))
 
 (defun cloud-locate-CN (name)
   "find file by (ciper) name"
-  (find name *file-DB* :key #'cipher-name :test #'string=))
+  (find name file-DB :key #'cipher-name :test #'string=))
 
 (defun format-file (DB-rec)
   (format "%S %s %s %s %d %S"

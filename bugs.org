@@ -1,0 +1,2 @@
+1. after the file is clouded, the first =M-x cloud-sync= does not copy it to the cloud, only the second one does the job.
+2. I can not delete files with parethesis in ~dired~, for example, ~/Downloads/document(1).pdf

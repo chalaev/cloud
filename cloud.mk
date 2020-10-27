@@ -1,26 +1,33 @@
-cloud=/mnt/lws/cloud/
+cloud=/mnt/cloud/
 password=*********
-gpg=gpg --pinentry-mode loopback --batch --yes --passphrase $(password)
-enc=$(gpg) --symmetric -o
-dec=$(gpg) --decrypt   -o
+gpg=gpg --pinentry-mode loopback --batch --yes
+enc=$(gpg) --symmetric --passphrase $(password) -o
+dec=$(gpg) --decrypt   --passphrase $(password) -o
+localLog=~/.emacs.d/cloud/kalinin.log
+date=`date '+%m/%d %T'`
+
+~/.emacs.d/cloud/pass.d/updated:~/.emacs.d/cloud/individual.passes
+	awk '{print $2 > $1}' $<
+	date > $@
+	-chgrp tmp ~/.emacs.d/cloud/pass.d/*
+
+$(cloud)zdJ.gpg: ~/cloud/shell/cloud-git
+	$(enc) $@ $<
+	-echo "$(date): uploaded ~/cloud/shell/cloud-git" >> $(localLog)
 
 $(cloud)bxj.gpg: ~/elisp-goodies/next-commit.txt
 	$(enc) $@ $<
+	-echo "$(date): uploaded ~/elisp-goodies/next-commit.txt" >> $(localLog)
 
-$(cloud)G2B.gpg: ~/.emacs.d/bookmarks
+$(cloud)LnR.gpg: ~/elisp-goodies/goodies.org
 	$(enc) $@ $<
+	-echo "$(date): uploaded ~/elisp-goodies/goodies.org" >> $(localLog)
 
-$(cloud)ypc.gpg: ~/DE/rechtschreibung.tex
+$(cloud)8fj.gpg: ~/cloud/cloud.org
 	$(enc) $@ $<
+	-echo "$(date): uploaded ~/cloud/cloud.org" >> $(localLog)
 
-$(cloud)boz.gpg: ~/DE/buch.txt
-	$(enc) $@ $<
-
-$(cloud)MxX.gpg: ~/secrets.txt.gpg
-	cp $< $@
-
-all: $(cloud)MxX.gpg $(cloud)boz.gpg $(cloud)ypc.gpg $(cloud)G2B.gpg $(cloud)bxj.gpg
-	echo "background (en/de)cryption finished `date +%T`" >> $(cloud)history
-	-rm $(cloud)now-syncing/kalinin
-	-rmdir $(cloud)now-syncing
-
+all: /mnt/cloud/8fj.gpg /mnt/cloud/LnR.gpg /mnt/cloud/bxj.gpg /mnt/cloud/zdJ.gpg
+	echo "background (en/de)cryption on kalinin finished $(date)" >> /mnt/cloud/history
+	-rm /mnt/cloud/now-syncing/kalinin
+	-rmdir /mnt/cloud/now-syncing/

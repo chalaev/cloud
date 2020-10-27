@@ -1,0 +1,33 @@
+#!/bin/bash
+
+args=($*)
+if [[ $1 == "mv" ]]; then
+    if [[ $# -ge 3 ]]; then
+	for file in ${args[@]: 1: ${#args[@]}-2}; do
+	    emacsclient -e "(new-action i-rename \"`realpath $file`\" \"`realpath ${args[-1]}`\")"
+	done
+	git ${args[@]}
+    else
+	echo "not enough arguments"
+    fi
+elif [[ $1 == "rm" ]]; then
+    if [[ $# -ge 2 ]]; then
+	for file in ${args[@]: 1: ${#args[@]}-1}; do
+	    emacsclient -e "(new-action i-delete \"`realpath $file`\")"
+	done
+        git ${args[@]}
+    else
+	echo "not enough arguments"
+    fi
+elif [[ $1 == "add" ]]; then
+    if [[ $# -ge 2 ]]; then
+	for file in ${args[@]: 1: ${#args[@]}-1}; do
+	    emacsclient -e "(cloud-add \"`realpath $file`\")"
+	done
+        git ${args[@]}
+    else
+	echo "not enough arguments"
+    fi
+else
+    echo "unrecognized command"
+fi

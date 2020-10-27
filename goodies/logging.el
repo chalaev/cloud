@@ -1,6 +1,6 @@
 ;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 
-;; generated from https://github.com/chalaev/elisp-goodies/blob/master/goodies.org
+;; generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
 (unless (boundp '*log-level*) (defvar *log-level* 0))
 (unless (boundp '*emacs-d*) (defvar *emacs-d* (concat (getenv "HOME") "/.emacs.d/")))
 
@@ -34,7 +34,7 @@
                     fstr)
             (cons (symbol-name level) args))))
       (file-acc-push (apply #'format log-msg))
-      (apply #'message log-msg))))
+      (apply #'message log-msg)) nil))
 
 (defun on-emacs-exit()
   (clog :debug "flushing comments before quiting emacs")
