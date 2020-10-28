@@ -1,2 +1,38 @@
-1. after the file is clouded, the first =M-x cloud-sync= does not copy it to the cloud, only the second one does the job.
-2. I can not delete files with parethesis in ~dired~, for example, ~/Downloads/document(1).pdf
+* Errors
+1. I can not delete files with parethesis in ~dired~, for example, ~/Downloads/document(1).pdf
+2. Synchronization is too slow, use logging to find the problem. The suspect #1 is: I check the existence of every file in remote directory instead of reading the directory
+   only once.
+
+* Tests
+** Fresh start
+1. rename directory =~/.emacs.d/cloud/=
+2. (Re)start emacs.
+3. Examine newly created =~/.emacs.d/cloud/=
+
+** Clouding new text file and new image
+1. Mark one image and one text file in dired, then =M-x cloud-add=.
+2. =M-x cloud-sync= must encrypt these and upload them to the cloud.
+3. (Re)start emacs on another computer, these two files must be downloaded from the cloud.
+
+* Ideas on future development
+** Cheap image encryption that should not increase the file size too much
+For every clouded image file, we create a sub-directory in the remote directory.
+This sub-directory will contain NxM small pieces (icons) of the image, where N,M≥12.
+Most of these pieces will be equally sized rectangulars, combined together into the inner part of the image.
+Others will be parts of the thin frame.
+On the one hand, N and M can not be to small; on the other hand each inner rectangular image should not be too small
+– at least 50x40 pixels – so that JPEG (or another) image compression algorithm remains efficient.
+Icon permutation must be encoded in the same password which is now used for AES-encryption.
+
+This kind of protection might not be enough for orgy photos, but is probably ok to protect innocent photos from face recognition robots.
+
+And in case someone writes an algorithm trying to guess the correct icons' position, 
+creating obstacles for it (so that decryption of a single photo would take at least a day) seems easy.
+
+This algorithm should become default encryption method for images.
+
+** Other ideas
+1. ~convert~ runs without parameters (e.g., controlling jpeg quality) for now. Thus, for example,
+   a low-quality ~JPEG~ file may be grow about 3 times larger after it was encrypted and then decrypted back.
+   There might be a way
+2. Package the code.

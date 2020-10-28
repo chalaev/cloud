@@ -452,23 +452,6 @@
 (defun plain-name  (df)(aref df plain))
 (defun cipher-name (df)(aref df cipher))
 
-(defun add-files(&rest names)
-  (let ((ok t))
-    (dolist (FN names)
-      (clog :debug "add-files(%s)" FN)
-      (unless (cloud-locate-FN FN)
-	(needs ((GFP (get-file-properties FN) (clog :error "Invalid attempt to cloud inexisting file %s" FN))
-		(CN (new-file-name cloud-dir)))
-	       (aset GFP cipher CN)
-	       (setf ok (and ok GFP))
-	       (push GFP file-DB)
-(when (member (file-name-extension FN) '("jpeg" "png" "jpg"))
-(write-region
-(format "%s %s
-" CN (rand-str 16)) nil (all-passes) t))
-(upload GFP))))
-    ok))
-
 ;; BTW, =(file-exists-p FN)= produces ~nil~ if the file resides in directory with (rx) permissions →
 (defun get-file-properties (FN)
 (or (cloud-locate-FN FN)
@@ -660,7 +643,6 @@
   (push action cloud-actions)))))
   (forward-line))
 
-(reset-Makefile)
 (forward-line)
 (while (< 10 (length (read-line)))
 (when-let ((CF (str-to-DBrec str)))
@@ -694,12 +676,13 @@
 `(clog :error "invalid %dth column in %s line = %s" ,N ,cType ,str)
 `(clog :error "invalid %dth column in %s line" ,N ,cType)))
 
+(defun touch (FN)
+"called when the file named FN is changed"
+(when (and FN (stringp FN))
+  (when-let ((file-data (cloud-locate-FN FN)))
+  (aset file-data mtime (current-time)))))
 (defun on-current-buffer-save ()
-  "attention: this function might be called many times within a couple of seconds!"
-  (let ((plain-file (file-chase-links (buffer-file-name))))
-(when (and plain-file (stringp plain-file))
-  (when-let ((file-data (cloud-locate-FN plain-file)))
-  (aset file-data mtime (current-time))))))
+  (touch (file-chase-links (buffer-file-name))))
 (add-hook 'after-save-hook 'on-current-buffer-save)
 
 (defun str-to-DBrec(str)
@@ -768,8 +751,11 @@ CF)))))
 (format "%s: $(cloud)%s.gpg
 \t$(dec) $@ $<
 " FN XYZ ))
-(format "\t-echo \"$(date): downloaded %s\" >> $(localLog)
-" FN))))))
+(format "\t-chgrp %s $@
+\t-chmod %o $@
+\t-touch --date=%S $@
+\t-echo \"$(date): downloaded %s\" >> $(localLog)
+" (aref file-record gname) (aref file-record modes) (full-TS (aref file-record mtime)) FN))))))
 
 (defun download (file-record)
 (needs (
@@ -797,13 +783,14 @@ all)
 (inl "enc=$(gpg) --symmetric --passphrase $(password) -o")
 (inl "dec=$(gpg) --decrypt   --passphrase $(password) -o")
 (inl "localLog=%s" (local-log))
+(inl "MK=%s" (cloud-mk))
 (inl "date=`date '+%%m/%%d %%T'`
 ")
 (inl (concat (format "%s: %s
 \tawk '{print $$2 > %S$$1}' $<
 \techo $(date) > $@
 \t-chgrp -R tmp %s*
-" (updated) (all-passes) (untilda (pass-d)) (pass-d)))))
+" (updated) (all-passes) (untilda (pass-d)) (pass-d))))))
 
 (defun save-Makefile()
 "flushing make file"
@@ -811,13 +798,15 @@ all)
 \techo \"background (en/de)cryption on %s finished $(date)\" >> %s
 \t-rm %s
 \t-rmdir %s
+\t-cat $(MK) > $(MK).previous
+\t-chgrp tmp $(MK) $(MK).previous
+\t-emacsclient -e '(reset-Makefile)'
 "
 (apply #'concat all)
 (system-name)
 (concat cloud-dir "history")
 (cloud-lockfile) (cloud-lockdir))
-(write-region (apply #'concat (reverse Makefile)) nil (cloud-mk))
-(chgrp "tmp" (cloud-mk)))))))))
+(write-region (apply #'concat (reverse Makefile)) nil (cloud-mk))))))))
 
 (defun cloud-sync()
 (interactive)
@@ -901,7 +890,7 @@ nil (local-log) t)
 (unless (boundp 'DDF) (defvar DDF (indirect-function (symbol-function 'dired-delete-file)) "original dired-delete-file function"))
 
 (defun dired-delete-file (FN &optional dirP TRASH)
-  (let (failure)
+  (let (failure (FN (tilda FN)))
 
 (condition-case err (funcall DDF FN dirP TRASH)
   (file-error
@@ -927,11 +916,6 @@ ok))
   (dolist (arg args)
     (setf ok (and (cloud-forget-recursive arg) ok)))
 ok))
-
-(defun cloud-delete-file (local-FN)
-  (needs ((DB-rec (cloud-locate-FN local-FN) (clog :info "delete: doing nothing since %s is not clouded")))
-    (new-action i-delete local-FN)
-(cloud-forget-file local-FN)))
 
 (defun contained-in(dir-name); dir-name must end with a slash /
     (let (res)
@@ -976,6 +960,26 @@ ok))
         (add-files (read-string "file to be clouded=" (if FN FN "")))
       (clog :error "could not cloud this file"))))
 
+(defun add-files(&rest names)
+  (let ((ok t))
+    (dolist (FN names)
+      (clog :debug "add-files(%s)" FN)
+      (unless (cloud-locate-FN FN)
+        (needs ((GFP (get-file-properties FN) (clog :error "Invalid attempt to cloud inexisting file %s" FN))
+                (CN (new-file-name cloud-dir)))
+               (aset GFP cipher CN)
+               (setf ok (and ok GFP))
+               (push GFP file-DB)
+(when (member (file-name-extension FN) '("jpeg" "png" "jpg"))
+
+(write-region
+(format "%s %s
+" CN (rand-str 18)) nil (all-passes) t)
+(touch (all-passes)) ;(touch FN)
+)
+(upload GFP))))
+    ok))
+
 (defun cloud-forget-file (local-FN); called *after* the file has already been sucessfully deleted
    (push local-FN removed-files)
   (needs ((DB-rec (cloud-locate-FN local-FN) (clog :info "forget: doing nothing since %s is not clouded" local-FN))
@@ -983,14 +987,15 @@ ok))
           (cloud-FN (concat cloud-dir (aref DB-rec cipher) CEXT) (clog :error "in DB entry for %s" local-FN)))
 
 (when (string= CEXT ".png")
-  (forget-password (aref  DB-rec cipher)))
+(clog :debug "forgetting password for %s" local-FN)
+  (forget-password (aref DB-rec cipher)))
 
 (drop file-DB DB-rec)
 (push local-FN removed-files)
 (safe-dired-delete cloud-FN)
  t))
 
-(defun cloud-forget-recursive(FN); called *after* the file has already been sucessfully deleted
+(defun cloud-forget-recursive(FN)
 (dolist (sub-FN (mapcar #'plain-name (contained-in FN)))
 (cloud-forget-file sub-FN)))
 
@@ -1047,6 +1052,7 @@ ok))
 (unless (file-exists-p (all-passes))
 (write-region "" nil (all-passes))
 (add-files (all-passes)))
+(reset-Makefile)
          (cloud-sync))
     (clog :warning "could not read local configuration file")
     (when (yes-or-no-p "(Re)create configuration?")

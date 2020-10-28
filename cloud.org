@@ -89,7 +89,6 @@ Every time we =M-x cloud-sync=, =file-DB= gets synchronized with the cloud throu
 (let ((i 0)) (dolist (field-name DB-fields) (setf i (1+ (set field-name i)))))
 #+END_SRC
 
-
 ** (En/De)cryption
 Especially when ~(= 0 *log-level*)~ this code might print many log messages.
 For most important ones I will use this function
@@ -361,7 +360,6 @@ the next thing to do is to read/parse the files' block of lines.
 For files that need to be (up/down)loaded (to/from) the cloud =(read-fileDB)= forms ~cloud.mk~
 which can be fed to GNU make as =make --jobs=4 -f cloud.mk=, where ~jobs~ parameter is the (configurable) number of CPU cores.
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
-(reset-Makefile)
 (forward-line)
 (while (< 10 (length (read-line)))
 (when-let ((CF (str-to-DBrec str)))
@@ -411,12 +409,13 @@ When the file is saved in emacs (=C-x s=), we mark it so that it is going
 to be uploaded to the cloud when the user calls =cloud-sync= next time:
 
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
+(defun touch (FN)
+"called when the file named FN is changed"
+(when (and FN (stringp FN))
+  (when-let ((file-data (cloud-locate-FN FN)))
+  (aset file-data mtime (current-time)))))
 (defun on-current-buffer-save ()
-  "attention: this function might be called many times within a couple of seconds!"
-  (let ((plain-file (file-chase-links (buffer-file-name))))
-(when (and plain-file (stringp plain-file))
-  (when-let ((file-data (cloud-locate-FN plain-file)))
-  (aset file-data mtime (current-time))))))
+  (touch (file-chase-links (buffer-file-name))))
 (add-hook 'after-save-hook 'on-current-buffer-save)
 #+END_SRC
 * Parsing file line
@@ -523,7 +522,6 @@ At the end of every file (en/de)coding stanza we send a message to the log file:
 Here ends the function =enc-make-stanza= that produces make-stanza for encoding.
 
 The decoding is similar:
-
 ** Creating ~make~ stanza for decoding one file
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (dec-make-stanza(file-record)
@@ -535,8 +533,11 @@ The decoding is similar:
 (format "%s: $(cloud)%s.gpg
 \t$(dec) $@ $<
 " FN XYZ ))
-(format "\t-echo \"$(date): downloaded %s\" >> $(localLog)
-" FN))))))
+(format "\t-chgrp %s $@
+\t-chmod %o $@
+\t-touch --date=%S $@
+\t-echo \"$(date): downloaded %s\" >> $(localLog)
+" (aref file-record gname) (aref file-record modes) (full-TS (aref file-record mtime)) FN))))))
 #+END_SRC
 
 ** Putting this all together
@@ -571,13 +572,14 @@ all)
 (inl "enc=$(gpg) --symmetric --passphrase $(password) -o")
 (inl "dec=$(gpg) --decrypt   --passphrase $(password) -o")
 (inl "localLog=%s" (local-log))
+(inl "MK=%s" (cloud-mk))
 (inl "date=`date '+%%m/%%d %%T'`
 ")
 (inl (concat (format "%s: %s
 \tawk '{print $$2 > %S$$1}' $<
 \techo $(date) > $@
 \t-chgrp -R tmp %s*
-" (updated) (all-passes) (untilda (pass-d)) (pass-d)))))
+" (updated) (all-passes) (untilda (pass-d)) (pass-d))))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
@@ -587,13 +589,15 @@ all)
 \techo \"background (en/de)cryption on %s finished $(date)\" >> %s
 \t-rm %s
 \t-rmdir %s
+\t-cat $(MK) > $(MK).previous
+\t-chgrp tmp $(MK) $(MK).previous
+\t-emacsclient -e '(reset-Makefile)'
 "
 (apply #'concat all)
 (system-name)
 (concat cloud-dir "history")
 (cloud-lockfile) (cloud-lockdir))
-(write-region (apply #'concat (reverse Makefile)) nil (cloud-mk))
-(chgrp "tmp" (cloud-mk)))))))))
+(write-region (apply #'concat (reverse Makefile)) nil (cloud-mk))))))))
 #+END_SRC
 
 * cloud-sync
@@ -761,7 +765,7 @@ Now let us write code for each of the following actions:
 We ovewrite standard emacs =dired-delete-file= function:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (defun dired-delete-file (FN &optional dirP TRASH)
-  (let (failure)
+  (let (failure (FN (tilda FN)))
 #+END_SRC
 Note that ~FN~ might be a directory.
 
@@ -798,13 +802,6 @@ ok))
   (dolist (arg args)
     (setf ok (and (cloud-forget-recursive arg) ok)))
 ok))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
-(defun cloud-delete-file (local-FN)
-  (needs ((DB-rec (cloud-locate-FN local-FN) (clog :info "delete: doing nothing since %s is not clouded")))
-    (new-action i-delete local-FN)
-(cloud-forget-file local-FN)))
 #+END_SRC
 
 When we rename or delete a folder, we have to perform similar action on every cloud file contained inside the folder.
@@ -866,6 +863,35 @@ To add (or "cloud") a file I suggest opening a dired buffer, mark the files and 
 Pending upgrades for =cloud-add=:
 1. =cloud-add= must become more user-friendly: let the user know that file(s) are sucessfully clouded, and
 2. =cloud-add= must work with directories. This is, however not so straightforward because I almost never want to cloud _all_ files within a directory.
+
+#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+(defun add-files(&rest names)
+  (let ((ok t))
+    (dolist (FN names)
+      (clog :debug "add-files(%s)" FN)
+      (unless (cloud-locate-FN FN)
+	(needs ((GFP (get-file-properties FN) (clog :error "Invalid attempt to cloud inexisting file %s" FN))
+		(CN (new-file-name cloud-dir)))
+	       (aset GFP cipher CN)
+	       (setf ok (and ok GFP))
+	       (push GFP file-DB)
+(when (member (file-name-extension FN) '("jpeg" "png" "jpg"))
+#+END_SRC
+Since we are clouding an image, we need to 
+1. generate an individual password for it,
+2. save this password in the "all-passwords" file whose name is given by =(all-passes)=, and
+3. notify our code that "all-passwords" file was changed:
+#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+(write-region
+(format "%s %s
+" CN (rand-str 18)) nil (all-passes) t)
+(touch (all-passes)) ;(touch FN)
+)
+(upload GFP))))
+    ok))
+#+END_SRC
+
+
 ** Forget files
 #+END_SRC
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
@@ -878,7 +904,8 @@ Pending upgrades for =cloud-add=:
 Remove image's individual password:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (when (string= CEXT ".png")
-  (forget-password (aref  DB-rec cipher)))
+(clog :debug "forgetting password for %s" local-FN)
+  (forget-password (aref DB-rec cipher)))
 #+END_SRC
 Remove file from the database and erase its encrypted copy in the cloud:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
@@ -889,8 +916,9 @@ Remove file from the database and erase its encrypted copy in the cloud:
 #+END_SRC
 ← returns t if the file was clouded; otherwise does nothing and returns nil.
 
+=cloud-forget-recursive= should be called *after* the file has already been sucessfully deleted:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
-(defun cloud-forget-recursive(FN); called *after* the file has already been sucessfully deleted
+(defun cloud-forget-recursive(FN)
 (dolist (sub-FN (mapcar #'plain-name (contained-in FN)))
 (cloud-forget-file sub-FN)))
 #+END_SRC
@@ -963,6 +991,7 @@ I suggest running =(cloud-start)= from =~/.emacs= every time you restart ~emacs~
 (unless (file-exists-p (all-passes))
 (write-region "" nil (all-passes))
 (add-files (all-passes)))
+(reset-Makefile)
          (cloud-sync))
     (clog :warning "could not read local configuration file")
     (when (yes-or-no-p "(Re)create configuration?")

@@ -29,18 +29,18 @@ Synchronizing important files on two or more computers using
     
     and
 3.  symmetric encryption
-    1.  with [ImageMagick](https://imagemagick.org/) for `JPEG` and `PNG` images or
-    2.  with [gpg](https://www.gnupg.org/) for other (presumably text) files.
+    1.  using [ImageMagick](https://imagemagick.org/) for `JPEG` and `PNG` images or
+    2.  using [gpg](https://www.gnupg.org/) for other (presumably text) files.
     
-    `JPEGs` and `PNGs` are encrypted with AES-algorithm that [may become vulnerable](https://imagemagick.org/script/cipher.php) if the same password is used for many images; this is why every image gets an individual password.
+    `JPEGs` and `PNGs` are encrypted with AES-algorithm that [may become vulnerable](https://imagemagick.org/script/cipher.php) if the same password is used for multiple images; this is why every image gets an individual password.
     As the encrypted image is about 13 times larger than the original one, I find it attractive switching to [selective image encryption](https://duckduckgo.com/?q=selective+image+encryption&t=ffsb&ia=web) when it becomes available in linux.
     (Or just pay for more cloud space.)
 
-Encrypted files saved in the cloud have randomly generated names to minimize the amount of information Evil Corporations can extract by monitoring our cloud directory.
+Encrypted files saved in the cloud have **random names** to minimize the amount of information Evil Corporations can extract by monitoring our cloud directory.
 
 # Prerequisites<a id="sec-2" name="sec-2"></a>
 
-We need `emacs`, GNU `make`, `ImageMagick`, `gpg`, and `gawk`; in Debian these can be installed with `aptitude` as follows:
+We need `emacs`, GNU `make`, `ImageMagick`, `gpg` and `gawk`; in Debian these can be installed with `aptitude` as follows:
 
     aptitude install emacs make imagemagick gpg gawk
 
@@ -56,14 +56,15 @@ We need `emacs`, GNU `make`, `ImageMagick`, `gpg`, and `gawk`; in Debian these c
         cloud-directory=/mnt/lws/cloud/
 3.  Evaluate `cloud.el` in `emacs` at start by placing the following lines
     
+        (server-start)
         (mapcar #'require '(cl dired-aux timezone diary-lib subr-x))
         (load-file "/path-to/cloud.el")
         (switch-to-buffer "*Messages*")
         (cloud-start)
     
-    into your `~/.emacs` file. (Later the code will be transformed into package.)
+    into your `~/.emacs` file.
     Then open a directory `C-x d`, mark several files, and cloud them with `M-x cloud-add`. Then `M-x cloud-sync`.
-4.  Check log files described in [files.org](files.md): they should let you know that the encrypted copies of your clouded files have been copied to the remote directory
+4.  Check log files described in [files.org](files.org): they should let you know that the encrypted copies of your clouded files have been copied to the remote directory
 5.  Using some secure way, copy `~/.emacs.d/cloud/config` to another host; launch `cloud.el` there and check the log files.
 6.  [Let me know](https://github.com/chalaev/cloud/issues/new/choose) if something does not work.
 
@@ -72,14 +73,18 @@ Every time we `M-x cloud-sync`, local files get synchronized with the cloud. For
 
 # Source code files<a id="sec-4" name="sec-4"></a>
 
-(Dynamically created/updated logs and data files are described in [files.org](files.md))
-1.  `README.org` generates `README.md` for [notabug](https://notabug.org/shalaev/emacs-cloud) and [github](https://github.com/chalaev/cloud).
-2.  `cloud.org` contains the code from `generated/main.el` together with explanations.
-3.  `0.el`, `1.el`, and `2.el` are kind of "Appendix" containing some pieces of code which not interesting enough to be included in `cloud.org`.
-4.  `goodies/{macros,functions,logging}.el` are copied from the [elisp-goodies](https://notabug.org/shalaev/elisp-goodies) project.
-5.  `Makefile` merges all the code into `generated/cloud.el` which is the main file to be launched when `emacs` starts.
-6.  `shell/cloud-git` synchronizes file operations in `git` with this code, for example:
+(Dynamically created/updated logs and data files are described in [files.org](files.org).)
+1.  [README.org](README.org) generates `README.md` for [notabug](https://notabug.org/shalaev/emacs-cloud) and [github](https://github.com/chalaev/cloud).
+2.  [cloud.org](cloud.org) contains the code from [generated/main.el](generated/main.el) together with explanations.
+3.  [0.el](0.el), [1.el](1.el), and [2.el](2.el) are kind of "Appendix" containing some pieces of code which not interesting enough to be included in `cloud.org`.
+4.  goodies/{[macros](goodies/macros.el),[functions](goodies/functions.el),[logging](goodies/logging.el)}.el are copied from the [elisp-goodies](https://notabug.org/shalaev/elisp-goodies) project.
+5.  [Makefile](Makefile) merges all the code into [generated/cloud.el](generated/cloud.el) which is the main file to be launched when `emacs` starts.
+6.  [shell/cloud-git](shell/cloud-git) synchronizes file operations in `git` with this code, for example:
     `cloud-git rm files.org` and `cloud-git mv log-files.org files.org`
+7.  [bugs.org](bugs.org) contains
+    1.  error and problem list,
+    2.  tests to be done, and
+    3.  ideas on further development.
 
 # Motivation<a id="sec-5" name="sec-5"></a>
 
@@ -102,12 +107,11 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 
 # Limitations<a id="sec-6" name="sec-6"></a>
 
-I use [GNU make](https://www.gnu.org/software/make/) together with its `--jobs` option to enjoy [(unsupported in emacs)](https://www.emacswiki.org/emacs/EmacsLispLimitations) multi-threading, and thus
-I have to suffer from the [make](https://www.gnu.org/software/make/) restriction: only nicely named files will work.
-
-In particular, **no spaces in file names** are allowed.
-
-In the future I hope to circumvent this limitation by creating soft links to badly named files.
+1.  I use [GNU make](https://www.gnu.org/software/make/) together with its `--jobs` option to enjoy [(unsupported in emacs)](https://www.emacswiki.org/emacs/EmacsLispLimitations) multi-threading, and thus
+    I have to suffer from the [make](https://www.gnu.org/software/make/) restriction: only nicely named files will work.  
+       In particular, **no spaces in file names** are allowed.  
+       In the future I hope to circumvent this limitation by creating soft links to badly named files.
+2.  After encrypting an image and then decrypting it back, we get the same, but not identical picture (file size is changed).
 
 # Support<a id="sec-7" name="sec-7"></a>
 

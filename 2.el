@@ -4,23 +4,6 @@
 (defun plain-name  (df)(aref df plain))
 (defun cipher-name (df)(aref df cipher))
 
-(defun add-files(&rest names)
-  (let ((ok t))
-    (dolist (FN names)
-      (clog :debug "add-files(%s)" FN)
-      (unless (cloud-locate-FN FN)
-	(needs ((GFP (get-file-properties FN) (clog :error "Invalid attempt to cloud inexisting file %s" FN))
-		(CN (new-file-name cloud-dir)))
-	       (aset GFP cipher CN)
-	       (setf ok (and ok GFP))
-	       (push GFP file-DB)
-(when (member (file-name-extension FN) '("jpeg" "png" "jpg"))
-(write-region
-(format "%s %s
-" CN (rand-str 16)) nil (all-passes) t))
-(upload GFP))))
-    ok))
-
 ;; BTW, =(file-exists-p FN)= produces ~nil~ if the file resides in directory with (rx) permissions →
 (defun get-file-properties (FN)
 (or (cloud-locate-FN FN)

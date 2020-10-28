@@ -1,3 +1,5 @@
+~gihub~ does not display this file properly, use ~emacs~ to open it.
+
 *Notes*:
 a. remote directory mount point is arbitrary and can be configured in =~/.emacs.d/cloud/config=; here I use the default value =/mnt/cloud/=
 b. `hostname` stands for the host name, my host names are "kalinin" and "kolmogorov".

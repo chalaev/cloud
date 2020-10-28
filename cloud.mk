@@ -1,33 +1,29 @@
-cloud=/mnt/cloud/
+cloud=/mnt/lws/cloud/
 password=*********
 gpg=gpg --pinentry-mode loopback --batch --yes
 enc=$(gpg) --symmetric --passphrase $(password) -o
 dec=$(gpg) --decrypt   --passphrase $(password) -o
-localLog=~/.emacs.d/cloud/kalinin.log
+localLog=~/.emacs.d/cloud/kolmogorov.log
+MK=~/.emacs.d/cloud/cloud.mk
 date=`date '+%m/%d %T'`
 
-~/.emacs.d/cloud/pass.d/updated:~/.emacs.d/cloud/individual.passes
-	awk '{print $2 > $1}' $<
-	date > $@
-	-chgrp tmp ~/.emacs.d/cloud/pass.d/*
+~/.emacs.d/cloud/pass.d/updated: ~/.emacs.d/cloud/individual.passes
+	awk '{print $$2 > "/home/shalaev/.emacs.d/cloud/pass.d/"$$1}' $<
+	echo $(date) > $@
+	-chgrp -R tmp ~/.emacs.d/cloud/pass.d/*
 
-$(cloud)zdJ.gpg: ~/cloud/shell/cloud-git
+$(cloud)UJT.gpg: ~/.emacs.d/cloud/individual.passes
 	$(enc) $@ $<
-	-echo "$(date): uploaded ~/cloud/shell/cloud-git" >> $(localLog)
+	-echo "$(date): uploaded ~/.emacs.d/cloud/individual.passes" >> $(localLog)
 
-$(cloud)bxj.gpg: ~/elisp-goodies/next-commit.txt
+$(cloud)plx.gpg: ~/learn/shell/3.sh
 	$(enc) $@ $<
-	-echo "$(date): uploaded ~/elisp-goodies/next-commit.txt" >> $(localLog)
+	-echo "$(date): uploaded ~/learn/shell/3.sh" >> $(localLog)
 
-$(cloud)LnR.gpg: ~/elisp-goodies/goodies.org
-	$(enc) $@ $<
-	-echo "$(date): uploaded ~/elisp-goodies/goodies.org" >> $(localLog)
-
-$(cloud)8fj.gpg: ~/cloud/cloud.org
-	$(enc) $@ $<
-	-echo "$(date): uploaded ~/cloud/cloud.org" >> $(localLog)
-
-all: /mnt/cloud/8fj.gpg /mnt/cloud/LnR.gpg /mnt/cloud/bxj.gpg /mnt/cloud/zdJ.gpg
-	echo "background (en/de)cryption on kalinin finished $(date)" >> /mnt/cloud/history
-	-rm /mnt/cloud/now-syncing/kalinin
-	-rmdir /mnt/cloud/now-syncing/
+all: /mnt/lws/cloud/plx.gpg /mnt/lws/cloud/UJT.gpg
+	echo "background (en/de)cryption on kolmogorov finished $(date)" >> /mnt/lws/cloud/history
+	-rm /mnt/lws/cloud/now-syncing/kolmogorov
+	-rmdir /mnt/lws/cloud/now-syncing/
+	-cat $(MK) > $(MK).previous
+	-chgrp tmp $(MK) $(MK).previous
+	-emacsclient -e '(reset-Makefile)'
