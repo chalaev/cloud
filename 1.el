@@ -82,7 +82,7 @@
 			(substring-no-properties str (1+ ME)))
 		  (clog :error "can not parse date/time string: %s"))))
 	   (:int (cons
-		      (string-to-int matched)
+		      (string-to-number matched)
 		      (substring-no-properties str ME)))
 	   (:string
 	    (cons (string-trim matched)

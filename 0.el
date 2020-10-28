@@ -2,20 +2,6 @@
 
 (defun cadar (x) (car (cdar x)))
 
-(unless (functionp 'gensym)
-(let ((counter 0))
-(clog :debug "macros/gensym: lexical-binding= %s" (if lexical-binding "true" "false"))
-  (defun gensym(&optional starts-with)
-    "for those who miss gensym from Common Lisp"
-    (unless starts-with (setf starts-with "gs"))
-    (let (sym)
-      (while (progn
-               (setf sym (make-symbol (concat starts-with (number-to-string counter))))
-               (or (special-form-p sym) (functionp sym) (macrop sym) (boundp sym)))
-        (incf counter))
-      (incf counter)
-      sym))))
-
 ;; specifying Moscow time zone (do this for other important unspecified time zones)
 (unless (assoc "MSK" timezone-world-timezones)
   (push '("MSK". 300) timezone-world-timezones))

@@ -8,38 +8,38 @@ Main (static) files are described in [[file:README.org][README.org]]; the code d
 
 * Log files
 ** /mnt/cloud/history
-kolmogorov: 10/23 13:16:44 -- 13:17:23
-background (en/de)cryption on kolmogorov finished 13:18:49
-kalinin: 10/23 13:38:01 -- 13:38:25
-background (en/de)cryption on kalinin finished 13:38:26
-background (en/de)cryption on kalinin finished 14:39:06
-background (en/de)cryption on kalinin finished 15:38:25
-background (en/de)cryption on kalinin finished 16:38:26
-kalinin: 10/23 16:38:01 -- 16:38:26
-background (en/de)cryption on kalinin finished 17:38:25
-kalinin: 10/23 17:38:01 -- 17:38:25
-kalinin: 10/23 17:48:57 -- 17:48:57
-kalinin: 10/23 17:49:25 -- 17:49:51
-background (en/de)cryption on kalinin finished 17:49:51
-background (en/de)cryption on kalinin finished 17:52:58
-kalinin: 10/23 17:52:33 -- 17:52:59
-kalinin: 10/23 18:11:46 -- 18:12:11
-background (en/de)cryption on kalinin finished 18:12:12
-background (en/de)cryption on kalinin finished 18:14:53
-background (en/de)cryption on kalinin finished 18:38:24
+kolmogorov: 10/23 13:16:44 -- 13:17:23\\
+background (en/de)cryption on kolmogorov finished 13:18:49\\
+kalinin: 10/23 13:38:01 -- 13:38:25\\
+background (en/de)cryption on kalinin finished 13:38:26\\
+background (en/de)cryption on kalinin finished 14:39:06\\
+background (en/de)cryption on kalinin finished 15:38:25\\
+background (en/de)cryption on kalinin finished 16:38:26\\
+kalinin: 10/23 16:38:01 -- 16:38:26\\
+background (en/de)cryption on kalinin finished 17:38:25\\
+kalinin: 10/23 17:38:01 -- 17:38:25\\
+kalinin: 10/23 17:48:57 -- 17:48:57\\
+kalinin: 10/23 17:49:25 -- 17:49:51\\
+background (en/de)cryption on kalinin finished 17:49:51\\
+background (en/de)cryption on kalinin finished 17:52:58\\
+kalinin: 10/23 17:52:33 -- 17:52:59\\
+kalinin: 10/23 18:11:46 -- 18:12:11\\
+background (en/de)cryption on kalinin finished 18:12:12\\
+background (en/de)cryption on kalinin finished 18:14:53\\
+background (en/de)cryption on kalinin finished 18:38:24\\
 kalinin: 10/23 18:38:01 -- 18:38:24
 
 ** ~/.emacs.d/cloud/kalinin.log
 While emacs is frozen while syncronization is not done, this file allows to see (en/de)coding operations in real time:
 
-10/23 17:49:48: uploaded ~/cloud/cloud.org
-10/23 17:49:46: downloaded ~/tmp2.max
-10/23 17:49:28: downloaded ~/tmp.max
-10/23 17:49:28: downloaded ~/tmp5.max
-17:52:58: uploaded ~/cloud/cloud.org
-18:12:11: uploaded ~/cloud/cloud.org
-18:12:12: downloaded ~/tmp1.max
-18:38:24: uploaded ~/cloud/cloud.org
+10/23 17:49:48: uploaded ~/cloud/cloud.org\\
+10/23 17:49:46: downloaded ~/tmp2.max\\
+10/23 17:49:28: downloaded ~/tmp.max\\
+10/23 17:49:28: downloaded ~/tmp5.max\\
+17:52:58: uploaded ~/cloud/cloud.org\\
+18:12:11: uploaded ~/cloud/cloud.org\\
+18:12:12: downloaded ~/tmp1.max\\
+18:38:24: uploaded ~/cloud/cloud.org\\
 18:38:24: uploaded ~/task.txt
 
 ** ~/.emacs.d/elisp.log
@@ -64,13 +64,11 @@ To see more messages, set =*log-level*=  to =:debug= (zero) level:
 
 * Other files
 1. =~/.emacs.d/cloud/config= (contains gpg password – don't cloud it!) Created by the user or by the code at the very first code run.
-2. =~/.emacs.d/cloud/cloud.mk= is the last GNU make file created during the previous =(cloud-sync)=
-3. =~/.emacs.d/cloud/individual.passes= contains individual password for *all* images, e.g.,
-   cL2 EKPBqTxuHoo8CF4v
+2. [[file:cloud.mk][~/.emacs.d/cloud/cloud.mk]] is the last GNU make file created during the previous =(cloud-sync)=
+3. =~/.emacs.d/cloud/individual.passes= contains individual password for *all* images, e.g.,\\
+   cL2 EKPBqTxuHoo8CF4v\\
    RGq f9f0vIgxu9VOvrjc
 4. Numerous =~/.emacs.d/cloud/images/???= (one per image) files contain individual image passwords.
 5. =~/.emacs.d/cloud/`hostname`.log= is the host-specific log file for the `hostname`.
-6. =~/.emacs.c/cloud/images.pass= is the (clouded) password file for all images.
-7. =/mnt/cloud/now-syncing/= is a lock directory; its existence tells other hosts that the cloud is busy now and they have to wait before
-   launching =cloud-sync=.
-8. =/mnt/cloud/now-syncing/`hostname`= tells the time when the =cloud-sync= on =`hostname`= started. Normally erased after =cloud-sync= has done the job.
+6. =/mnt/cloud/now-syncing/= is a lock directory; its existence tells other hosts that the cloud is busy now and they have to wait before launching =cloud-sync=.
+7. =/mnt/cloud/now-syncing/`hostname`= tells the time when the =cloud-sync= on =`hostname`= started. Normally erased after =cloud-sync= has done the job.

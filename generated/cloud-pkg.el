@@ -1,4 +1,3 @@
-
 (define-package "cloud" "0.1" "secure cloud file synchronization" '(cl epg dired-aux)
 :keywords '("cloud" "gpg" "synchronization")
 :url "https://cloud.leanws.com"

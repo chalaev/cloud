@@ -1,5 +1,4 @@
 ;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-
 ;; generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
 (unless (boundp '*log-level*) (defvar *log-level* 0))
 (unless (boundp '*emacs-d*) (defvar *emacs-d* (concat (getenv "HOME") "/.emacs.d/")))
@@ -12,11 +11,11 @@
   (when (= 0 *log-level*)
     (with-temp-buffer
       (let ((today-str (format-time-string "%04Y-%02m-%02d" (current-time))))
-        (unless (string= today-str *last-FLD*)
-          (setf *last-FLD* today-str)
-          (insert today-str) (newline))
-        (dolist (msg (reverse *file-acc-buffer*))
-          (insert msg) (newline)))
+	(unless (string= today-str *last-FLD*)
+	  (setf *last-FLD* today-str)
+	  (insert today-str) (newline))
+	(dolist (msg (reverse *file-acc-buffer*))
+	  (insert msg) (newline)))
       (append-to-file (point-min) (point-max) (concat *emacs-d* "elisp.log")))
     (setf *file-acc-buffer* nil)))
 
@@ -28,11 +27,11 @@
   "simple logging function" ; level is one of → :debug :info :warning :error
   (when (<= *log-level* (or (pos level '(:debug :info :warning :error)) 0))
     (let ((log-msg
-           (cons
-            (concat "%s " (format-time-string "%H:%M:%S "
+	   (cons
+	    (concat "%s " (format-time-string "%H:%M:%S "
 (apply 'encode-time (butlast (decode-time (current-time)) 3)))
-                    fstr)
-            (cons (symbol-name level) args))))
+		    fstr)
+	    (cons (symbol-name level) args))))
       (file-acc-push (apply #'format log-msg))
       (apply #'message log-msg)) nil))
 

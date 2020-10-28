@@ -1,13 +1,13 @@
 * Errors
-1. I can not delete files with parethesis in ~dired~, for example, ~/Downloads/document(1).pdf
-2. Synchronization is too slow, use logging to find the problem. The suspect #1 is: I check the existence of every file in remote directory instead of reading the directory
-   only once.
-
+1. Strange error message at start "Loading ‘.../generated/cloud.el’: unescaped character literals `?(', `?)', `?[', `?]' detected!"
+     
 * Tests
 ** Fresh start
-1. rename directory =~/.emacs.d/cloud/=
-2. (Re)start emacs.
-3. Examine newly created =~/.emacs.d/cloud/=
+1. Rename directory =~/.emacs.d/cloud/=
+2. Disconnect (unmount) remote directory.
+3. (Re)start emacs.
+4. Examine newly created =~/.emacs.d/cloud/config=
+5. Examine ~*Messages*~ buffer for error message(s) explaining that the code can not work until you connect to the server.
 
 ** Clouding new text file and new image
 1. Mark one image and one text file in dired, then =M-x cloud-add=.
@@ -15,24 +15,38 @@
 3. (Re)start emacs on another computer, these two files must be downloaded from the cloud.
 
 * Ideas on future development
-** Cheap image encryption that should not increase the file size too much
+** Special JPEG treatment
+(I could probably implement this in 2-4 weeks.)
+
+I assume that JPEG images are most probably photos and that most of them contain people's faces.
+
+*** striking them back
+Let us think of how could we damage the business of face-recognizers.
+1. At the very least least we can replace real faces on our photos with pictures of inexisting people generated (for example) by https://thispersondoesnotexist.com/ ; all this should be
+   done in a make file.
+2. Or even better, it is possible to to distort these faces of inexisting people in such a way that AI face recognition algorithms will be damaged (basically, they will learn
+   the wrong way of faces recognition). See https://sandlab.cs.uchicago.edu/fawkes/
+
+*** permutate image blocks
 For every clouded image file, we create a sub-directory in the remote directory.
 This sub-directory will contain NxM small pieces (icons) of the image, where N,M≥12.
 Most of these pieces will be equally sized rectangulars, combined together into the inner part of the image.
 Others will be parts of the thin frame.
 On the one hand, N and M can not be to small; on the other hand each inner rectangular image should not be too small
 – at least 50x40 pixels – so that JPEG (or another) image compression algorithm remains efficient.
-Icon permutation must be encoded in the same password which is now used for AES-encryption.
-
 This kind of protection might not be enough for orgy photos, but is probably ok to protect innocent photos from face recognition robots.
-
 And in case someone writes an algorithm trying to guess the correct icons' position, 
 creating obstacles for it (so that decryption of a single photo would take at least a day) seems easy.
 
-This algorithm should become default encryption method for images.
+*** The algorithm
+So at first we run ~facedetect~ to detect if there are any faces on the image.
+If there are no faces, we just [[permutate image blocks]].
+
+If there are faces, we examine their sizes provided by ~facedetect~.
+Ideally the size of rectangulars for permutation would be just equal to the largest face detected by ~facedetect~.
+Then we encrypt real faces using AES algorithm and put fake ones instead of them.
 
 ** Other ideas
 1. ~convert~ runs without parameters (e.g., controlling jpeg quality) for now. Thus, for example,
    a low-quality ~JPEG~ file may be grow about 3 times larger after it was encrypted and then decrypted back.
-   There might be a way
 2. Package the code.

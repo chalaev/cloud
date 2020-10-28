@@ -15,8 +15,6 @@ Synchronizing important files on two or more computers using
    a. using [[https://imagemagick.org/][ImageMagick]] for ~JPEG~ and ~PNG~ images or
    b. using [[https://www.gnupg.org/][gpg]] for other (presumably text) files.
    ~JPEGs~ and ~PNGs~ are encrypted with AES-algorithm that [[https://imagemagick.org/script/cipher.php][may become vulnerable]] if the same password is used for multiple images; this is why every image gets an individual password.
-   As the encrypted image is about 13 times larger than the original one, I find it attractive switching to [[https://duckduckgo.com/?q=selective+image+encryption&t=ffsb&ia=web][selective image encryption]] when it becomes available in linux.
-   (Or just pay for more cloud space.)
 
 Encrypted files saved in the cloud have *random names* to minimize the amount of information Evil Corporations can extract by monitoring our cloud directory.
 

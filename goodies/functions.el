@@ -1,5 +1,4 @@
 ;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-
 ;; generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
 (defun chgrp(group file-name)
   (= 0 (call-process "chgrp" nil nil nil group file-name)))
@@ -14,7 +13,7 @@
   (let ((i 0) r)
   (dolist (e ll r)
     (if (eql e el)
-        (setf r i)
+	(setf r i)
       (incf i)))))
 
 (defun remo (from-where &rest what)
@@ -38,13 +37,13 @@
 "formats integer file mode into string"
 (let ((ll '((1 . 0))))
   (apply #'concat (mapcar
-                   #'(lambda(x) (format "%c" (if (= 0 (logand file-mode (car x))) ?- (aref "xwr" (cdr x)))))
+		   #'(lambda(x) (format "%c" (if (= 0 (logand file-mode (car x))) ?- (aref "xwr" (cdr x)))))
   (dotimes (i 8 ll)
      (push (cons (* 2 (caar ll)) (mod (1+ i) 3))  ll))))))
 
 (defun parse-date (str)
-  (mapcar 'string-to-int 
-          (cond
+  (mapcar 'string-to-number
+	  (cond
  ((string-match "\\([0-9]\\{4\\}\\)[/-]\\([0-9][0-9]\\)[/-]\\([0-9][0-9]\\)" str) (mapcar #'(lambda (x) (match-string x str)) '(3 2 1)))
  ((string-match "\\([0-9][0-9]\\)[/-]\\([0-9][0-9]\\)[/-]\\([0-9]\\{4\\}\\)" str) (mapcar #'(lambda (x) (match-string x str)) '(2 1 3)))
  ((string-match "\\([0-9][0-9]\\)\\.\\([0-9][0-9]\\)\\.\\([0-9]\\{4\\}\\)" str) (mapcar #'(lambda (x) (match-string x str)) '(1 2 3)))
@@ -60,7 +59,7 @@
       (parse-time-string str)
     (let ((SS (split-string str)))
       (append (parse-only-time (cadr SS))
-              (parse-date (car SS))))))
+	      (parse-date (car SS))))))
 
 (defun firstN(lista N)
   "returning first N elments of the list"
