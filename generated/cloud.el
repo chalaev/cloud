@@ -279,9 +279,7 @@
 ;; I try to get rid of loop and other common-lisp stuff here
 
 (defvar *all-chars*
-  (let ((forbidden-symbols '(?! ?@ ?# ?$ ?% ?& ?* ?( ?) ?+ ?= ?/ 
-                      ?{ ?} ?[ ?] ?: ?\; ?< ?>
-                      ?_ ?- ?| ?, ?. ?` ?' ?~ ?^ ?\")))
+(let ((forbidden-symbols '(?! ?@ ?# ?$ ?% ?& ?* ?\( ?\) ?+ ?= ?/ ?{ ?} ?\[ ?\] ?: ?\; ?< ?> ?_ ?- ?| ?, ?. ?` ?' ?~ ?^ ?\")))
     (append
      (loop for i from ?A to ?Z unless (member i forbidden-symbols) collect i)
      (loop for i from ?a to ?z unless (member i forbidden-symbols) collect i)
@@ -475,12 +473,12 @@
 (defvar cloud-actions nil "actions to be saved in the cloud")
 (defvar removed-files  nil "files that were just removed (or renamed) on local host before (cloud-sync)")
 (defvar important-msgs nil "these messages will be typically printed at the end of the process")
-(defvar ~ (getenv "HOME"))
 (defvar gpg-process nil "assyncronous make-process for (en/de)cryption")
 
 (defvar N-CPU-cores 1)
 (defvar cloud-dir  "/mnt/cloud/")
 (defvar cloud-file-hooks nil "for special files treatment")
+(defvar ~ (getenv "HOME"))
 (defvar emacs-d (concat ~ "/.emacs.d/"))
 
 (defun local-dir() (tilda (concat emacs-d "cloud/")))
@@ -579,10 +577,11 @@
 (defun clouded(DB-rec)
 (let ((FN (aref DB-rec plain))
       (CN (aref DB-rec cipher)))
- (concat cloud-dir CN (cip-ext FN))))
+  (concat cloud-dir CN (cip-ext FN))))
 
 (defun read-fileDB* (DBname)
   "reads content (text) file into the database file-DB"
+(clog :debug "started read-fileDB*")
   (find-file DBname) (goto-char (point-min))
 (macrolet ((read-line() '(setf str (buffer-substring-no-properties (point) (line-end-position)))))
   (let ((BN (buffer-name)) str)
@@ -664,8 +663,9 @@
 "called when the file named FN is changed"
 (when (and FN (stringp FN))
   (when-let ((file-data (cloud-locate-FN FN)))
-  (aset file-data mtime (current-time)))))
-(defun on-current-buffer-save ()
+    (aset file-data mtime (current-time))
+    (upload file-data))))
+(defun on-current-buffer-save()
   (touch (file-chase-links (buffer-file-name))))
 (add-hook 'after-save-hook 'on-current-buffer-save)
 
@@ -720,7 +720,7 @@ CF)))))
 (format fstr XYZ FN (updated) (pass-d) XYZ)
 
 (format "$(cloud)%s.gpg: %s
-\t$(enc) $@ $<
+\t@$(enc) $@ $<
 " XYZ FN))
 
 (format "\t-echo \"$(date): uploaded %s\" >> $(localLog)
@@ -733,7 +733,7 @@ CF)))))
 (if-let ((fstr (car (find file-ext specially-decoded :key #'cdr :test #'(lambda(x y) (member x y))))))
 (format fstr FN XYZ (updated) (pass-d) XYZ)
 (format "%s: $(cloud)%s.gpg
-\t$(dec) $@ $<
+\t@$(dec) $@ $<
 " FN XYZ ))
 (format "\t-chgrp %s $@
 \t-chmod %o $@
@@ -782,8 +782,6 @@ all)
 \techo \"background (en/de)cryption on %s finished $(date)\" >> %s
 \t-rm %s
 \t-rmdir %s
-\t-cat $(MK) > $(MK).previous
-\t-chgrp tmp $(MK) $(MK).previous
 \t-emacsclient -e '(reset-Makefile)'
 "
 (apply #'concat all)
@@ -807,10 +805,24 @@ all)
     (clog :error "lock directory %s exists; someone else might be syncing right now. If this is not the case, remove %s manually" (cloud-lockdir) (cloud-lockdir)))
    ((and gpg-process (process-live-p gpg-process))
     (clog :error "I will not start new (en/de) coding process because the previous one is still funning"))
-   ((progn (write-region time-stamp nil (cloud-lockfile)) (read-fileDB))
-    (clog :info "started syncing")
-    (if (and gpg-process (process-live-p gpg-process))
-	(clog :error "I will not start new (en/de) coding process because the previous one is still funning")
+(t
+(write-region time-stamp nil (cloud-lockfile))
+
+(let* ((DN (concat cloud-dir "hosts/"))
+       (FN (concat DN (system-name))))
+(ifn (safe-mkdir DN) (clog :error "can not create directory %s" DN)
+(unless 
+(and
+  (file-exists-p FN)
+  (string= FN (car (sort (mapcar #'(lambda(fn) (concat DN fn)) cloud-hosts) #'file-newer-than-file-p))))
+
+(ifn (read-fileDB)
+(setf ok (clog :error "cloud-sync: could not read content file from the cloud"))
+(write-region time-stamp nil (concat cloud-dir  "hosts/" (system-name)))))
+
+(when ok (clog :info "started syncing")
+(if (and gpg-process (process-live-p gpg-process))
+(clog :error "I will not start new (en/de) coding process because the previous one is still funning")
 (setf gpg-process (apply #'start-process (append (list
 "cloud-batch"
 (generate-new-buffer "*cloud-batch*")
@@ -818,23 +830,21 @@ all)
 (split-string (format "-j%d -f %s all" N-CPU-cores (cloud-mk)))))))
 
 (let ((tmp-CCN (untilda (concat (local-dir) "CCN"))))
-   (write-fileDB tmp-CCN)
-   (if (setf ok 
-(= 0 (apply #'call-process
+(write-fileDB tmp-CCN)
+(ifn (= 0 (apply #'call-process
 (append (list "gpg" nil nil nil)
 (split-string (format
 "--batch --yes --pinentry-mode loopback --passphrase %s  -o %s --symmetric %s"
-password (concat cloud-dir contents-name ".gpg") tmp-CCN))))))
-       (when cloud-delete-contents (safe-dired-delete tmp-CCN))
-     (clog :error "failed to encrypt content file %s to %s!" tmp-CCN contents-name))))
-(t (clog :error "unknown error in cloud-sync")))
+password (concat cloud-dir contents-name ".gpg") tmp-CCN)))))
+(clog :error "failed to encrypt content file %s to %s!" tmp-CCN contents-name)
+(when cloud-delete-contents (safe-dired-delete tmp-CCN))
 
 (dolist (msg (reverse important-msgs)) (message msg))
 (setf important-msgs nil)
 (clog :info "done syncing")
      (write-region (format "%s: %s -- %s
 " (system-name) time-stamp (format-time-string "%H:%M:%S" (current-time))) nil (concat cloud-dir "history") t)
-ok))))
+ok)))))))))))
 
 (defun before-exit()
   (write-conf)

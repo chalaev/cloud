@@ -25,6 +25,17 @@ aptitude install emacs make imagemagick gpg gawk
 #+END_SRC
 
 * Quick start
+I am running emacs in daemon mode (in text console) with the following =~/.bash_login=
+#+BEGIN_SRC shell
+(emacs --daemon ; make -j8 -f ~/.emacs.d/cloud/cloud.mk all) &
+#+END_SRC
+and =~/.bash_logout=
+#+BEGIN_SRC shell
+emacsclient -e "(kill-emacs)"
+#+END_SRC
+where in =~/.bash_login= I assumed that there are 8 CPU cores available.
+The I use =emacsclient -c= to open a new (gui) emacs window.
+
 1. Mount remote directory. The mounting point may be arbitrary (specified as =cloud-directory= in =~/.emacs.d/cloud/config=), the default one is ~/mnt/cloud/~.
 2. You can create the file =~/.emacs.d/cloud/config= yourself, or it will be generated. Mine looks as follows:
    #+BEGIN_SRC

@@ -1,5 +1,10 @@
 * Errors
-1. Strange error message at start "Loading ‘.../generated/cloud.el’: unescaped character literals `?(', `?)', `?[', `?]' detected!"
+Old ones fixed, no new ones noticed as of 2020-10-29.
+
+* To do
+1. Tired project
+2. Clouding directories
+3. Package the code.
      
 * Tests
 ** Fresh start
@@ -14,29 +19,38 @@
 2. =M-x cloud-sync= must encrypt these and upload them to the cloud.
 3. (Re)start emacs on another computer, these two files must be downloaded from the cloud.
 
+
 * Ideas on future development
-** Special JPEG treatment
-(I could probably implement this in 2-4 weeks.)
-
-I assume that JPEG images are most probably photos and that most of them contain people's faces.
-
-*** striking them back
-Let us think of how could we damage the business of face-recognizers.
-1. At the very least least we can replace real faces on our photos with pictures of inexisting people generated (for example) by https://thispersondoesnotexist.com/ ; all this should be
-   done in a make file.
-2. Or even better, it is possible to to distort these faces of inexisting people in such a way that AI face recognition algorithms will be damaged (basically, they will learn
-   the wrong way of faces recognition). See https://sandlab.cs.uchicago.edu/fawkes/
-
-*** permutate image blocks
+** Replace clouds with torrents? 
+I will think of using torrents instead of clouds or using them together.
+Advantages of torrents:
+1. With torrents we can forget about space limitation we always have for clouds, and
+2. The more people use torrents, the harder it is to enforce [[https://www.fsf.org/search?SearchableText=DMCA][DMCA]]; probably 50 million of torrent users in the US
+   would be enough to make it meaningless and powerless piece of paper.
+** Permutate image blocks
 For every clouded image file, we create a sub-directory in the remote directory.
 This sub-directory will contain NxM small pieces (icons) of the image, where N,M≥12.
 Most of these pieces will be equally sized rectangulars, combined together into the inner part of the image.
 Others will be parts of the thin frame.
 On the one hand, N and M can not be to small; on the other hand each inner rectangular image should not be too small
 – at least 50x40 pixels – so that JPEG (or another) image compression algorithm remains efficient.
-This kind of protection might not be enough for orgy photos, but is probably ok to protect innocent photos from face recognition robots.
+This kind of protection is probably ok to protect innocent photos from face recognition robots.
 And in case someone writes an algorithm trying to guess the correct icons' position, 
-creating obstacles for it (so that decryption of a single photo would take at least a day) seems easy.
+creating obstacles for it (so that decryption of a single photo would take at least an hour) seems easy.
+
+** Special JPEG treatment
+I assume that JPEG images are most probably photos and that most of them contain people's faces.
+
+*I had to postpone this idea* because both 
+(face recognition program) [[https://www.thregr.org/~wavexx/software/facedetect/][facedetect]] and
+(face distorting program) [[https://sandlab.cs.uchicago.edu/fawkes/][fawkes]] are very unreliable.
+
+*** striking them back
+Let us think of how could we damage the business of face-recognizers.
+1. At the very least least we can replace real faces on our photos with pictures of inexisting people generated (for example) by https://thispersondoesnotexist.com ; all this should be
+   done in a make file.
+2. Or even better, it is possible to to distort these faces of inexisting people in such a way that AI face recognition algorithms will be damaged (basically, they will learn
+   the wrong way of faces recognition). Unfortunately, the code https://sandlab.cs.uchicago.edu/fawkes/ is very unstable for now: it worked only once for me and I've tried a lot!
 
 *** The algorithm
 So at first we run ~facedetect~ to detect if there are any faces on the image.
@@ -49,4 +63,3 @@ Then we encrypt real faces using AES algorithm and put fake ones instead of them
 ** Other ideas
 1. ~convert~ runs without parameters (e.g., controlling jpeg quality) for now. Thus, for example,
    a low-quality ~JPEG~ file may be grow about 3 times larger after it was encrypted and then decrypted back.
-2. Package the code.
