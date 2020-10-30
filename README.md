@@ -1,14 +1,14 @@
 
 # Table of Contents
 
-1.  [Description](#orgc4119a3)
-2.  [Prerequisites](#org8bfa011)
-3.  [Quick start](#org886c69d)
-4.  [Useful commands](#org83c407f)
-5.  [Source code files](#org84efe34)
-6.  [Motivation](#org1fcc6ea)
-7.  [Limitations](#org7ab4962)
-8.  [Support](#orgd015821)
+1.  [Description](#orgc4c1e85)
+2.  [Prerequisites](#org533c2ca)
+3.  [Commands](#orge97ec48)
+4.  [Quick start](#orgf3b6c6c)
+5.  [Source code files](#org758b072)
+6.  [Motivation](#orga1325a0)
+7.  [Limitations](#orgeb4912f)
+8.  [Support](#orga7e6491)
 
 Intended for linux users who have [emacs](https://www.gnu.org/software/emacs/) always open.
 
@@ -16,7 +16,7 @@ I did not expect this project to grow that much;
 some of the desired functions are still not implemented or half-implemented.
 
 
-<a id="orgc4119a3"></a>
+<a id="orgc4c1e85"></a>
 
 # Description
 
@@ -36,7 +36,7 @@ Synchronizing important files on two or more computers using
 Encrypted files saved in the cloud have **random names** to minimize the amount of information Evil Corporations can extract by monitoring our cloud directory.
 
 
-<a id="org8bfa011"></a>
+<a id="org533c2ca"></a>
 
 # Prerequisites
 
@@ -45,17 +45,31 @@ We need `emacs`, GNU `make`, `ImageMagick`, `gpg`, `sed` and `gawk`; in Debian t
     aptitude install emacs make imagemagick gpg sed gawk
 
 
-<a id="org886c69d"></a>
+<a id="orge97ec48"></a>
+
+# Commands
+
+-   `M-x cloud-add` adds one or several files to the list of "clouded" files. This means that `M-x cloud-sync` command will upload
+    these "clouded" files to the remote server if they are updated. Supposed to be used in dired buffer for several (marked) files,
+    or (when no files are marked) for a single file. Currently works on files only, not on directories.
+-   `M-x cloud-forget` is the opposite of `M-x cloud-add`. It is also called automatically when files are removed in dired buffer.
+    Currently works on files only, not on directories.
+-   `M-x cloud-sync` syncronizes local files with the cloud. Could be regularly called with a `crontab` line, e.g., 
+    `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
+
+
+<a id="orgf3b6c6c"></a>
 
 # Quick start
 
 I am running `emacs` in daemon mode (in text console) using the following `~/.bash_login`
 
-    (emacs --daemon ; make -j8 -f ~/.emacs.d/cloud/cloud.mk all) &
+    emacs --daemon
 
 and `~/.bash_logout`
 
     emacsclient -e "(kill-emacs)"
+    [ -f ~/.emacs.d/cloud/cloud.mk ] && make -j8 -f ~/.emacs.d/cloud/cloud.mk all
 
 where in `~/.bash_login` I assumed that there are 8 CPU cores available.
 Once  `~/.bash_login` has started  `emacs` in the server mode,
@@ -79,7 +93,7 @@ I can use `emacsclient -c` to open a new (gui) emacs window.
     
     into your `~/.emacs` file.
     Then open a directory `C-x d`, mark several files, and cloud them with `M-x cloud-add`. Then `M-x cloud-sync`.
-4.  Check log files described in [files.org](files.org): they should let you know that the encrypted copies of your clouded files have been copied to the remote directory
+4.  Check log files described in [files.org](files.md): they should let you know that the encrypted copies of your clouded files have been copied to the remote directory
 5.  Using some secure way, copy `~/.emacs.d/cloud/config` to another host; launch `cloud.el` there and check the log files.
 6.  [Let me know](https://github.com/chalaev/cloud/issues/new/choose) if something is unclear or does not work.
 
@@ -87,34 +101,26 @@ Every time we `M-x cloud-sync`, local files get synchronized with the cloud. For
 `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="org83c407f"></a>
-
-# Useful commands
-
-`M-x cloud-add` adds one or several files to the list of "clouded" files. This means that `M-x cloud-sync` command will upload these "clouded" files to the remote server if
-they are updated.
-
-
-<a id="org84efe34"></a>
+<a id="org758b072"></a>
 
 # Source code files
 
-(Dynamically created/updated logs and data files are described in [files.org](files.org).)
+(Dynamically created/updated logs and data files are described in [files.org](files.md).)
 
-1.  [README.org](README.org) generates `README.md` for [notabug](https://notabug.org/shalaev/emacs-cloud) and [github](https://github.com/chalaev/cloud).
-2.  [cloud.org](cloud.org) contains the code from [generated/main.el](generated/main.el) together with explanations.
+1.  [README.org](README.md) generates `README.md` for [notabug](https://notabug.org/shalaev/emacs-cloud) and [github](https://github.com/chalaev/cloud).
+2.  [cloud.org](cloud.md) contains the code from [generated/main.el](generated/main.el) together with explanations.
 3.  [0.el](0.el), [1.el](1.el), and [2.el](2.el) are kind of "Appendix" containing some pieces of code which not interesting enough to be included in `cloud.org`.
 4.  goodies/{[macros](goodies/macros.el),[functions](goodies/functions.el),[logging](goodies/logging.el)}.el are copied from the [elisp-goodies](https://notabug.org/shalaev/elisp-goodies) project.
 5.  [Makefile](Makefile) merges all the code into [generated/cloud.el](generated/cloud.el) which is the main file to be launched when `emacs` starts.
 6.  [shell/cloud-git](shell/cloud-git) synchronizes file operations in `git` with this code, for example:
     `cloud-git rm files.org` and `cloud-git mv log-files.org files.org`
-7.  [bugs.org](bugs.org) contains
+7.  [bugs.org](bugs.md) contains
     a. error and problem list,
     b. tests to be done, and
     c. ideas on further development.
 
 
-<a id="org1fcc6ea"></a>
+<a id="orga1325a0"></a>
 
 # Motivation
 
@@ -137,7 +143,7 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 5.  Dired-compatible: whatever I do with a file in dired (delete, rename), will be automatically done on other computers.
 
 
-<a id="org7ab4962"></a>
+<a id="orgeb4912f"></a>
 
 # Limitations
 
@@ -148,7 +154,7 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 2.  After encrypting an image and then decrypting it back, we get the same, but not identical picture (file size is changed).
 
 
-<a id="orgd015821"></a>
+<a id="orga7e6491"></a>
 
 # Support
 

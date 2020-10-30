@@ -480,6 +480,7 @@
 (defvar cloud-file-hooks nil "for special files treatment")
 (defvar ~ (getenv "HOME"))
 (defvar emacs-d (concat ~ "/.emacs.d/"))
+(defvar cloud-was-connected t "normally t, nill when there was no connection")
 
 (defun local-dir() (tilda (concat emacs-d "cloud/")))
 (defun cloud-mk() (concat (local-dir) "cloud.mk"))
@@ -533,6 +534,7 @@
 ;;(file-readable-p (concat cloud-dir contents-name ".gpg")
 
 (defun write-conf()
+(clog :debug "starting write-conf")
 (with-temp-file (local-config)
   (insert (format "delete-contents=%s" (if cloud-delete-contents "yes" "no"))) (newline)
   (insert (format "contents-name=%s" contents-name)) (newline)
@@ -652,7 +654,7 @@
 
 (forward-line))
 
-(save-Makefile) (kill-buffer BN))))))
+(kill-buffer BN))))))
 
 (defmacro bad-column (cType N &optional str)
 (if str
@@ -794,8 +796,13 @@ password (cloud-mk) (cloud-mk) (cloud-mk))
 
 (defun cloud-sync()
 (interactive)
-(ifn (cloud-connected-p)
-  (clog :error "remote directory is not mounted")
+(ifn (cloud-connected-p) (progn
+(clog :error "remote directory is not mounted")
+(setf cloud-was-connected nil)
+
+(dolist (action (reverse cloud-actions))
+  (insert (format-action action)) (drop cloud-actions action) (delete-char -1) (newline))
+)
 (let ((time-stamp (TS (current-time)))
       (mkdir (safe-mkdir (cloud-lockdir))) (ok t))
   (if (member mkdir '(:permission nil))
@@ -809,17 +816,20 @@ password (cloud-mk) (cloud-mk) (cloud-mk))
     (clog :error "I will not start new (en/de) coding process because the previous one is still funning"))
 (t
 (write-region time-stamp nil (cloud-lockfile))
+(save-Makefile)
 
 (let* ((DN (concat cloud-dir "hosts/"))
        (FN (concat DN (system-name))))
 (ifn (safe-mkdir DN) (clog :error "can not create directory %s" DN)
 (unless 
 (and
+  cloud-was-connected
   (file-exists-p FN)
   (string= FN (car (sort (mapcar #'(lambda(fn) (concat DN fn)) cloud-hosts) #'file-newer-than-file-p))))
 
 (ifn (read-fileDB)
 (setf ok (clog :error "cloud-sync: could not read content file from the cloud"))
+(setf cloud-was-connected t)
 (write-region time-stamp nil (concat cloud-dir  "hosts/" (system-name)))))
 
 (when ok (clog :info "started syncing")
@@ -849,7 +859,7 @@ password (concat cloud-dir contents-name ".gpg") tmp-CCN)))))
 ok)))))))))))
 
 (defun before-exit()
-  (write-conf)
+;; (write-conf)
   (cloud-sync))
 
 (defvar action-fields '(i-time i-ID i-args i-hostnames i-Nargs))
@@ -980,7 +990,7 @@ ok))
 " CN (rand-str 18)) nil (all-passes) t)
 (touch (all-passes)))
 (upload GFP))))
-(save-Makefile)
+;;(save-Makefile)
 ok))
 
 (defun cloud-forget-file (local-FN); called *after* the file has already been sucessfully deleted
@@ -1046,17 +1056,17 @@ ok))
 	   (clog :info "check newly created configuraion %s and then M-x cloud-start" (local-config)))
 
 (ifn (and
-      (if-let ((CD (cdr (assoc "cloud-directory" conf))))
-	  (setf cloud-dir CD); "/mnt/lws/cloud/"
+   (if-let ((CD (cdr (assoc "cloud-directory" conf))))
+	  (setf cloud-dir CD)
 	(setf cloud-dir (read-string "cloud directory=" cloud-dir))
 	(write-conf) t)
-      (progn
+   (progn
 	(when-let ((delete-contents (cdr (assoc "delete-contents" conf))))
-          (setf cloud-delete-contents (if (string= "no" delete-contents) nil t)))t)
-      (setf contents-name (cdr (assoc "contents-name" conf)))
-      (setf N-CPU-cores (string-to-number (or (cdr (assoc "number-of-CPU-cores" conf)) "1")))
-      (setf password  (cdr (assoc "password" conf))))
-   (clog :error "something is missing or wrong in the configuration file" cloud-dir)
+       (setf cloud-delete-contents (if (string= "no" delete-contents) nil t)))t)
+   (setf contents-name (cdr (assoc "contents-name" conf)))
+   (setf N-CPU-cores (string-to-number (or (cdr (assoc "number-of-CPU-cores" conf)) "1")))
+   (setf password  (cdr (assoc "password" conf))))
+(clog :error "something is missing or wrong in the configuration file" cloud-dir)
 
 (setf cloud-dir 
   (or (cdr (assoc "cloud-directory" conf))
@@ -1075,7 +1085,7 @@ ok))
   (let ((tmp-CCN (untilda (concat (local-dir) "CCN"))))
 (or
 (and
- (cloud-connected-p)
+;; (cloud-connected-p)
 (= 0 (apply #'call-process
 (append (list "gpg" nil nil nil)
 (split-string (format
