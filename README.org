@@ -30,7 +30,7 @@ aptitude install emacs make imagemagick gpg sed gawk
   or (when no files are marked) for a single file. Currently works on files only, not on directories.
 - =M-x cloud-forget= is the opposite of =M-x cloud-add=. It is also called automatically when files are removed in dired buffer.
   Currently works on files only, not on directories.
-- =M-x cloud-sync= syncronizes local files with the cloud. Could be regularly called with a =crontab= line, e.g., 
+- =M-x cloud-sync= syncronizes local files with the cloud. Could be regularly called with a =crontab= line, e.g.,\\
   =43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null=
 * Quick start
 I am running ~emacs~ in daemon mode (in text console) using the following =~/.bash_login=
