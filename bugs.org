@@ -1,12 +1,37 @@
 * Errors
-Old ones fixed, no new ones noticed as of 2020-10-29.
+1. Suppose I am starting =emacs --daemon= and the remote directory is *not* mounted.
+   (Either because I forgot to mount it, or there is no wifi available.)
+   Then I could =M-x cloud-add= and =M-x cloud-forget=, delete and rename files and direcories in dired, but this all woun't be
+   synced?
+   *The clouding system should work even if there is no connection to the cloud.*
+   2020-10-30 Experimenting with that with my laptop in doctor's office (without internet):
+   1. changed (previously clouded) bugs.org
+   2. clouded 2-task.txt
+   When I came to my office, both files were sucessfully sent to the cloud, but on the desktop there was a disaster:
+   1. 2-task.txt
+      :debug 09:44:26 started read-fileDB*
+      :error 09:44:28 forgetting file ~/2-task.txt which is marked as clouded but is neither on local disk nor in the cloud
+      :error 09:44:28 forgetting file ~/programming/emacs/common.el which is marked as clouded but is neither on local disk nor in the cloud
+      ← that is, ~/2-task.txt was erased from the cloud!
+   2. bugs.org was never copied; its stanza in cloud make was the opposite, for uploading, not for downloading.
+2. Now suppose I run out of battery and I will shut down the laptop before I reach the internet.
+   What is going to be lost? I guess, 2-task.txt will not be clouded.
+   This problem could be fixed by adding ~pending-actions~ file to the directory ~/.emacs.d/cloud/
+3. Newly added image ~/03.jpg was added to =file-DB= and saved to ~/.emacs.d/cloud/CCN and got a line in individual.passes *but*
+   was not saved to cloud.mk and was not uploaded.
 
 * To do
-1. Tired project
-2. Clouding directories
-3. Package the code.
+1. (see above) add ~pending-actions~ file to the directory ~/.emacs.d/cloud/
+2. Tired project
+3. Clouding directories
+4. Package the code.
      
 * Tests
+** Clouding new text file and new image
+1. Mark one image and one text file in dired, then =M-x cloud-add=.
+2. =M-x cloud-sync= must encrypt these and upload them to the cloud.
+3. (Re)start emacs on another computer, these two files must be downloaded from the cloud.
+
 ** Fresh start
 1. Rename directory =~/.emacs.d/cloud/=
 2. Disconnect (unmount) remote directory.
@@ -14,14 +39,10 @@ Old ones fixed, no new ones noticed as of 2020-10-29.
 4. Examine newly created =~/.emacs.d/cloud/config=
 5. Examine ~*Messages*~ buffer for error message(s) explaining that the code can not work until you connect to the server.
 
-** Clouding new text file and new image
-1. Mark one image and one text file in dired, then =M-x cloud-add=.
-2. =M-x cloud-sync= must encrypt these and upload them to the cloud.
-3. (Re)start emacs on another computer, these two files must be downloaded from the cloud.
-
-
 * Ideas on future development
 ** Replace clouds with torrents? 
+[[http://lftp.yar.ru][lftp]] supports torrents.
+
 I will think of using torrents instead of clouds or using them together.
 Advantages of torrents:
 1. With torrents we can forget about space limitation we always have for clouds, and

@@ -1,13 +1,14 @@
 
 # Table of Contents
 
-1.  [Description](#org504ff3c)
-2.  [Prerequisites](#org112e166)
-3.  [Quick start](#orge022f18)
-4.  [Source code files](#orgcc345b3)
-5.  [Motivation](#orgd4e1f47)
-6.  [Limitations](#orgf967957)
-7.  [Support](#org95b2c01)
+1.  [Description](#orgc4119a3)
+2.  [Prerequisites](#org8bfa011)
+3.  [Quick start](#org886c69d)
+4.  [Useful commands](#org83c407f)
+5.  [Source code files](#org84efe34)
+6.  [Motivation](#org1fcc6ea)
+7.  [Limitations](#org7ab4962)
+8.  [Support](#orgd015821)
 
 Intended for linux users who have [emacs](https://www.gnu.org/software/emacs/) always open.
 
@@ -15,7 +16,7 @@ I did not expect this project to grow that much;
 some of the desired functions are still not implemented or half-implemented.
 
 
-<a id="org504ff3c"></a>
+<a id="orgc4119a3"></a>
 
 # Description
 
@@ -35,20 +36,20 @@ Synchronizing important files on two or more computers using
 Encrypted files saved in the cloud have **random names** to minimize the amount of information Evil Corporations can extract by monitoring our cloud directory.
 
 
-<a id="org112e166"></a>
+<a id="org8bfa011"></a>
 
 # Prerequisites
 
-We need `emacs`, GNU `make`, `ImageMagick`, `gpg` and `gawk`; in Debian these can be installed with `aptitude` as follows:
+We need `emacs`, GNU `make`, `ImageMagick`, `gpg`, `sed` and `gawk`; in Debian these can be installed with `aptitude` as follows:
 
-    aptitude install emacs make imagemagick gpg gawk
+    aptitude install emacs make imagemagick gpg sed gawk
 
 
-<a id="orge022f18"></a>
+<a id="org886c69d"></a>
 
 # Quick start
 
-I am running emacs in daemon mode (in text console) with the following `~/.bash_login`
+I am running `emacs` in daemon mode (in text console) using the following `~/.bash_login`
 
     (emacs --daemon ; make -j8 -f ~/.emacs.d/cloud/cloud.mk all) &
 
@@ -56,8 +57,9 @@ and `~/.bash_logout`
 
     emacsclient -e "(kill-emacs)"
 
-where in `~/.login` I assume that there are 8 CPU cores available.
-The I use `emacsclient -c` to open a new (gui) emacs window.
+where in `~/.bash_login` I assumed that there are 8 CPU cores available.
+Once  `~/.bash_login` has started  `emacs` in the server mode,
+I can use `emacsclient -c` to open a new (gui) emacs window.
 
 1.  Mount remote directory. The mounting point may be arbitrary (specified as `cloud-directory` in `~/.emacs.d/cloud/config`), the default one is `/mnt/cloud/`.
 2.  You can create the file `~/.emacs.d/cloud/config` yourself, or it will be generated. Mine looks as follows:
@@ -79,13 +81,21 @@ The I use `emacsclient -c` to open a new (gui) emacs window.
     Then open a directory `C-x d`, mark several files, and cloud them with `M-x cloud-add`. Then `M-x cloud-sync`.
 4.  Check log files described in [files.org](files.org): they should let you know that the encrypted copies of your clouded files have been copied to the remote directory
 5.  Using some secure way, copy `~/.emacs.d/cloud/config` to another host; launch `cloud.el` there and check the log files.
-6.  [Let me know](https://github.com/chalaev/cloud/issues/new/choose) if something does not work.
+6.  [Let me know](https://github.com/chalaev/cloud/issues/new/choose) if something is unclear or does not work.
 
 Every time we `M-x cloud-sync`, local files get synchronized with the cloud. For this purpose I have a line in my `crontab`:
 `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="orgcc345b3"></a>
+<a id="org83c407f"></a>
+
+# Useful commands
+
+`M-x cloud-add` adds one or several files to the list of "clouded" files. This means that `M-x cloud-sync` command will upload these "clouded" files to the remote server if
+they are updated.
+
+
+<a id="org84efe34"></a>
 
 # Source code files
 
@@ -104,7 +114,7 @@ Every time we `M-x cloud-sync`, local files get synchronized with the cloud. For
     c. ideas on further development.
 
 
-<a id="orgd4e1f47"></a>
+<a id="org1fcc6ea"></a>
 
 # Motivation
 
@@ -127,7 +137,7 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 5.  Dired-compatible: whatever I do with a file in dired (delete, rename), will be automatically done on other computers.
 
 
-<a id="orgf967957"></a>
+<a id="org7ab4962"></a>
 
 # Limitations
 
@@ -138,7 +148,7 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 2.  After encrypting an image and then decrypting it back, we get the same, but not identical picture (file size is changed).
 
 
-<a id="org95b2c01"></a>
+<a id="orgd015821"></a>
 
 # Support
 

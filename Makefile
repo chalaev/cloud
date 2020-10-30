@@ -2,7 +2,6 @@
 
 README.md: generated/cloud.el README.org
 	emacsclient -e '(progn (find-file "README.org") (org-md-export-to-markdown))'
-	sed -i "s/\.md)/.org)/g"  $@
 	chgrp tmp $@
 
 generated/cloud.el: header.el 0.el goodies/macros.el goodies/functions.el goodies/logging.el 1.el 2.el generated/main.el

@@ -742,9 +742,8 @@ CF)))))
 " (aref file-record gname) (aref file-record modes) (full-TS (aref file-record mtime)) FN))))))
 
 (defun download (file-record)
-(needs (
-(FN (aref file-record plain) (clog :error "download: file lacks plain name"))
-(stanza (dec-make-stanza file-record) (clog :error "download: could not create stanza for %s" FN)))
+(needs ((FN (aref file-record plain) (clog :error "download: file lacks plain name"))
+        (stanza (dec-make-stanza file-record) (clog :error "download: could not create stanza for %s" FN)))
 (push (format " %s" FN) all)
 (push stanza Makefile) (NL)))
 
@@ -782,12 +781,15 @@ all)
 \techo \"background (en/de)cryption on %s finished $(date)\" >> %s
 \t-rm %s
 \t-rmdir %s
+\t@sed 's/%s/******/g' %s > %s.bak
+\t-rm %s
 \t-emacsclient -e '(reset-Makefile)'
 "
 (apply #'concat all)
 (system-name)
 (concat cloud-dir "history")
-(cloud-lockfile) (cloud-lockdir))
+(cloud-lockfile) (cloud-lockdir)
+password (cloud-mk) (cloud-mk) (cloud-mk))
 (write-region (apply #'concat (reverse Makefile)) nil (cloud-mk))))))))
 
 (defun cloud-sync()
@@ -966,7 +968,7 @@ ok))
     (dolist (FN names)
       (clog :debug "add-files(%s)" FN)
       (unless (cloud-locate-FN FN)
-	(needs ((GFP (get-file-properties FN) (clog :error "Invalid attempt to cloud inexisting file %s" FN))
+	(needs ((GFP (get-file-properties (file-chase-links FN)) (clog :error "Aborting attempt to cloud inexisting file %s" FN))
 		(CN (new-file-name cloud-dir)))
 	       (aset GFP cipher CN)
 	       (setf ok (and ok GFP))
@@ -976,10 +978,10 @@ ok))
 (write-region
 (format "%s %s
 " CN (rand-str 18)) nil (all-passes) t)
-(touch (all-passes)) ;(touch FN)
-)
+(touch (all-passes)))
 (upload GFP))))
-    ok))
+(save-Makefile)
+ok))
 
 (defun cloud-forget-file (local-FN); called *after* the file has already been sucessfully deleted
    (push local-FN removed-files)

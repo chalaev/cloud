@@ -19,22 +19,32 @@ Synchronizing important files on two or more computers using
 Encrypted files saved in the cloud have *random names* to minimize the amount of information Evil Corporations can extract by monitoring our cloud directory.
 
 * Prerequisites
-We need ~emacs~, GNU ~make~, ~ImageMagick~, ~gpg~ and ~gawk~; in Debian these can be installed with ~aptitude~ as follows:
+We need ~emacs~, GNU ~make~, ~ImageMagick~, ~gpg~, ~sed~ and ~gawk~; in Debian these can be installed with ~aptitude~ as follows:
 #+BEGIN_SRC shell
-aptitude install emacs make imagemagick gpg gawk
+aptitude install emacs make imagemagick gpg sed gawk
 #+END_SRC
 
+* Commands
+- =M-x cloud-add= adds one or several files to the list of "clouded" files. This means that =M-x cloud-sync= command will upload
+  these "clouded" files to the remote server if they are updated. Supposed to be used in dired buffer for several (marked) files,
+  or (when no files are marked) for a single file. Currently works on files only, not on directories.
+- =M-x cloud-forget= is the opposite of =M-x cloud-add=. It is also called automatically when files are removed in dired buffer.
+  Currently works on files only, not on directories.
+- =M-x cloud-sync= syncronizes local files with the cloud. Could be regularly called with a =crontab= line, e.g., 
+  =43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null=
 * Quick start
-I am running emacs in daemon mode (in text console) with the following =~/.bash_login=
+I am running ~emacs~ in daemon mode (in text console) using the following =~/.bash_login=
 #+BEGIN_SRC shell
-(emacs --daemon ; make -j8 -f ~/.emacs.d/cloud/cloud.mk all) &
+emacs --daemon
 #+END_SRC
 and =~/.bash_logout=
 #+BEGIN_SRC shell
 emacsclient -e "(kill-emacs)"
+[ -f ~/.emacs.d/cloud/cloud.mk ] && make -j8 -f ~/.emacs.d/cloud/cloud.mk all
 #+END_SRC
 where in =~/.bash_login= I assumed that there are 8 CPU cores available.
-The I use =emacsclient -c= to open a new (gui) emacs window.
+Once  =~/.bash_login= has started  ~emacs~ in the server mode,
+I can use =emacsclient -c= to open a new (gui) emacs window.
 
 1. Mount remote directory. The mounting point may be arbitrary (specified as =cloud-directory= in =~/.emacs.d/cloud/config=), the default one is ~/mnt/cloud/~.
 2. You can create the file =~/.emacs.d/cloud/config= yourself, or it will be generated. Mine looks as follows:
@@ -57,7 +67,7 @@ The I use =emacsclient -c= to open a new (gui) emacs window.
    Then open a directory =C-x d=, mark several files, and cloud them with =M-x cloud-add=. Then =M-x cloud-sync=.
 4. Check log files described in [[file:files.org][files.org]]: they should let you know that the encrypted copies of your clouded files have been copied to the remote directory
 5. Using some secure way, copy =~/.emacs.d/cloud/config= to another host; launch ~cloud.el~ there and check the log files.
-6. [[https://github.com/chalaev/cloud/issues/new/choose][Let me know]] if something does not work.
+6. [[https://github.com/chalaev/cloud/issues/new/choose][Let me know]] if something is unclear or does not work.
 
 Every time we =M-x cloud-sync=, local files get synchronized with the cloud. For this purpose I have a line in my ~crontab~:
 =43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null=

@@ -68,7 +68,10 @@ To see more messages, set =*log-level*=  to =:debug= (zero) level:
 3. =~/.emacs.d/cloud/individual.passes= contains individual password for *all* images, e.g.,\\
    cL2 EKPBqTxuHoo8CF4v\\
    RGq f9f0vIgxu9VOvrjc
-4. Numerous =~/.emacs.d/cloud/images/???= (one per image) files contain individual image passwords.
+4. Numerous =~/.emacs.d/cloud/images/???= (temporary, one per image) files contain individual image passwords.
 5. =~/.emacs.d/cloud/`hostname`.log= is the host-specific log file for the `hostname`.
 6. =/mnt/cloud/now-syncing/= is a lock directory; its existence tells other hosts that the cloud is busy now and they have to wait before launching =cloud-sync=.
 7. =/mnt/cloud/now-syncing/`hostname`= tells the time when the =cloud-sync= on =`hostname`= started. Normally erased after =cloud-sync= has done the job.
+8. =~/.emacs.d/cloud/pending-actions= contains the list of actions waiting to be transmitted to the cloud, when we get internet.
+9. =/mnt/cloud/hosts/`hostname`= ← these file's modification dates tell us who was the last host to change the files on the remote server.
+   For now these files also contain (unnecessary) time stamps.

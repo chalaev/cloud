@@ -50,6 +50,7 @@ When those are copied from the cloud to the local hard drive, one should call, e
 (defvar cloud-file-hooks nil "for special files treatment")
 (defvar ~ (getenv "HOME"))
 (defvar emacs-d (concat ~ "/.emacs.d/"))
+(defvar cloud-was-connected t "normally t, nill when there was no connection")
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
@@ -192,6 +193,7 @@ Contents file is the main one in the cloud; it contains information
 ** Creation
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (defun write-conf()
+(clog :debug "starting write-conf")
 (with-temp-file (local-config)
   (insert (format "delete-contents=%s" (if cloud-delete-contents "yes" "no"))) (newline)
   (insert (format "contents-name=%s" contents-name)) (newline)
@@ -395,9 +397,9 @@ Done with this file, moving to another one:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (forward-line))
 #+END_SRC
-We ended up parsing the list of files
+At this point we ended up parsing the list of files.
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
-(save-Makefile) (kill-buffer BN))))))
+(kill-buffer BN))))))
 #+END_SRC
 =(defun read-fileDB* ...)= ends here.
 
@@ -547,9 +549,8 @@ The decoding is similar:
 ** Putting this all together
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (defun download (file-record)
-(needs (
-(FN (aref file-record plain) (clog :error "download: file lacks plain name"))
-(stanza (dec-make-stanza file-record) (clog :error "download: could not create stanza for %s" FN)))
+(needs ((FN (aref file-record plain) (clog :error "download: file lacks plain name"))
+        (stanza (dec-make-stanza file-record) (clog :error "download: could not create stanza for %s" FN)))
 (push (format " %s" FN) all)
 (push stanza Makefile) (NL)))
 #+END_SRC
@@ -593,12 +594,15 @@ all)
 \techo \"background (en/de)cryption on %s finished $(date)\" >> %s
 \t-rm %s
 \t-rmdir %s
+\t@sed 's/%s/******/g' %s > %s.bak
+\t-rm %s
 \t-emacsclient -e '(reset-Makefile)'
 "
 (apply #'concat all)
 (system-name)
 (concat cloud-dir "history")
-(cloud-lockfile) (cloud-lockdir))
+(cloud-lockfile) (cloud-lockdir)
+password (cloud-mk) (cloud-mk) (cloud-mk))
 (write-region (apply #'concat (reverse Makefile)) nil (cloud-mk))))))))
 #+END_SRC
 
@@ -610,8 +614,15 @@ We assume that files are changed only within emacs, so that
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (defun cloud-sync()
 (interactive)
-(ifn (cloud-connected-p)
-  (clog :error "remote directory is not mounted")
+(ifn (cloud-connected-p) (progn
+(clog :error "remote directory is not mounted")
+(setf cloud-was-connected nil)
+#+END_SRC
+2020-10-30 save actions to =~/.emacs.d/cloud/pending-actions=
+#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+(dolist (action (reverse cloud-actions))
+  (insert (format-action action)) (drop cloud-actions action) (delete-char -1) (newline))
+)
 (let ((time-stamp (TS (current-time)))
       (mkdir (safe-mkdir (cloud-lockdir))) (ok t))
   (if (member mkdir '(:permission nil))
@@ -625,6 +636,7 @@ We assume that files are changed only within emacs, so that
     (clog :error "I will not start new (en/de) coding process because the previous one is still funning"))
 (t
 (write-region time-stamp nil (cloud-lockfile))
+(save-Makefile)
 #+END_SRC
 Now let us reveal what host made the latest update to the cloud:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
@@ -633,6 +645,7 @@ Now let us reveal what host made the latest update to the cloud:
 (ifn (safe-mkdir DN) (clog :error "can not create directory %s" DN)
 (unless 
 (and
+  cloud-was-connected
   (file-exists-p FN)
   (string= FN (car (sort (mapcar #'(lambda(fn) (concat DN fn)) cloud-hosts) #'file-newer-than-file-p))))
 #+END_SRC
@@ -640,6 +653,7 @@ If another host has updated the cloud:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (ifn (read-fileDB)
 (setf ok (clog :error "cloud-sync: could not read content file from the cloud"))
+(setf cloud-was-connected t)
 (write-region time-stamp nil (concat cloud-dir  "hosts/" (system-name)))))
 #+END_SRC
 ← this =write-region= provides log files with time stamps to Forces of Darkness;
@@ -689,7 +703,7 @@ ok)))))))))))
 This will be a hook on quitting emacs:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (defun before-exit()
-  (write-conf)
+;; (write-conf)
   (cloud-sync))
 #+END_SRC
 so that =cloud-sync= is set to run before the user quits ~emacs~.
@@ -888,7 +902,7 @@ To add (or "cloud") a file I suggest opening a dired buffer, mark the files and 
 #+END_SRC
 Pending upgrades for =cloud-add=:
 1. =cloud-add= must become more user-friendly: let the user know that file(s) are sucessfully clouded, and
-2. =cloud-add= must work with directories. This is, however not so straightforward because I almost never want to cloud _all_ files within a directory.
+2. =cloud-add= must work with directories. This is, however, not so straightforward because I almost never want to cloud _all_ files within a directory.
 
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (defun add-files(&rest names)
@@ -896,7 +910,7 @@ Pending upgrades for =cloud-add=:
     (dolist (FN names)
       (clog :debug "add-files(%s)" FN)
       (unless (cloud-locate-FN FN)
-	(needs ((GFP (get-file-properties FN) (clog :error "Invalid attempt to cloud inexisting file %s" FN))
+	(needs ((GFP (get-file-properties (file-chase-links FN)) (clog :error "Aborting attempt to cloud inexisting file %s" FN))
 		(CN (new-file-name cloud-dir)))
 	       (aset GFP cipher CN)
 	       (setf ok (and ok GFP))
@@ -911,12 +925,11 @@ Since we are clouding an image, we need to
 (write-region
 (format "%s %s
 " CN (rand-str 18)) nil (all-passes) t)
-(touch (all-passes)) ;(touch FN)
-)
+(touch (all-passes)))
 (upload GFP))))
-    ok))
+;;(save-Makefile)
+ok))
 #+END_SRC
-
 
 ** Forget files
 #+END_SRC
@@ -1010,17 +1023,17 @@ I suggest running =(cloud-start)= from =~/.emacs= every time you restart ~emacs~
 We have read configuration, and now let us check if it is correct:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (ifn (and
-      (if-let ((CD (cdr (assoc "cloud-directory" conf))))
-	  (setf cloud-dir CD); "/mnt/lws/cloud/"
+   (if-let ((CD (cdr (assoc "cloud-directory" conf))))
+	  (setf cloud-dir CD)
 	(setf cloud-dir (read-string "cloud directory=" cloud-dir))
 	(write-conf) t)
-      (progn
+   (progn
 	(when-let ((delete-contents (cdr (assoc "delete-contents" conf))))
-          (setf cloud-delete-contents (if (string= "no" delete-contents) nil t)))t)
-      (setf contents-name (cdr (assoc "contents-name" conf)))
-      (setf N-CPU-cores (string-to-number (or (cdr (assoc "number-of-CPU-cores" conf)) "1")))
-      (setf password  (cdr (assoc "password" conf))))
-   (clog :error "something is missing or wrong in the configuration file" cloud-dir)
+       (setf cloud-delete-contents (if (string= "no" delete-contents) nil t)))t)
+   (setf contents-name (cdr (assoc "contents-name" conf)))
+   (setf N-CPU-cores (string-to-number (or (cdr (assoc "number-of-CPU-cores" conf)) "1")))
+   (setf password  (cdr (assoc "password" conf))))
+(clog :error "something is missing or wrong in the configuration file" cloud-dir)
 #+END_SRC
 In case ~cloud-directory~ configuration parameter is missing, let ask the user for the input:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
@@ -1051,7 +1064,7 @@ even if we've got no images clouded so there are no passwords for them, this fil
   (let ((tmp-CCN (untilda (concat (local-dir) "CCN"))))
 (or
 (and
- (cloud-connected-p)
+;; (cloud-connected-p)
 (= 0 (apply #'call-process
 (append (list "gpg" nil nil nil)
 (split-string (format
