@@ -72,6 +72,9 @@ To see more messages, set =*log-level*=  to =:debug= (zero) level:
 5. =~/.emacs.d/cloud/`hostname`.log= is the host-specific log file for the `hostname`.
 6. =/mnt/cloud/now-syncing/= is a lock directory; its existence tells other hosts that the cloud is busy now and they have to wait before launching =cloud-sync=.
 7. =/mnt/cloud/now-syncing/`hostname`= tells the time when the =cloud-sync= on =`hostname`= started. Normally erased after =cloud-sync= has done the job.
-8. =~/.emacs.d/cloud/pending-actions= contains the list of actions waiting to be transmitted to the cloud, when we get internet.
+8. =~/.emacs.d/cloud/pending.`hostname`= contains
+   1. (1st line) list of clouded hosts
+   2. (starting from 3rd line) list of actions waiting to be transmitted to the cloud, when we get internet.
+      There is no need to cloud this file.
 9. =/mnt/cloud/hosts/`hostname`= ← these file's modification dates tell us who was the last host to change the files on the remote server.
    For now these files also contain (unnecessary) time stamps.

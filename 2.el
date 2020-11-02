@@ -9,7 +9,7 @@
 (or (cloud-locate-FN FN)
 (when (file-exists-p FN)
   (when-let ((FA (file-attributes FN 'string)))
-    (let ((DB-rec (make-vector (length DB-fields) nil)))
+    (let ((DB-rec (make-vector (length file-fields) nil)))
       (destructuring-bind
 	  (uid gid acess-time mod-time status-time size ms void inode fsNum)
 	  (cddr FA)
@@ -37,3 +37,8 @@
     (insert (replace-regexp-in-string (format "%s .*
 " XYZ) "" str)))
   (kill-buffer BN)))
+
+(defmacro bad-column (cType N &optional str)
+(if str
+`(clog :error "invalid %dth column in %s line = %s" ,N ,cType ,str)
+`(clog :error "invalid %dth column in %s line" ,N ,cType)))

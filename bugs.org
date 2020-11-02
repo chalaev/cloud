@@ -1,24 +1,9 @@
 * Errors
-1. Suppose I am starting =emacs --daemon= and the remote directory is *not* mounted.
-   (Either because I forgot to mount it, or there is no wifi available.)
-   Then I could =M-x cloud-add= and =M-x cloud-forget=, delete and rename files and direcories in dired, but this all woun't be
-   synced?
-   *The clouding system should work even if there is no connection to the cloud.*
-   2020-10-30 Experimenting with that with my laptop in doctor's office (without internet):
-   1. changed (previously clouded) bugs.org
-   2. clouded 2-task.txt
-   When I came to my office, both files were sucessfully sent to the cloud, but on the desktop there was a disaster:
-   1. 2-task.txt
-      :debug 09:44:26 started read-fileDB*
-      :error 09:44:28 forgetting file ~/2-task.txt which is marked as clouded but is neither on local disk nor in the cloud
-      :error 09:44:28 forgetting file ~/programming/emacs/common.el which is marked as clouded but is neither on local disk nor in the cloud
-      ← that is, ~/2-task.txt was erased from the cloud!
-   2. bugs.org was never copied; its stanza in cloud make was the opposite, for uploading, not for downloading.
-2. Now suppose I run out of battery and I will shut down the laptop before I reach the internet.
-   What is going to be lost? I guess, 2-task.txt will not be clouded.
-   This problem could be fixed by adding ~pending-actions~ file to the directory ~/.emacs.d/cloud/
-3. Newly added image ~/03.jpg was added to =file-DB= and saved to ~/.emacs.d/cloud/CCN and got a line in individual.passes *but*
-   was not saved to cloud.mk and was not uploaded.
+Suppose old and new vesrions of one and the same file exists on 2 hosts: kalinin and kolmogorov.
+The version on kolmogorov is the most recent one.
+I =M-x cloud-add= the file on kalinin, and its obsolete version is uploaded to the cloud.
+The problem is that it won't be substituted by the newer version (residing on kolmogorov)
+because the time stamp of the gpg is newer!
 
 * To do
 1. (see above) add ~pending-actions~ file to the directory ~/.emacs.d/cloud/
@@ -44,6 +29,11 @@
 [[http://lftp.yar.ru][lftp]] supports torrents.
 
 I will think of using torrents instead of clouds or using them together.
+Note that (at least when mounted using ~WebDav~) clouds are probably *even slowlier* than torrents for large files:
+for example, it took me 13+ hours (!) to copy 403-megabyte archive to [[https://disk.yandex.com/][Yandex Disk]].
+(This is not an exception – I am used to the fact that ~WebDav~-clouds are very slow.)
+I did not use torrents for looong time but I think they we faster even 10 years ago.
+
 Advantages of torrents:
 1. With torrents we can forget about space limitation we always have for clouds, and
 2. The more people use torrents, the harder it is to enforce [[https://www.fsf.org/search?SearchableText=DMCA][DMCA]]; probably 50 million of torrent users in the US

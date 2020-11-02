@@ -1,14 +1,14 @@
 
 # Table of Contents
 
-1.  [Description](#orga8da760)
-2.  [Prerequisites](#org36c4428)
-3.  [Commands](#org00edf10)
-4.  [Quick start](#org5af86ee)
-5.  [Source code files](#org747501a)
-6.  [Motivation](#org08ff221)
-7.  [Limitations](#org11c0186)
-8.  [Support](#orge4def78)
+1.  [Description](#org98cc3ad)
+2.  [Prerequisites](#org9f78f79)
+3.  [Commands](#org698d568)
+4.  [Quick start](#org68a9715)
+5.  [Source code files](#org430d091)
+6.  [Motivation](#orgbf56e3d)
+7.  [Limitations](#orgf9a6887)
+8.  [Support](#orgdbfe616)
 
 Intended for linux users who have [emacs](https://www.gnu.org/software/emacs/) always open.
 
@@ -16,7 +16,7 @@ I did not expect this project to grow that much;
 some of the desired functions are still not implemented or half-implemented.
 
 
-<a id="orga8da760"></a>
+<a id="org98cc3ad"></a>
 
 # Description
 
@@ -36,7 +36,7 @@ Synchronizing important files on two or more computers using
 Encrypted files saved in the cloud have **random names** to minimize the amount of information Evil Corporations can extract by monitoring our cloud directory.
 
 
-<a id="org36c4428"></a>
+<a id="org9f78f79"></a>
 
 # Prerequisites
 
@@ -45,7 +45,7 @@ We need `emacs`, GNU `make`, `ImageMagick`, `gpg`, `sed` and `gawk`; in Debian t
     aptitude install emacs make imagemagick gpg sed gawk
 
 
-<a id="org00edf10"></a>
+<a id="org698d568"></a>
 
 # Commands
 
@@ -58,7 +58,7 @@ We need `emacs`, GNU `make`, `ImageMagick`, `gpg`, `sed` and `gawk`; in Debian t
     `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="org5af86ee"></a>
+<a id="org68a9715"></a>
 
 # Quick start
 
@@ -78,7 +78,6 @@ I can use `emacsclient -c` to open a new (gui) emacs window.
 1.  Mount remote directory. The mounting point may be arbitrary (specified as `cloud-directory` in `~/.emacs.d/cloud/config`), the default one is `/mnt/cloud/`.
 2.  You can create the file `~/.emacs.d/cloud/config` yourself, or it will be generated. Mine looks as follows:
     
-        delete-contents=yes
         contents-name=XYZ
         password=*********
         number-of-CPU-cores=8
@@ -101,7 +100,7 @@ Every time we `M-x cloud-sync`, local files get synchronized with the cloud. For
 `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="org747501a"></a>
+<a id="org430d091"></a>
 
 # Source code files
 
@@ -120,7 +119,7 @@ Every time we `M-x cloud-sync`, local files get synchronized with the cloud. For
     c. ideas on further development.
 
 
-<a id="org08ff221"></a>
+<a id="orgbf56e3d"></a>
 
 # Motivation
 
@@ -143,7 +142,7 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 5.  Dired-compatible: whatever I do with a file in dired (delete, rename), will be automatically done on other computers.
 
 
-<a id="org11c0186"></a>
+<a id="orgf9a6887"></a>
 
 # Limitations
 
@@ -154,7 +153,7 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 2.  After encrypting an image and then decrypting it back, we get the same, but not identical picture (file size is changed).
 
 
-<a id="orge4def78"></a>
+<a id="orgdbfe616"></a>
 
 # Support
 

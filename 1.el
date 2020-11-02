@@ -53,6 +53,30 @@
      (setf failed t)))
   (not failed)))
 
+;;(setf coding-system-for-read 'utf-8)
+(defun safe-insert-file(FN)
+  (let (failed)
+  (condition-case err (insert-file-contents FN)
+    (file-missing
+     (clog :error "missing file %s: %s" FN (error-message-string err))
+     (setf failed t))
+    (file-error
+     (clog :info "cannot read file %s; %s" FN (error-message-string err))
+     (setf failed t)))
+  (not failed)))
+
+(defmacro temp-open(FN &rest body)
+  `(with-temp-buffer
+     (safe-insert-file ,FN)
+     ,@body))
+
+(defun backspace()
+  (if (< (point-min) (point))
+      (delete-char -1)
+    (clog :error "can not backspace in buffer(%s), file(%s)"
+	  (buffer-name)
+	  (if-let ((FN (buffer-file-name))) FN "N/A"))))
+
 (defun new-file-name (cloud-dir)
   (let (new-fname error-exists); экзистенциальная ошибка: какое бы имя я не выдумывал, а такой файл уже существует!
     (loop repeat 10 do (setf new-fname (rand-str 3))
@@ -110,8 +134,9 @@
       (cons (reverse result) str)))
    (t (begins-with* str what))))
 
+(let ((~ (getenv "HOME")))
 (defun tilda(x) (replace-regexp-in-string (concat "^" ~) "~" x))
-(defun untilda(x) (replace-regexp-in-string "^~" ~ x))
+(defun untilda(x) (replace-regexp-in-string "^~" ~ x)))
 
 (defun cloud-locate-FN (name)
   "find file by (true) name"
@@ -122,20 +147,11 @@
   "find file by (ciper) name"
   (find name file-DB :key #'cipher-name :test #'string=))
 
-(defun format-file (DB-rec)
-  (format "%S %s %s %s %d %S"
-	  (tilda (aref DB-rec plain))
-	  (aref DB-rec cipher)
-	  (aref DB-rec uname)
-	  (aref DB-rec gname)
-	  (aref DB-rec modes); integer
-	  (format-time-string "%F %H:%M:%S %Z" (aref DB-rec mtime))))
-
 (defun plain-name  (df)(aref df plain))
 
 (defun DBrec-from-file(file-name)
   (when-let ((FA (file-attributes file-name 'string)))
-    (let ((DBrec (make-vector (length DB-fields) nil)))
+    (let ((DBrec (make-vector (length file-fields) nil)))
       (destructuring-bind
 	  (uid gid acess-time mod-time status-time size ms void inode fsNum)
 	  (cddr FA)
@@ -150,4 +166,3 @@
 ;; (defun grab-parameter (str parname); (grab-parameter "contentsName=z12"  "contentsName") => "z12"
 ;;   (when (string-match (concat parname "=\\(\\ca+\\)$") str)
 ;;       (match-string 1 str)))
-

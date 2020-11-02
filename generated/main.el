@@ -1,40 +1,188 @@
-;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-;; generated from cloud.org
-(defvar cloud-delete-contents t "if decrypted contents file must be erased")
-(defvar cloud-hosts nil "host names participating in file syncronization")
-(defvar cloud-actions nil "actions to be saved in the cloud")
-(defvar removed-files  nil "files that were just removed (or renamed) on local host before (cloud-sync)")
-(defvar important-msgs nil "these messages will be typically printed at the end of the process")
-(defvar gpg-process nil "assyncronous make-process for (en/de)cryption")
-
+(defvar password nil); to be read from config or generated
 (defvar N-CPU-cores 1)
-(defvar cloud-dir  "/mnt/cloud/")
+(defvar remote-dir  "/mnt/cloud/")
 (defvar cloud-file-hooks nil "for special files treatment")
-(defvar ~ (getenv "HOME"))
-(defvar emacs-d (concat ~ "/.emacs.d/"))
+
+(defvar emacs-d "~/.emacs.d/")
 (defvar cloud-was-connected t "normally t, nill when there was no connection")
 
-(defun local-dir() (tilda (concat emacs-d "cloud/")))
+(defun local-dir() (concat emacs-d "cloud/"))
 (defun cloud-mk() (concat (local-dir) "cloud.mk"))
-(defun cloud-lockdir() (concat cloud-dir "now-syncing/"))
-(defun cloud-lockfile() (concat (cloud-lockdir) (system-name)))
-(defun all-passes() (concat (local-dir) "individual.passes"))
+(defun lock-dir() (concat remote-dir "now-syncing/"))
+(defun lock-file() (concat (lock-dir) (system-name)))
+(defun image-passes() (concat (local-dir) "individual.passes"))
+(defun local/() (concat (local-dir) (system-name) "/"))
+(defun local/log() (concat (local/) "log"))
 
-(defun local-config() (concat (local-dir) "config"))
+(defun local/config() (concat (local-dir) (system-name) "/config"))
 
-(defvar contents-name nil)
+(defun cloud-init() "initializes cloud directory and generates password -- runs only once"
+;; (interactive) ==== this function must be local
+(clog :info "atempting to create new configuration for this host")
+;;(when (yes-or-no-p "Is cloud mounted?")
+;;(setf remote-dir (read-string "cloud directory=" remote-dir))
+(ifn (member (safe-mkdir remote-dir) '(:exists t))
+(clog :error "could not create/access directory %s" remote-dir)
 
-(defvar file-DB nil "")
-(defvar password nil); to be read from config or generated
-(defvar DB-fields; indices numerating array fields
+(if (directory-files remote-dir nil "^.\+.gpg$" t)
+    (clog :error "please clean the directory %s before asking me to initialize it" remote-dir)
+(clog :info "creating (main) remote file DB in unused directory %s" remote-dir)
+(ifn-set ((remote/files (new-file-name remote-dir)))
+  (clog :error "could not create DB file in the directory %s" remote-dir)
+
+(setf password (rand-str 9))
+
+(ifn (member (safe-mkdir (local-dir)) '(:exists t))
+  (clog :error "could not create/acess directory %s" (local-dir))
+(write-conf)
+(clog :info "use M-x cloud-add in the dired to cloud important files and directories" ))))))
+
+(defun write-conf()
+(clog :debug "starting write-conf")
+(with-temp-file (local/config)
+  (insert (format "remote/files=%s" remote/files)) (newline)
+  (insert (format "password=%s" password)) (newline)
+  (insert (format "number-of-CPU-cores=%s" N-CPU-cores)) (newline)
+  (insert (format "remote-directory=%s" remote-dir)) (newline)))
+
+(defun read-conf()
+  "reads configuration file"
+(clog :debug "starting read-conf")
+(let (conf)
+(needs-set
+  ((conf (read-conf* (local/config)))
+   (remote/files (cdr (assoc "remote/files" conf)) (clog :error "specify 3-symbol contents name (remote/files) in %s" (local/config)))
+   (N-CPU-cores (string-to-number
+ (or
+ (cdr (assoc "number-of-CPU-cores" conf))
+ (clog :warning "specify number-of-CPU-cores in %s" (local/config)
+ "1"))))
+   (password (cdr (assoc "password" conf)) (clog :error "specify password in %s" (local/config)))
+   (remote-dir (cdr (assoc "remote-directory" conf)) (clog :error "specify remote-directory in %s" (local/config))))
+conf)))
+
+(defun read-conf* (file-name)
+  "reads configuration file"
+(clog :debug "read-conf")
+(with-temp-buffer
+(safe-insert-file (local/config))
+  (let (res str)
+    (while (< 0 (length (setf str (read-line))))
+     (if (string-match "^\\(\\ca+\\)=\\(\\ca+\\)$" str)
+	 (push (cons (match-string 1 str) (match-string 2 str)) res)
+       (clog :error "garbage string in configuration file: %s" str)))
+    res)))
+
+(defvar cloud-hosts nil "host names participating in file synchronization")
+(defvar remote-actions nil "actions to be saved in the cloud")
+(defvar file-DB nil "list of vectors, each corresponding to a clouded file")
+
+(defvar remote/files nil "encrypted DB (without .gpg suffix) stored on the server")
+
+(defvar file-fields; indices numerating array fields
 (list 'plain; original (local) file name
 'cipher; encrypted file name (base name)
 'mtime; modification time
 'modes; permissions
 'uname; user name (obsolete and unused)
-'gname; group name
-))
-(let ((i 0)) (dolist (field-name DB-fields) (setf i (1+ (set field-name i)))))
+'gname)); group name
+(let ((i 0)) (dolist (field-name file-fields) (setf i (1+ (set field-name i)))))
+
+(defun local/hosts() (concat (local/) "hosts"))
+(defun local/actions() (concat (local/) "actions"))
+
+(defun local/files() (concat (local/) "files"))
+(defun local/all() (concat (local/) "all"))
+
+(defun no-new-updates-p()
+(let* ((DN (concat remote-dir "hosts/"))
+       (FN (concat DN (system-name))))
+(ifn (safe-mkdir DN) (clog :error "can not create directory %s" DN)
+(and
+  cloud-was-connected
+  (file-exists-p FN)
+  (string= FN (car (sort (mapcar #'(lambda(fn) (concat DN fn)) cloud-hosts) #'file-newer-than-file-p)))))))
+
+(defun print-hosts()
+(dolist (hostname cloud-hosts) (insert (format "%s " hostname)))
+(backspace)
+(newline))
+;;(clog :debug "print-hosts finished"))
+
+(defun print-actions()
+(clog :debug "print-action started")
+(dolist (action (reverse remote-actions))
+  (insert (format-action action))
+  (drop remote-actions action)
+  ;;(backspace) 
+(newline))
+(clog :debug "print-action finished")
+)
+
+(defun format-file (DB-rec)
+  (format "%S %s %s %s %d %S"
+	  (tilda (aref DB-rec plain))
+	  (aref DB-rec cipher)
+	  (aref DB-rec uname)
+	  (aref DB-rec gname)
+	  (aref DB-rec modes); integer
+	  (format-time-string "%F %H:%M:%S %Z" (aref DB-rec mtime))))
+
+(defun safe-FL()
+  (if (< (line-end-position) (point-max))
+     (forward-line)
+     (move-end-of-line 1)))
+(defun read-line()
+(let ((str (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+ (safe-FL)
+ str))
+(defun cut-line() 
+(let ((str (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+  (delete-region (line-beginning-position) (progn (safe-FL) (point)))
+   str))
+
+(defun parse-action(str)
+(clog :debug "parse-action(%s) ..." str)
+(let ((action (make-vector (length action-fields) nil)))
+
+(dolist (column (list
+                 `(:time-stamp . ,i-time)
+                 `(:int . ,i-ID)
+                 `(:int . ,i-Nargs)))
+  (needs ((col-value (begins-with str (car column)) (bad-column "action" (cdr column))))
+     (aset action (cdr column) (car col-value))
+     (setf str (cdr col-value))))
+
+(dolist (column 
+(list
+  (cons (cons  :string  (aref action i-Nargs)) i-args)
+       `(:strings . ,i-hostnames)))
+  (needs ((col-value (begins-with str (car column)) (bad-column "action" (cdr column))))
+     (aset action (cdr column) (car col-value)); was (mapcar #'untilda (car col-value))
+     (setf str (cdr col-value))))
+
+(let ((AID (format-time-string "%02m/%02d %H:%M:%S" (aref action i-time))))
+(clog :info "... will later be referenced as %s" AID)
+(cons AID action))))
+
+(defun str-to-DBrec(str)
+"parses one file line from the remote file DB"
+(ifn (string-match "\"\\(.+\\)\"\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([[:digit:]]+\\)\s+\"\\(.+\\)\"" str)
+(clog :error "Ignoring invalid file line %s" str)
+
+(let ((CF (make-vector (length file-fields) nil))
+      (FN (match-string 1 str)))
+  (aset CF plain FN)
+  (aset CF cipher (match-string 2 str))
+  (aset CF uname (match-string 3 str))
+
+(aset CF gname (match-string 4 str))
+  (aset CF modes (string-to-number (match-string 5 str)))
+  (let ((mtime-str (match-string 6 str)))
+(ifn (string-match "[0-9]\\{4\\}-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9] [[:upper:]]\\{3\\}" mtime-str)
+(bad-column "file" 6 mtime-str)
+(aset CF mtime (parse-time mtime-str))
+CF)))))
 
 (defun end-log (fstr &rest args)
   "message + time"
@@ -59,48 +207,24 @@
     ;;   (load-file FN))
 )))
 
+;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; generated from cloud.org
+(defvar removed-files  nil "files that were just removed (or renamed) on local host before (cloud-sync)")
+
+(defvar important-msgs nil "these messages will be typically printed at the end of the process")
+(defvar gpg-process nil "assyncronous make-process for (en/de)cryption")
+
 (defun cloud-connected-p()
   (and
-   cloud-dir contents-name
-   (file-readable-p cloud-dir)))
-;;(file-readable-p (concat cloud-dir contents-name ".gpg")
+   remote-dir remote/files
+   (file-readable-p remote-dir)))
+;;(file-readable-p (concat remote-dir remote/files ".gpg")
 
-(defun write-conf()
-(clog :debug "starting write-conf")
-(with-temp-file (local-config)
-  (insert (format "delete-contents=%s" (if cloud-delete-contents "yes" "no"))) (newline)
-  (insert (format "contents-name=%s" contents-name)) (newline)
-  (insert (format "password=%s" password)) (newline)
-  (insert (format "number-of-CPU-cores=%s" N-CPU-cores)) (newline)
-  (insert (format "cloud-directory=%s" cloud-dir)) (newline)))
-
-(defun cloud-init() "initializes cloud directory and generates password -- runs only once"
-(interactive)
-(when (yes-or-no-p "Is cloud mounted?")
-(setf cloud-dir (read-string "cloud directory=" cloud-dir))
-(ifn (member (safe-mkdir cloud-dir) '(:exists t))
-(clog :error "could not create/access directory %s" cloud-dir)
-
-(if (directory-files cloud-dir nil "^.\+.gpg$" t)
-    (clog :error "please clean the directory %s before asking me to initialize it" cloud-dir)
-(clog :info "creating (main) contents file in unused directory %s" cloud-dir)
-(ifn-set ((contents-name (new-file-name cloud-dir)))
-  (clog :error "could not create DB file in the directory %s" cloud-dir)
-
-(setf password (rand-str 9))
-
-(ifn (member (safe-mkdir (local-dir)) '(:exists t))
-(clog :error "could not create/acess directory %s" (local-dir))
-(write-conf)
-(clog :info "use M-x cloud-add in the dired to cloud important files and directories" )))))))
-
-(defun write-fileDB (DBname)
+(defun write-all (DBname)
   (with-temp-file DBname
-(dolist (hostname cloud-hosts) (insert (format "%s " hostname)))
-(delete-char -1) (newline)
+(print-hosts)
 
-(dolist (action (reverse cloud-actions))
-  (insert (format-action action)) (drop cloud-actions action) (delete-char -1) (newline))
+(print-actions)
 
 (newline)
 
@@ -108,60 +232,38 @@
   (insert (format-file file-record)) (newline))
 (setf removed-files nil)))
 
-(defun clouded(DB-rec)
-(let ((FN (aref DB-rec plain))
-      (CN (aref DB-rec cipher)))
-  (concat cloud-dir CN (cip-ext FN))))
-
 (defun read-fileDB* (DBname)
   "reads content (text) file into the database file-DB"
 (clog :debug "started read-fileDB*")
-  (find-file DBname) (goto-char (point-min))
-(macrolet ((read-line() '(setf str (buffer-substring-no-properties (point) (line-end-position)))))
-  (let ((BN (buffer-name)) str)
+  (temp-open DBname
+  (let (str)
 (needs-set
- ((cloud-hosts 
-  (split-string (read-line))
-  (clog :error "invalid first line in the contents file %s" DBname)))
+ ((cloud-hosts
+  (split-string (setf str (read-line)))
+  (clog :error "invalid first line in the remote file DB %s" DBname)))
+;; (setf cloud-hosts '("kolmogorov" "kalinin"))
 
 (unless (member (system-name) cloud-hosts) (cloud-host-add))
-(forward-line)
+(clog :debug "sucessfully read list of hosts")
 
-(while (< 0 (length (read-line)))
-(clog :info "action %s ..." str)
-(let ((action (make-vector (length action-fields) nil)))
-
-(dolist (column (list
-                 `(:time-stamp . ,i-time)
-                 `(:int . ,i-ID)
-                 `(:int . ,i-Nargs)))
-  (needs ((col-value (begins-with str (car column)) (bad-column "action" (cdr column))))
-     (aset action (cdr column) (car col-value))
-     (setf str (cdr col-value))))
-
-(dolist (column (list
-                 (cons (cons  :string  (aref action i-Nargs)) i-args)
-                 `(:strings . ,i-hostnames)))
-  (needs ((col-value (begins-with str (car column)) (bad-column "action" (cdr column))))
-     (aset action (cdr column) (car col-value)); was (mapcar #'untilda (car col-value))
-     (setf str (cdr col-value))))
-
-(let ((AID (format-time-string "%02m/%02d %H:%M:%S" (aref action i-time))))
-(clog :info "... will later be referenced as %s" AID)
+(while (< 0 (length (setf str (read-line))))
+(when-let ((AA (parse-action str)) (AID (car AA)) (action (cdr AA)))
   (ifn (member (system-name) (aref action i-hostnames))
       (clog :info "this host is unaffected by action %s" AID)
-    (when (perform action)
-	(clog :debug "sucessfully performed action %s" AID)
+    (if (perform action)
+	(clog :info "sucessfully performed action %s" AID)
       (clog :error " action %s failed, will NOT retry it" AID))
 
 (when (drop (aref action i-hostnames) (system-name))
-  (push action cloud-actions)))))
-  (forward-line))
+  (push action remote-actions)))))
+(clog :debug "sucessfully read list of actions")
 
 (forward-line)
-(needs ((CDFs (mapcar #'(lambda(s) (replace-regexp-in-string "....$" "" s))
-      (directory-files cloud-dir nil "...\...." t)) (clog :error "can not read %s" cloud-dir)))
-(while (< 10 (length (read-line)))
+(needs ((CDFs
+
+(mapcar #'(lambda(s) (replace-regexp-in-string "....$" "" s))
+      (directory-files remote-dir nil "...\...." t)) (clog :error "can not read %s" remote-dir)))
+(while (< 10 (length (setf str (read-line))))
 (when-let ((CF (str-to-DBrec str)))
 
 (let* ((FN (plain-name CF))
@@ -178,20 +280,13 @@
 ((or
  (and (not local-exists) remote-exists)
  (and local-exists remote-exists (time< (aref local-exists mtime) (aref CF mtime))))
+
 (download CF))
 ((or
  (and local-exists remote-exists (time< (aref CF mtime) (aref local-exists mtime)))
  (and local-exists (not remote-exists)))
-(upload CF)))))
-
-(forward-line))
-
-(kill-buffer BN))))))
-
-(defmacro bad-column (cType N &optional str)
-(if str
-`(clog :error "invalid %dth column in %s line = %s" ,N ,cType ,str)
-`(clog :error "invalid %dth column in %s line" ,N ,cType)))
+(upload CF))))))
+t)))))
 
 (defun touch (FN)
 "called when the file named FN is changed"
@@ -203,37 +298,18 @@
   (touch (file-chase-links (buffer-file-name))))
 (add-hook 'after-save-hook 'on-current-buffer-save)
 
-(defun str-to-DBrec(str)
-"parses one file line from the contents file"
-(ifn (string-match "\"\\(.+\\)\"\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([[:digit:]]+\\)\s+\"\\(.+\\)\"" str)
-(clog :error "Ignoring invalid file line %s" str)
-
-(let ((CF (make-vector (length DB-fields) nil))
-      (FN (match-string 1 str)))
-  (aset CF plain FN)
-  (aset CF cipher (match-string 2 str))
-  (aset CF uname (match-string 3 str))
-
-(aset CF gname (match-string 4 str))
-  (aset CF modes (string-to-number (match-string 5 str)))
-  (let ((mtime-str (match-string 6 str)))
-(ifn (string-match "[0-9]\\{4\\}-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9] [[:upper:]]\\{3\\}" mtime-str)
-(bad-column "file" 6 mtime-str)
-(aset CF mtime (parse-time mtime-str))
-CF)))))
-
 (macrolet ((NL () '(push "
 " Makefile))
 (inl (&rest format-pars) `(progn (push ,(cons 'format format-pars) Makefile) (NL))))
 (cl-flet ((pass-d()  (concat (local-dir) "pass.d/")))
-(cl-flet ((updated() (concat (pass-d) "updated"))
-       (local-log() (concat (local-dir) (system-name) ".log")))
+(cl-flet ((updated() (concat (pass-d) "updated")))
 (let (all Makefile
 
 (specially-encoded '(
 
 ("$(cloud)%s.gpg: %s
-\tcp $< $@" "gpg")
+\tcp $< $@
+" "gpg")
 
 ("$(cloud)%s.png: %s %s
 \tconvert $< -encipher %s%s $@
@@ -241,7 +317,8 @@ CF)))))
 
 (specially-decoded '(
 ("%s: $(cloud)%s.gpg
-\tcp $< $@" "gpg")
+\tcp $< $@
+" "gpg")
 ("%s: $(cloud)%s.png  %s
 \tconvert $< -decipher %s%s $@
 " "jpg" "jpeg" "png"))))
@@ -285,7 +362,7 @@ CF)))))
 (needs ((FN (tilda (aref file-record plain)) (clog :error "upload: file lacks plain name"))
 	(CN (aref file-record cipher) (clog :error "upload: file %s lacks cipher name" FN))
 	(stanza (enc-make-stanza file-record) (clog :error "upload: could not create stanza for %s" FN)))
-(push (format " %s" (concat cloud-dir CN
+(push (format " %s" (concat remote-dir CN
 (cip-ext FN)))
 all)
 (push stanza Makefile) (NL)))
@@ -294,12 +371,12 @@ all)
 "reseting make file"
 (when (or (and (file-exists-p (pass-d)) (file-directory-p (pass-d))) (safe-mkdir (pass-d)))
 (setf all nil Makefile nil)
-(inl "cloud=%s" cloud-dir)
+(inl "cloud=%s" remote-dir)
 (inl "password=%S" password)
 (inl "gpg=gpg --pinentry-mode loopback --batch --yes")
 (inl "enc=$(gpg) --symmetric --passphrase $(password) -o")
 (inl "dec=$(gpg) --decrypt   --passphrase $(password) -o")
-(inl "localLog=%s" (local-log))
+(inl "localLog=%s" (local/log))
 (inl "MK=%s" (cloud-mk))
 (inl "date=`date '+%%m/%%d %%T'`
 ")
@@ -307,7 +384,7 @@ all)
 \tawk '{print $$2 > %S$$1}' $<
 \techo $(date) > $@
 \t-chgrp -R tmp %s*
-" (updated) (all-passes) (untilda (pass-d)) (pass-d))))))
+" (updated) (image-passes) (untilda (pass-d)) (pass-d))))))
 
 (defun save-Makefile()
 "flushing make file"
@@ -321,50 +398,57 @@ all)
 "
 (apply #'concat all)
 (system-name)
-(concat cloud-dir "history")
-(cloud-lockfile) (cloud-lockdir)
+(concat remote-dir "history")
+(lock-file) (lock-dir)
 password (cloud-mk) (cloud-mk) (cloud-mk))
 (write-region (apply #'concat (reverse Makefile)) nil (cloud-mk))))))))
 
 (defun cloud-sync()
 (interactive)
-(ifn (cloud-connected-p) (progn
+(ifn (cloud-connected-p)
+
+(progn
 (clog :error "remote directory is not mounted")
 (setf cloud-was-connected nil)
 
-(dolist (action (reverse cloud-actions))
-  (insert (format-action action)) (drop cloud-actions action) (delete-char -1) (newline))
-)
+(with-temp-file (local/hosts) (print-hosts))
+
+(with-temp-buffer (print-actions)
+(write-region nil nil (local/actions) t)))
+
 (let ((time-stamp (TS (current-time)))
-      (mkdir (safe-mkdir (cloud-lockdir))) (ok t))
+      (mkdir (safe-mkdir (lock-dir))))
   (if (member mkdir '(:permission nil))
-      (clog :error "cannot cloud-sync without %s" (cloud-lockdir))
+      (clog :error "cannot cloud-sync -- being unable to lock directory %s" (lock-dir))
 (clog :debug "cloud-sync started")
   (cond
-   ((not mkdir) (clog :error "can not create lock directory %s. Is the remote directory monted?" (cloud-lockdir)))
+   ((not mkdir) (clog :error "can not create lock directory %s. Is the remote directory monted?" (lock-dir)))
    ((member mkdir '(:exists))
-    (clog :error "lock directory %s exists; someone else might be syncing right now. If this is not the case, remove %s manually" (cloud-lockdir) (cloud-lockdir)))
+    (clog :error "lock directory %s exists; someone else might be syncing right now. If this is not the case, remove %s manually" (lock-dir) (lock-dir)))
    ((and gpg-process (process-live-p gpg-process))
     (clog :error "I will not start new (en/de) coding process because the previous one is still funning"))
 (t
-(write-region time-stamp nil (cloud-lockfile))
-(save-Makefile)
+(write-region time-stamp nil (lock-file))
 
-(let* ((DN (concat cloud-dir "hosts/"))
-       (FN (concat DN (system-name))))
-(ifn (safe-mkdir DN) (clog :error "can not create directory %s" DN)
-(unless 
-(and
-  cloud-was-connected
-  (file-exists-p FN)
-  (string= FN (car (sort (mapcar #'(lambda(fn) (concat DN fn)) cloud-hosts) #'file-newer-than-file-p))))
+(with-temp-file (local/actions)
+(safe-insert-file (local/actions))
+(let (res str)
+  (while (< 0 (length (setf str (cut-line))))
+     (push (cdr (parse-action str)) remote-actions))))
 
+(if (no-new-updates-p)
+
+(unless file-DB (read-fileDB))
+
+(clog :debug "another host has updated the cloud")
 (ifn (read-fileDB)
-(setf ok (clog :error "cloud-sync: could not read content file from the cloud"))
+(clog :error "cloud-sync: could not read content file from the cloud")
 (setf cloud-was-connected t)
-(write-region time-stamp nil (concat cloud-dir  "hosts/" (system-name)))))
 
-(when ok (clog :info "started syncing")
+(write-region time-stamp nil (concat remote-dir  "hosts/" (system-name)))))
+
+(clog :info "started syncing")
+(save-Makefile)
 (if (and gpg-process (process-live-p gpg-process))
 (clog :error "I will not start new (en/de) coding process because the previous one is still funning")
 (setf gpg-process (apply #'start-process (append (list
@@ -373,22 +457,19 @@ password (cloud-mk) (cloud-mk) (cloud-mk))
 "make")
 (split-string (format "-j%d -f %s all" N-CPU-cores (cloud-mk)))))))
 
-(let ((tmp-CCN (untilda (concat (local-dir) "CCN"))))
-(write-fileDB tmp-CCN)
+(write-all (local/all))
 (ifn (= 0 (apply #'call-process
 (append (list "gpg" nil nil nil)
 (split-string (format
 "--batch --yes --pinentry-mode loopback --passphrase %s  -o %s --symmetric %s"
-password (concat cloud-dir contents-name ".gpg") tmp-CCN)))))
-(clog :error "failed to encrypt content file %s to %s!" tmp-CCN contents-name)
-(when cloud-delete-contents (safe-dired-delete tmp-CCN))
+password (concat remote-dir remote/files ".gpg") (untilda (local/all)))))))
+(clog :error "failed to encrypt content file %s to %s!" (local/all) remote/files)
 
 (dolist (msg (reverse important-msgs)) (message msg))
 (setf important-msgs nil)
 (clog :info "done syncing")
      (write-region (format "%s: %s -- %s
-" (system-name) time-stamp (format-time-string "%H:%M:%S" (current-time))) nil (concat cloud-dir "history") t)
-ok)))))))))))
+" (system-name) time-stamp (format-time-string "%H:%M:%S" (current-time))) nil (concat remote-dir "history") t))))))))
 
 (defun before-exit()
 ;; (write-conf)
@@ -406,22 +487,22 @@ ok)))))))))))
     (aset action i-time (current-time))
     (aset action i-args args)
     (aset action i-hostnames (remove (system-name) cloud-hosts))
-    (push action cloud-actions)))
+    (push action remote-actions)))
 
 (defun perform(action)
 (write-region
 (format "%s: %s
 " (TS (current-time)) (format-action action))
-nil (local-log) t)
+nil (local/log) t)
   (let ((arguments (aref action i-args)))
-    (case= (aref action i-ID)
+    (case* (aref action i-ID) =
       (i-host-forget (dolist (arg arguments) (drop cloud-hosts arg)) t)
       (i-host-add (dolist (arg arguments) (push arg cloud-hosts)) t)
       (i-forget (cloud-forget-many arguments) t)
       (i-delete (cloud-rm arguments) t)
       (i-rename (cloud-rename-file (first arguments) (second arguments)) t)
       (otherwise (clog :error "unknown action %d" (aref action i-ID)))))
-   (drop cloud-actions action) t)
+   (drop remote-actions action) t)
 
 (defun format-action (action)
   (format "%S %d %d %s %s"
@@ -472,11 +553,11 @@ ok))
       res))
 
 (defun add-to-actions(hostname)
-  (dolist (action cloud-actions)
+  (dolist (action remote-actions)
     (unless (member hostname (aref action i-hostnames))
       (aset action i-hostnames (cons hostname (aref action i-hostnames))))))
 (defun erase-from-actions(hostname)
-  (dolist (action cloud-actions)
+  (dolist (action remote-actions)
     (when (member hostname (aref action i-hostnames))
       (aset action i-hostnames (remove hostname (aref action i-hostnames))))))
 
@@ -494,7 +575,7 @@ ok))
     (when (yes-or-no-p (format "Forget the host %s?" hostname))
       (new-action i-host-forget hostname)
       (if (cloud-sync)
-	  (safe-dired-delete (local-config))
+	  (safe-dired-delete (local/config))
 	(clog :error "sync failed, so I will not erase local configuration")))))
 
 (defun cloud-add (&optional FN)
@@ -511,7 +592,7 @@ ok))
       (clog :debug "add-files(%s)" FN)
       (unless (cloud-locate-FN FN)
 	(needs ((GFP (get-file-properties (file-chase-links FN)) (clog :error "Aborting attempt to cloud inexisting file %s" FN))
-		(CN (new-file-name cloud-dir)))
+		(CN (new-file-name remote-dir)))
 	       (aset GFP cipher CN)
 	       (setf ok (and ok GFP))
 	       (push GFP file-DB)
@@ -519,8 +600,8 @@ ok))
 
 (write-region
 (format "%s %s
-" CN (rand-str 18)) nil (all-passes) t)
-(touch (all-passes)))
+" CN (rand-str 18)) nil (image-passes) t)
+(touch (image-passes)))
 (upload GFP))))
 ;;(save-Makefile)
 ok))
@@ -529,7 +610,7 @@ ok))
    (push local-FN removed-files)
   (needs ((DB-rec (cloud-locate-FN local-FN) (clog :info "forget: doing nothing since %s is not clouded" local-FN))
           (CEXT (cip-ext local-FN))
-	  (cloud-FN (concat cloud-dir (aref DB-rec cipher) CEXT) (clog :error "in DB entry for %s" local-FN)))
+	  (cloud-FN (concat remote-dir (aref DB-rec cipher) CEXT) (clog :error "in DB entry for %s" local-FN)))
 
 (when (string= CEXT ".png")
 (clog :debug "forgetting password for %s" local-FN)
@@ -580,41 +661,39 @@ ok))
 
 (defun cloud-start()
   (interactive) (save-some-buffers)
-(clog :debug "cloud-start: local-config = %s" (local-config))
-(ifn-let ((conf (read-conf (local-config))))
-	 (progn
-	   (clog :warning "could not read local configuration file, trying to (re)create configuration")
-	   (cloud-init)
-	   (clog :info "check newly created configuraion %s and then M-x cloud-start" (local-config)))
+(clog :debug "cloud-start: local/config = %s" (local/config))
+(ifn-let ((conf (read-conf)))
+(progn
+  (clog :warning "could not read local configuration file, trying to (re)create configuration")
+  (when (cloud-init)
+  (clog :info "check newly created configuraion %s and then M-x cloud-start" (local/config))))
 
 (ifn (and
-   (if-let ((CD (cdr (assoc "cloud-directory" conf))))
-	  (setf cloud-dir CD)
-	(setf cloud-dir (read-string "cloud directory=" cloud-dir))
+   (if-let ((CD (cdr (assoc "remote-directory" conf))))
+	  (setf remote-dir CD)
+	(setf remote-dir (read-string "cloud directory=" remote-dir))
 	(write-conf) t)
-   (progn
-	(when-let ((delete-contents (cdr (assoc "delete-contents" conf))))
-       (setf cloud-delete-contents (if (string= "no" delete-contents) nil t)))t)
-   (setf contents-name (cdr (assoc "contents-name" conf)))
+   (setf remote/files (cdr (assoc "remote/files" conf)))
    (setf N-CPU-cores (string-to-number (or (cdr (assoc "number-of-CPU-cores" conf)) "1")))
    (setf password  (cdr (assoc "password" conf))))
-(clog :error "something is missing or wrong in the configuration file" cloud-dir)
+(clog :error "something is missing or wrong in the configuration file" remote-dir)
 
-(setf cloud-dir 
-  (or (cdr (assoc "cloud-directory" conf))
-      (read-string "cloud directory=" cloud-dir)))
+(setf remote-dir 
+  (or (cdr (assoc "remote-directory" conf))
+      (read-string "cloud directory=" remote-dir)))
 
 (add-hook 'kill-emacs-hook 'before-exit)
 
-(unless (file-exists-p (all-passes))
-  (write-region "" nil (all-passes))
-  (add-files (all-passes)))
+(unless (file-exists-p (image-passes))
+  (write-region "" nil (image-passes))
+  (add-files (image-passes)))
 
 (reset-Makefile)
-(cloud-sync))))
+(cloud-sync) ;;(clog :debug "(cloud-sync)")
+)))
 
 (defun read-fileDB()
-  (let ((tmp-CCN (untilda (concat (local-dir) "CCN"))))
+(clog :debug "starting read-fileDB")
 (or
 (and
 ;; (cloud-connected-p)
@@ -622,23 +701,6 @@ ok))
 (append (list "gpg" nil nil nil)
 (split-string (format
 "--batch --yes --pinentry-mode loopback --passphrase %s -o %s --decrypt %s"
-password tmp-CCN (concat cloud-dir contents-name ".gpg"))))))
- (progn (read-fileDB* tmp-CCN)
-	(if cloud-delete-contents
-	    (safe-dired-delete tmp-CCN) t)))
-(progn (clog :error "cloud-start header failed") nil))))
-
-(defun read-conf (file-name)
-  "reads configuration file"
-(clog :debug "read-conf")
-  (find-file (local-config)) (goto-char (point-min)); opening config file
-  (let (res str (BN (buffer-name)))
-    (while (and
-	    (setf str (buffer-substring-no-properties (point) (line-end-position)))
-	    (< 0 (length str)))
-     (if (string-match "^\\(\\ca+\\)=\\(\\ca+\\)$" str)
-	 (push (cons (match-string 1 str) (match-string 2 str)) res)
-       (clog :error "garbage string in configuration file: %s" str))
-(forward-line))
-(kill-buffer BN)
-    res))
+password (untilda (local/files)) (concat remote-dir remote/files ".gpg"))))))
+(read-fileDB* (local/files)))
+(clog :error "cloud-start header failed") nil))
