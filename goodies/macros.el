@@ -115,7 +115,7 @@
 	  ,(caddr vardef))
       `(when-set (,(car vardefs))
 	   ,(if (cdr vardefs)
-	       (macroexpand-1 `(needs ,(cdr vardefs) ,@body))
+	       (macroexpand-1 `(needs-set ,(cdr vardefs) ,@body))
 	      (cons 'progn body))))))
 
 (defmacro ifn (test ifnot &rest ifyes)

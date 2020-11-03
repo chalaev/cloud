@@ -13,8 +13,13 @@ generated/cloud.el: header.el 0.el goodies/macros.el goodies/functions.el goodie
 	chgrp tmp $@
 	chmod a-x generated/*.el
 
+2.el: 2.org
+	emacsclient -e '(org-babel-tangle-file "$<")'
+	chgrp tmp $@
+	chmod a-x $@
+
 generated/main.el: cloud.org
-	emacsclient -e '(org-babel-tangle-file "cloud.org")'
+	emacsclient -e '(org-babel-tangle-file "$<")'
 	chgrp tmp $@
 	chmod a-x generated/*.el
 

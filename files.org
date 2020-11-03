@@ -7,6 +7,11 @@ b. `hostname` stands for the host name, my host names are "kalinin" and "kolmogo
 Main (static) files are described in [[file:README.org][README.org]]; the code dynamically creates the following files:
 
 * Log files
+To watch all logs:
+#+BEGIN_SRC shell
+tail -f /mnt/cloud/history /mnt/cloud/hosts/* ~/.emacs.d/elisp.log ~/.emacs.d/cloud/pass.d/updated ~/.emacs.d/cloud/*/log
+#+END_SRC
+
 ** /mnt/cloud/history
 kolmogorov: 10/23 13:16:44 -- 13:17:23\\
 background (en/de)cryption on kolmogorov finished 13:18:49\\

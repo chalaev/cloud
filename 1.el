@@ -138,9 +138,9 @@
 (defun tilda(x) (replace-regexp-in-string (concat "^" ~) "~" x))
 (defun untilda(x) (replace-regexp-in-string "^~" ~ x)))
 
-(defun cloud-locate-FN (name)
+(defun cloud-locate-FN (FN)
   "find file by (true) name"
-  (find name file-DB :key #'plain-name
+  (find FN file-DB :key #'plain-name
 	:test #'(lambda(x y)(string= (tilda x) (tilda y)))))
 
 (defun cloud-locate-CN (name)

@@ -1,6 +1,11 @@
+ Note sure if the following 2 functions are necessary, or, may be, they should be declared as macro or "inline":
+#+BEGIN_SRC emacs-lisp :tangle 2.el
 (defun plain-name  (df)(aref df plain))
 (defun cipher-name (df)(aref df cipher))
+#+END_SRC
 
+BTW, =(file-exists-p FN)= produces ~nil~ if the file resides in directory with (rx) permissions →
+#+BEGIN_SRC emacs-lisp :tangle 2.el
 (defun get-file-properties* (FN)
   (when-let ((FA (and (file-exists-p FN) (file-attributes FN 'string)))
 	     (DB-rec (make-vector (length file-fields) nil)))
@@ -39,7 +44,13 @@
 (if str
 `(clog :error "invalid %dth column in %s line = %s" ,N ,cType ,str)
 `(clog :error "invalid %dth column in %s line" ,N ,cType)))
+#+END_SRC
 
+2020-11-02 I observed a strange ~gpg~ error: when I encrypted directly to the cloud directory,
+sometimes I could not unencrypt it as if there were some write errors!
+So I decided that I will first encrypt the file locally and then move it to the folder.
+
+#+BEGIN_SRC emacs-lisp :tangle 2.el
 (safe-mkdir "/tmp/cloud/")
 (defun gpg-encrypt(FN XYZ)
 (let ((tmp-gpg (concat "/tmp/cloud/" XYZ ".gpg")))
@@ -59,7 +70,10 @@
 		      password (untilda FN) tmp-gpg)))))
        (clog :error "failed to encrypt %s to %s!" (local/all) remote/files)
 (safe-delete-file tmp-gpg) t)))
+#+END_SRC
 
+* Lock directory
+#+BEGIN_SRC emacs-lisp :tangle 2.el
 (defmacro directory-lock(DN &rest body)
   (let ((lock-file (gensym "LF")))
 `(let ((,lock-file (concat ,DN (system-name))))
@@ -69,3 +83,4 @@
 (ifn (and (safe-delete-file ,lock-file) (safe-delete-dir ,DN))
 (clog :error "can not unlock %s" ,DN)
 t)))))
+#+END_SRC
