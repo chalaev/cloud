@@ -1,4 +1,4 @@
-;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 
 ;; I try to get rid of loop and other common-lisp stuff here
 
@@ -18,17 +18,6 @@
     (time-less-p (time-add t1 1) t2)
     (not (time-less-p (time-add t2 1) t1))))
 
-(defun safe-mkdir (dirname)
-  (clog :debug "mkdir %s" dirname)
-  (if (file-exists-p dirname)
-      (if (file-directory-p dirname)
-          (progn (clog :warning "not creating already existing directory %s" dirname) :exists)
-        (clog :warning "file exists with the same name as working directory %s" dirname) :file)
-    (condition-case err
-        (progn (make-directory dirname) t)
-      (file-already-exists (clog :warning "Strange, may be the file already exists (but this was checked!). %s" (error-message-string err)) nil); when file exists
-      (file-error (clog :warning "Probably, you have no permission to create this directory: %s" (error-message-string err)) :permission))))
-
 (defun safe-dired-delete (FN)
   (let (failed)
     (condition-case err (funcall DDF FN "always")
@@ -36,22 +25,6 @@
        (clog :error "in DDF: %s" (error-message-string err))
        (setf failed t)))
     (not failed)))
-
-(defun safe-delete-file (FN)
-  (let (failed)
-  (condition-case err (delete-file FN)
-    (file-error
-     (clog :error "cannot delete file %s; %s" FN (error-message-string err))
-     (setf failed t)))
-  (not failed)))
-
-(defun safe-delete-dir (FN)
-  (let (failed)
-  (condition-case err (delete-directory FN)
-    (file-error
-     (clog :info "cannot delete directory %s; %s" FN (error-message-string err))
-     (setf failed t)))
-  (not failed)))
 
 ;;(setf coding-system-for-read 'utf-8)
 (defun safe-insert-file(FN)
@@ -135,8 +108,10 @@
    (t (begins-with* str what))))
 
 (let ((~ (getenv "HOME")))
-(defun tilda(x) (replace-regexp-in-string (concat "^" ~) "~" x))
-(defun untilda(x) (replace-regexp-in-string "^~" ~ x)))
+  (defun tilda(x)
+    (replace-regexp-in-string (concat "^" ~) "~" x))
+  (defun untilda(x)
+    (replace-regexp-in-string "^~" ~ x)))
 
 (defun cloud-locate-FN (FN)
   "find file by (true) name"
@@ -147,7 +122,9 @@
   "find file by (ciper) name"
   (find name file-DB :key #'cipher-name :test #'string=))
 
+ ;; Note sure if the following 2 functions are necessary, or, may be, they should be declared as macro or "inline":
 (defun plain-name  (df)(aref df plain))
+(defun cipher-name (df)(aref df cipher))
 
 (defun DBrec-from-file(file-name)
   (when-let ((FA (file-attributes file-name 'string)))

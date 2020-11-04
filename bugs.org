@@ -1,30 +1,23 @@
 * Errors
-Suppose old and new vesrions of one and the same file exists on 2 hosts: kalinin and kolmogorov.
-The version on kolmogorov is the most recent one.
-I =M-x cloud-add= the file on kalinin, and its obsolete version is uploaded to the cloud.
-The problem is that it won't be substituted by the newer version (residing on kolmogorov)
-because the time stamp of the gpg is newer!
+To be checked:
+suppose 
 
 * To do
-1. (see above) add ~pending-actions~ file to the directory ~/.emacs.d/cloud/
-2. Tired project
-3. Clouding directories
+1. Tired project
+2. Clouding directories
+3. Garbage cleaning: some of the files in the remote directory are not referenced in =~/.emacs.d/cloud/`hostname`/all=;
+   Such "abandoned" files were created during debugging; they should be identified and erased. Similarly, some of the lines in =~/.emacs.d/cloud/individual.passes= are unused
+   and should be removed.
 4. Package the code.
      
-* Tests
-** Clouding new text file and new image
-1. Mark one image and one text file in dired, then =M-x cloud-add=.
-2. =M-x cloud-sync= must encrypt these and upload them to the cloud.
-3. (Re)start emacs on another computer, these two files must be downloaded from the cloud.
-
-** Fresh start
-1. Rename directory =~/.emacs.d/cloud/=
-2. Disconnect (unmount) remote directory.
-3. (Re)start emacs.
-4. Examine newly created =~/.emacs.d/cloud/config=
-5. Examine ~*Messages*~ buffer for error message(s) explaining that the code can not work until you connect to the server.
-
 * Ideas on future development
+
+~JPEGs~ and ~PNGs~ are encrypted with AES-algorithm that [[https://imagemagick.org/script/cipher.php][may become vulnerable]] if the same password is used for multiple images; this is why every image gets an individual password.
+
+I did not expect this project to grow that much;
+some of the desired functions are still not implemented or half-implemented.
+
+
 ** Replace clouds with torrents? 
 [[http://lftp.yar.ru][lftp]] supports torrents.
 

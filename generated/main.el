@@ -1,4 +1,4 @@
-;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 ;; generated from cloud.org
 (defvar password nil); to be read from config or generated
 (defvar N-CPU-cores 1)
@@ -19,7 +19,6 @@
 (defun local-dir() (concat emacs-d "cloud/"))
 (defun cloud-mk() (concat (local-dir) "cloud.mk"))
 (defun lock-dir() (concat (remote-dir) "now-syncing/"))
-(defun lock-file() (concat (lock-dir) (system-name)))
 (defun image-passes() (concat (local-dir) "individual.passes"))
 (defun local/() (concat (local-dir) (system-name) "/"))
 (defun local/log() (concat (local/) "log"))
@@ -102,8 +101,8 @@ conf)))
 ;;(clog :debug "print-hosts finished"))
 
 (defun print-actions()
-(clog :debug "print-action started")
 (dolist (action (reverse remote-actions))
+  (clog :debug "printing-action %s" (format-action action))
   (insert (format-action action))
   (drop remote-actions action)
   ;;(backspace) 
@@ -251,8 +250,9 @@ CF)))))
 (when-let ((CF (str-to-DBrec str)))
 
 (let* ((FN (plain-name CF))
-      (remote-file-exists (member FN CDFs))
-      (local-file-rec (or (cloud-locate-FN FN)
+       (CN (aref CF cipher))
+       (remote-file-exists (member CN CDFs))
+       (local-file-rec (or (cloud-locate-FN FN)
 (when-let ((LF (get-file-properties* FN)))
         (aset LF cipher (aref CF cipher))
         (push LF file-DB)
@@ -265,6 +265,7 @@ CF)))))
  (and (not local-file-rec) remote-file-exists)
  (and local-file-rec remote-file-exists (time< (aref local-file-rec mtime) (aref CF mtime))))
 
+(unless local-file-rec (push CF file-DB))
 (download CF))
 ((or
  (and local-file-rec remote-file-exists (time< (aref CF mtime) (aref local-file-rec mtime)))
@@ -274,7 +275,6 @@ t)))))
 
 (defun touch (FN)
 "called when the file named FN is changed"
-(clog :debug "touch(%s)" FN)
 (when (and FN (stringp FN))
   (when-let ((file-data (cloud-locate-FN (file-chase-links FN))))
     (aset file-data mtime (current-time))
@@ -408,7 +408,8 @@ password (cloud-mk) (cloud-mk))
  (read-all (local/all)))
 
 (ifn (cloud-connected-p) (clog :warning "remote directory not mounted, so we will not encrypt %s-->%s" (local/all) (remote-files))
-  (directory-lock (lock-dir)
+  (let ((DL (directory-lock (lock-dir) (format "%s
+%s" (system-name) (TS (current-time)))
     (when (file-newer-than-file-p (remote-files) (local/all))
       (clog :info "detected NEW %s, will now update %s from it" (remote-files) (local/all))
       (ifn (gpg-decrypt (local/all) (remote/files))
@@ -419,7 +420,7 @@ password (cloud-mk) (cloud-mk))
 (when (or added-files upload-queue removed-files)
   (ifn (write-all (local/all)) (setf ok (clog :error "could not save data to %s" (local/all)))
     (gpg-encrypt (local/all) (remote/files))
-    (setf added-files nil upload-queue nil)))
+    (setf added-files nil upload-queue nil removed-files nil)))
 
 (set-file-times (local/all) (current-time))
 
@@ -428,7 +429,10 @@ password (cloud-mk) (cloud-mk))
   (clog :debug "starting %s" make)
   (shell-command make)
   (clog :debug "finished %s" make))
-(reset-Makefile)))
+(safe-delete-file (cloud-mk))
+(reset-Makefile))))
+
+(unless (car DL) (setf ok (clog :error "Could not (un)lock remote directory! Please investigate")))))
 
 (dolist (msg (reverse important-msgs)) (message msg))
 (setf important-msgs nil)
@@ -587,7 +591,6 @@ ok))
 ok))
 
 (defun cloud-forget-file (local-FN); called *after* the file has already been sucessfully deleted
-   (push local-FN removed-files)
   (needs ((DB-rec (cloud-locate-FN local-FN) (clog :info "forget: doing nothing since %s is not clouded" local-FN))
           (CEXT (cip-ext local-FN))
 	  (cloud-FN (concat (remote-dir) (aref DB-rec cipher) CEXT) (clog :error "in DB entry for %s" local-FN)))

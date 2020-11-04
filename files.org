@@ -7,9 +7,9 @@ b. `hostname` stands for the host name, my host names are "kalinin" and "kolmogo
 Main (static) files are described in [[file:README.org][README.org]]; the code dynamically creates the following files:
 
 * Log files
-To watch all logs:
+Debugging becaomes easier when we watch all the logs:
 #+BEGIN_SRC shell
-tail -f /mnt/cloud/history /mnt/cloud/hosts/* ~/.emacs.d/elisp.log ~/.emacs.d/cloud/pass.d/updated ~/.emacs.d/cloud/*/log
+tail -f /mnt/cloud/history /mnt/cloud/hosts/* ~/.emacs.d/elisp.log ~/.emacs.d/cloud/pass.d/updated ~/.emacs.d/cloud/*/log ~/.emacs.d/cloud/*.log
 #+END_SRC
 
 ** /mnt/cloud/history
@@ -64,14 +64,11 @@ To see more messages, set =*log-level*=  to =:debug= (zero) level:
 (setf *log-level* 0)
 #+END_SRC
 
-** =*cloud-batch*=
-=*cloud-batch*= is the name of ~emacs~ buffer where GNU make output is stored.
-
 * Other files
 1. =~/.emacs.d/cloud/config= (contains gpg password – don't cloud it!) Created by the user or by the code at the very first code run.
-2. [[file:cloud.mk][~/.emacs.d/cloud/cloud.mk]] is the last GNU make file created during the previous =(cloud-sync)=
+2. [[file:make-files/1.mk][~/.emacs.d/cloud/cloud.mk]] is the last GNU make file created during the previous =(cloud-sync)=
 3. =~/.emacs.d/cloud/individual.passes= contains individual password for *all* images, e.g.,\\
-   cL2 EKPBqTxuHoo8CF4v\\
+   cL2 EKPBqTxuHoo8CF4v
    RGq f9f0vIgxu9VOvrjc
 4. Numerous =~/.emacs.d/cloud/images/???= (temporary, one per image) files contain individual image passwords.
 5. =~/.emacs.d/cloud/`hostname`.log= is the host-specific log file for the `hostname`.

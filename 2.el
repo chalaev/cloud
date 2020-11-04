@@ -1,6 +1,4 @@
-(defun plain-name  (df)(aref df plain))
-(defun cipher-name (df)(aref df cipher))
-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 (defun get-file-properties* (FN)
   (when-let ((FA (and (file-exists-p FN) (file-attributes FN 'string)))
 	     (DB-rec (make-vector (length file-fields) nil)))
@@ -27,10 +25,10 @@
 (defun forget-password(XYZ)
   "removes image password from password file"
 (let* ((str (progn
-	     (find-file (all-passes))
+	     (find-file (image-passes))
 	     (buffer-string)))
        (BN (buffer-name)))
-  (with-temp-file (all-passes)
+  (with-temp-file (image-passes)
     (insert (replace-regexp-in-string (format "%s .*
 " XYZ) "" str)))
   (kill-buffer BN)))
@@ -59,13 +57,3 @@
 		      password (untilda FN) tmp-gpg)))))
        (clog :error "failed to encrypt %s to %s!" (local/all) remote/files)
 (safe-delete-file tmp-gpg) t)))
-
-(defmacro directory-lock(DN &rest body)
-  (let ((lock-file (gensym "LF")))
-`(let ((,lock-file (concat ,DN (system-name))))
-  (if (member (safe-mkdir ,DN) '(:permission nil))
-  (clog :error "cannot cloud-sync -- unable to lock directory %s" ,DN) (write-region (TS (current-time)) nil ,lock-file)
-,@body
-(ifn (and (safe-delete-file ,lock-file) (safe-delete-dir ,DN))
-(clog :error "can not unlock %s" ,DN)
-t)))))

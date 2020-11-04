@@ -1,0 +1,34 @@
+cloud=/mnt/lws/cloud/
+password="******"
+gpg=gpg --pinentry-mode loopback --batch --yes
+enc=$(gpg) --symmetric --passphrase $(password) -o
+dec=$(gpg) --decrypt   --passphrase $(password) -o
+localLog=~/.emacs.d/cloud/kalinin/log
+MK=~/.emacs.d/cloud/cloud.mk
+date=`date '+%m/%d %T'`
+
+~/.emacs.d/cloud/pass.d/updated: ~/.emacs.d/cloud/individual.passes
+	awk '{print $$2 > "/home/shalaev/.emacs.d/cloud/pass.d/"$$1}' $<
+	echo $(date) > $@
+	-chgrp -R tmp ~/.emacs.d/cloud/pass.d/*
+
+$(cloud)mel.gpg: ~/Private/work/cloud/todo.txt
+	@$(enc) $@ $<
+	-echo "$(date): uploaded ~/Private/work/cloud/todo.txt" >> $(localLog)
+
+$(cloud)vEV.gpg: ~/Private/work/cloud/README.org
+	@$(enc) $@ $<
+	-echo "$(date): uploaded ~/Private/work/cloud/README.org" >> $(localLog)
+
+$(cloud)UJT.gpg: ~/.emacs.d/cloud/individual.passes
+	@$(enc) $@ $<
+	-echo "$(date): uploaded ~/.emacs.d/cloud/individual.passes" >> $(localLog)
+
+$(cloud)ivh.png: ~/20-02.jpg ~/.emacs.d/cloud/pass.d/updated
+	convert $< -encipher ~/.emacs.d/cloud/pass.d/ivh $@
+	-echo "$(date): uploaded ~/20-02.jpg" >> $(localLog)
+
+all: /mnt/lws/cloud/ivh.png /mnt/lws/cloud/UJT.gpg /mnt/lws/cloud/vEV.gpg /mnt/lws/cloud/mel.gpg
+	echo "background (en/de)cryption on kalinin finished $(date)" >> /mnt/lws/cloud/history
+	@sed 's/******/******/g' ~/.emacs.d/cloud/cloud.mk > ~/.emacs.d/cloud/cloud.mk.bak
+

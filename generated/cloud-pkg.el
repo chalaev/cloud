@@ -6,4 +6,4 @@
 ;; Local Variables:
 ;; no-byte-compile: t
 ;; End:
-;;; cloud-pkg.el ends here
+;; cloud-pkg.el ends here

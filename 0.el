@@ -1,4 +1,4 @@
-;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 
 (defun cadar (x) (car (cdar x)))
 

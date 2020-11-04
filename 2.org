@@ -1,11 +1,5 @@
- Note sure if the following 2 functions are necessary, or, may be, they should be declared as macro or "inline":
-#+BEGIN_SRC emacs-lisp :tangle 2.el
-(defun plain-name  (df)(aref df plain))
-(defun cipher-name (df)(aref df cipher))
-#+END_SRC
-
 BTW, =(file-exists-p FN)= produces ~nil~ if the file resides in directory with (rx) permissions →
-#+BEGIN_SRC emacs-lisp :tangle 2.el
+#+BEGIN_SRC emacs-lisp :tangle 2.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
 (defun get-file-properties* (FN)
   (when-let ((FA (and (file-exists-p FN) (file-attributes FN 'string)))
 	     (DB-rec (make-vector (length file-fields) nil)))
@@ -32,10 +26,10 @@ BTW, =(file-exists-p FN)= produces ~nil~ if the file resides in directory with (
 (defun forget-password(XYZ)
   "removes image password from password file"
 (let* ((str (progn
-	     (find-file (all-passes))
+	     (find-file (image-passes))
 	     (buffer-string)))
        (BN (buffer-name)))
-  (with-temp-file (all-passes)
+  (with-temp-file (image-passes)
     (insert (replace-regexp-in-string (format "%s .*
 " XYZ) "" str)))
   (kill-buffer BN)))
@@ -70,17 +64,4 @@ So I decided that I will first encrypt the file locally and then move it to the 
 		      password (untilda FN) tmp-gpg)))))
        (clog :error "failed to encrypt %s to %s!" (local/all) remote/files)
 (safe-delete-file tmp-gpg) t)))
-#+END_SRC
-
-* Lock directory
-#+BEGIN_SRC emacs-lisp :tangle 2.el
-(defmacro directory-lock(DN &rest body)
-  (let ((lock-file (gensym "LF")))
-`(let ((,lock-file (concat ,DN (system-name))))
-  (if (member (safe-mkdir ,DN) '(:permission nil))
-  (clog :error "cannot cloud-sync -- unable to lock directory %s" ,DN) (write-region (TS (current-time)) nil ,lock-file)
-,@body
-(ifn (and (safe-delete-file ,lock-file) (safe-delete-dir ,DN))
-(clog :error "can not unlock %s" ,DN)
-t)))))
 #+END_SRC

@@ -1,10 +1,10 @@
 #+TITLE: emacs-based secure cloud storage for text files
 #+AUTHOR: Oleg Shalaev
 #+EMAIL:  oleg@chalaev.com
-#+LaTeX_HEADER: \usepackage[english,russian]{babel}
+#+LaTeX_HEADER: \usepackage[russian,english]{babel}
 #+LATEX_HEADER: \usepackage[letterpaper,hmargin={1.5cm,1.5cm},vmargin={1.3cm,2cm},nohead,nofoot]{geometry}
 
-Uses ~macros.el~, ~functions.el~, and ~logging.el~ from the [[https://notabug.org/shalaev/elisp-goodies][elisp-goodies]] project.
+Uses ~macros.el~, ~functions.el~, ~file-functions.el~, and ~logging.el~ from the [[https://notabug.org/shalaev/elisp-goodies][elisp-goodies]] project.
 
 Github vs Emacs: since ~github~
 1. does not understand ~org-mode~ internal links,
@@ -29,7 +29,7 @@ The variables with the names starting with "cloud-" should probably be kept glob
 
 =cloud-file-hooks= is used for special files (e.g., diary or bookmarks);
 When those are copied from the cloud to the local hard drive, one should call, e.g., =diary-view-entries= or =bookmark-load=:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el :shebang ";;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+#+BEGIN_SRC emacs-lisp :tangle generated/main.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
 ;; generated from cloud.org
 (defvar password nil); to be read from config or generated
 (defvar N-CPU-cores 1)
@@ -63,7 +63,6 @@ Similarly to how they do it in ~JavaScript~, let me call the following functions
 (defun local-dir() (concat emacs-d "cloud/"))
 (defun cloud-mk() (concat (local-dir) "cloud.mk"))
 (defun lock-dir() (concat (remote-dir) "now-syncing/"))
-(defun lock-file() (concat (lock-dir) (system-name)))
 (defun image-passes() (concat (local-dir) "individual.passes"))
 (defun local/() (concat (local-dir) (system-name) "/"))
 (defun local/log() (concat (local/) "log"))
@@ -201,8 +200,8 @@ The content of ~file-DB~ is locally stored in the file named =(local/all)=:
 **** actions
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (defun print-actions()
-(clog :debug "print-action started")
 (dolist (action (reverse remote-actions))
+  (clog :debug "printing-action %s" (format-action action))
   (insert (format-action action))
   (drop remote-actions action)
   ;;(backspace) 
@@ -455,6 +454,7 @@ Here every line corresponds to one file:
   (insert (format-file file-record)) (newline))
 (setf removed-files nil) t))
 #+END_SRC
+← Also =removed-files= is set to =nil= in =cloud-sync=; probably it's enough to reset it only there.
 
 ** Parsing
 *** list of host names
@@ -521,8 +521,9 @@ In reality either file, the local one, or the remote one, or both, might be abse
 and we have to address all of these situations:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (let* ((FN (plain-name CF))
-      (remote-file-exists (member FN CDFs))
-      (local-file-rec (or (cloud-locate-FN FN)
+       (CN (aref CF cipher))
+       (remote-file-exists (member CN CDFs))
+       (local-file-rec (or (cloud-locate-FN FN)
 (when-let ((LF (get-file-properties* FN)))
         (aset LF cipher (aref CF cipher))
         (push LF file-DB)
@@ -537,6 +538,7 @@ and we have to address all of these situations:
 #+END_SRC
 =download= queues the file for downloading from the cloud (by updating the [[Creating make file][make file]]):
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
+(unless local-file-rec (push CF file-DB))
 (download CF))
 ((or
  (and local-file-rec remote-file-exists (time< (aref CF mtime) (aref local-file-rec mtime)))
@@ -555,7 +557,6 @@ to be uploaded to the cloud when the user calls =cloud-sync= next time:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (defun touch (FN)
 "called when the file named FN is changed"
-(clog :debug "touch(%s)" FN)
 (when (and FN (stringp FN))
   (when-let ((file-data (cloud-locate-FN (file-chase-links FN))))
     (aset file-data mtime (current-time))
@@ -749,10 +750,13 @@ and must be loaded at start (when =file-DB= is empty):
  (clog :info "loading data from disk at start")
  (read-all (local/all)))
 #+END_SRC
+← note that this local DB night be obsolete; some files recently clouded on other hosts are missing there.
+
 Now if we realize that clouded data is younger, we update the local one from it and =read-all= once again.
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (ifn (cloud-connected-p) (clog :warning "remote directory not mounted, so we will not encrypt %s-->%s" (local/all) (remote-files))
-  (directory-lock (lock-dir)
+  (let ((DL (directory-lock (lock-dir) (format "%s
+%s" (system-name) (TS (current-time)))
     (when (file-newer-than-file-p (remote-files) (local/all))
       (clog :info "detected NEW %s, will now update %s from it" (remote-files) (local/all))
       (ifn (gpg-decrypt (local/all) (remote/files))
@@ -766,7 +770,7 @@ If our host made the last updates on the server, and we have some data to save, 
 (when (or added-files upload-queue removed-files)
   (ifn (write-all (local/all)) (setf ok (clog :error "could not save data to %s" (local/all)))
     (gpg-encrypt (local/all) (remote/files))
-    (setf added-files nil upload-queue nil)))
+    (setf added-files nil upload-queue nil removed-files nil)))
 #+END_SRC
 
 It is always easier to read local file, so let me make it a little bit younger than the (encrypted) remote one:
@@ -780,9 +784,16 @@ Now let us copy the files from/to the cloud:
   (clog :debug "starting %s" make)
   (shell-command make)
   (clog :debug "finished %s" make))
-(reset-Makefile)))
+(safe-delete-file (cloud-mk))
+(reset-Makefile))))
 #+END_SRC
+If director (un)locking fails, we
+#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+(unless (car DL) (setf ok (clog :error "Could not (un)lock remote directory! Please investigate")))))
+#+END_SRC
+← This is actually rather superficial treatment; in the future we might want to treat this error better based on the information contained in =(cdr DL)=.
 
+Otherwise we proceed in a normal way.
 Finally let us print stored messages (printed by =end-log=):
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (dolist (msg (reverse important-msgs)) (message msg))
@@ -1053,7 +1064,6 @@ ok))
 #+END_SRC
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (defun cloud-forget-file (local-FN); called *after* the file has already been sucessfully deleted
-   (push local-FN removed-files)
   (needs ((DB-rec (cloud-locate-FN local-FN) (clog :info "forget: doing nothing since %s is not clouded" local-FN))
           (CEXT (cip-ext local-FN))
 	  (cloud-FN (concat (remote-dir) (aref DB-rec cipher) CEXT) (clog :error "in DB entry for %s" local-FN)))
@@ -1214,5 +1224,5 @@ Saving database to a file:
 ;; Local Variables:
 ;; no-byte-compile: t
 ;; End:
-;;; cloud-pkg.el ends here
+;; cloud-pkg.el ends here
 #+END_SRC

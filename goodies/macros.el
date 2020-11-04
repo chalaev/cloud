@@ -1,9 +1,9 @@
-;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 ;; generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
-(defmacro case* (var test &rest cases)
+(defmacro case* (expr test &rest cases)
   "case with arbitrary test function"
   (let ((v (gensym "v")))
-    `(let ((,v ,var))
+    `(let ((,v ,expr))
        (cond
         ,@(mapcar #'(lambda (VR)
 (let ((val (car VR)) (rest (cdr VR)))
@@ -11,6 +11,17 @@
       `(t ,@rest)
     `((,test ,v ,val) ,@rest))))
  cases)))))
+
+(defmacro case-let (let-var expr test &rest cases)
+  "case* with let expriable named by the user"
+    `(let ((,let-var ,expr))
+       (cond
+        ,@(mapcar #'(lambda (VR)
+(let ((val (car VR)) (rest (cdr VR)))
+  (if (eql val 'otherwise)
+      `(t ,@rest)
+    `((,test ,let-var ,val) ,@rest))))
+ cases))))
 
 (defmacro when-let (vars &rest body)
   "when with let using stndard let-notation"
@@ -117,6 +128,20 @@
 	   ,(if (cdr vardefs)
 	       (macroexpand-1 `(needs-set ,(cdr vardefs) ,@body))
 	      (cons 'progn body))))))
+
+(defmacro directory-lock(locked-dir by &rest body)
+(let ((LD0 (gensym "ld0-")) (LD1 (gensym "ld1-")) (lock-file (gensym "lf")) (mkdir (gensym "md")) (result (gensym "r")) (unlock (gensym "u")))
+
+`(let* ((,LD0 ,locked-dir)
+        (,LD1 (if (= ?/ (aref (reverse ,LD0) 0)) ,LD0 (concat ,LD0 "/")))
+        (,lock-file (concat ,LD1 "by"))
+        (,mkdir (safe-mkdir ,LD1)))
+  (ifn (car ,mkdir) (cons nil ,mkdir)
+  (write-region ,by nil ,lock-file)
+  (let ((,result (progn ,@body)))
+    (if-let ((,unlock (and (safe-delete-file ,lock-file) (safe-delete-dir ,LD1))))
+      (cons t ,result)
+      (cons nil (cons ,unlock ,result))))))))
 
 (defmacro ifn (test ifnot &rest ifyes)
 `(if (not ,test) ,ifnot ,@ifyes))

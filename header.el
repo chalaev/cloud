@@ -1,4 +1,4 @@
-;; -*- lexical-binding: t -*-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 
 ;;;cloud.el --- secure cloud storage and syncronization for text files
 

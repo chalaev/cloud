@@ -1,8 +1,4 @@
-;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-;; generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
-(defun chgrp(group file-name)
-  (= 0 (call-process "chgrp" nil nil nil group file-name)))
-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 (defun email (addr &optional subject body)
   "fast non-interactive way to send an email"
   (compose-mail addr (if subject subject ""))

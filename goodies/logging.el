@@ -1,4 +1,4 @@
-;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 ;; generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
 (unless (boundp '*log-level*) (defvar *log-level* 0))
 (unless (boundp '*emacs-d*) (defvar *emacs-d* (concat (getenv "HOME") "/.emacs.d/")))

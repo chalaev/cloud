@@ -1,5 +1,5 @@
-;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-;; -*- lexical-binding: t -*-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 
 ;;;cloud.el --- secure cloud storage and syncronization for text files
 
@@ -19,7 +19,7 @@
 ;; https://github.com/chalaev/cloud/blob/master/cloud.org
   
 ;;; Code:
-;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 
 (defun cadar (x) (car (cdar x)))
 
@@ -46,12 +46,12 @@
 (defun TS (time)
   (format-time-string "%02m/%02d %H:%M:%S" time))
 
-;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 ;; generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
-(defmacro case* (var test &rest cases)
+(defmacro case* (expr test &rest cases)
   "case with arbitrary test function"
   (let ((v (gensym "v")))
-    `(let ((,v ,var))
+    `(let ((,v ,expr))
        (cond
         ,@(mapcar #'(lambda (VR)
 (let ((val (car VR)) (rest (cdr VR)))
@@ -59,6 +59,17 @@
       `(t ,@rest)
     `((,test ,v ,val) ,@rest))))
  cases)))))
+
+(defmacro case-let (let-var expr test &rest cases)
+  "case* with let expriable named by the user"
+    `(let ((,let-var ,expr))
+       (cond
+        ,@(mapcar #'(lambda (VR)
+(let ((val (car VR)) (rest (cdr VR)))
+  (if (eql val 'otherwise)
+      `(t ,@rest)
+    `((,test ,let-var ,val) ,@rest))))
+ cases))))
 
 (defmacro when-let (vars &rest body)
   "when with let using stndard let-notation"
@@ -166,13 +177,23 @@
 	       (macroexpand-1 `(needs-set ,(cdr vardefs) ,@body))
 	      (cons 'progn body))))))
 
+(defmacro directory-lock(locked-dir by &rest body)
+(let ((LD0 (gensym "ld0-")) (LD1 (gensym "ld1-")) (lock-file (gensym "lf")) (mkdir (gensym "md")) (result (gensym "r")) (unlock (gensym "u")))
+
+`(let* ((,LD0 ,locked-dir)
+        (,LD1 (if (= ?/ (aref (reverse ,LD0) 0)) ,LD0 (concat ,LD0 "/")))
+        (,lock-file (concat ,LD1 "by"))
+        (,mkdir (safe-mkdir ,LD1)))
+  (ifn (car ,mkdir) (cons nil ,mkdir)
+  (write-region ,by nil ,lock-file)
+  (let ((,result (progn ,@body)))
+    (if-let ((,unlock (and (safe-delete-file ,lock-file) (safe-delete-dir ,LD1))))
+      (cons t ,result)
+      (cons nil (cons ,unlock ,result))))))))
+
 (defmacro ifn (test ifnot &rest ifyes)
 `(if (not ,test) ,ifnot ,@ifyes))
-;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-;; generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
-(defun chgrp(group file-name)
-  (= 0 (call-process "chgrp" nil nil nil group file-name)))
-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 (defun email (addr &optional subject body)
   "fast non-interactive way to send an email"
   (compose-mail addr (if subject subject ""))
@@ -235,7 +256,27 @@
   "returning first N elments of the list"
   (when (and (< 0 N) (car lista))
     (cons (car lista) (firstN (cdr lista) (1- N)))))
-;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
+(defun chgrp(group file-name)
+  (= 0 (call-process "chgrp" nil nil nil group file-name)))
+
+(defun safe-mkdir (dirname)
+  (if (file-exists-p dirname)
+    (cons nil (if (file-directory-p dirname) :exists :file))
+    (condition-case err
+        (progn (make-directory dirname) (list t))
+      (file-already-exists (cons nil :strange))
+      (file-error (cons nil :permission)))))
+
+(defun safe-delete-file (FN)
+  (condition-case err (progn (delete-file FN) (list t))
+    (file-error (cons nil (error-message-string err)))))
+
+(defun safe-delete-dir (FN)
+  (condition-case err (progn (delete-directory FN) (list t))
+    (file-error (cons nil (error-message-string err)))))
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 ;; generated from https://notabug.org/shalaev/elisp-goodies/src/master/goodies.org
 (unless (boundp '*log-level*) (defvar *log-level* 0))
 (unless (boundp '*emacs-d*) (defvar *emacs-d* (concat (getenv "HOME") "/.emacs.d/")))
@@ -277,7 +318,7 @@
   (clog-flush))
 
 (add-hook 'kill-emacs-hook 'on-emacs-exit)
-;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 
 ;; I try to get rid of loop and other common-lisp stuff here
 
@@ -297,17 +338,6 @@
     (time-less-p (time-add t1 1) t2)
     (not (time-less-p (time-add t2 1) t1))))
 
-(defun safe-mkdir (dirname)
-  (clog :debug "mkdir %s" dirname)
-  (if (file-exists-p dirname)
-      (if (file-directory-p dirname)
-          (progn (clog :warning "not creating already existing directory %s" dirname) :exists)
-        (clog :warning "file exists with the same name as working directory %s" dirname) :file)
-    (condition-case err
-        (progn (make-directory dirname) t)
-      (file-already-exists (clog :warning "Strange, may be the file already exists (but this was checked!). %s" (error-message-string err)) nil); when file exists
-      (file-error (clog :warning "Probably, you have no permission to create this directory: %s" (error-message-string err)) :permission))))
-
 (defun safe-dired-delete (FN)
   (let (failed)
     (condition-case err (funcall DDF FN "always")
@@ -315,22 +345,6 @@
        (clog :error "in DDF: %s" (error-message-string err))
        (setf failed t)))
     (not failed)))
-
-(defun safe-delete-file (FN)
-  (let (failed)
-  (condition-case err (delete-file FN)
-    (file-error
-     (clog :error "cannot delete file %s; %s" FN (error-message-string err))
-     (setf failed t)))
-  (not failed)))
-
-(defun safe-delete-dir (FN)
-  (let (failed)
-  (condition-case err (delete-directory FN)
-    (file-error
-     (clog :info "cannot delete directory %s; %s" FN (error-message-string err))
-     (setf failed t)))
-  (not failed)))
 
 ;;(setf coding-system-for-read 'utf-8)
 (defun safe-insert-file(FN)
@@ -414,8 +428,10 @@
    (t (begins-with* str what))))
 
 (let ((~ (getenv "HOME")))
-(defun tilda(x) (replace-regexp-in-string (concat "^" ~) "~" x))
-(defun untilda(x) (replace-regexp-in-string "^~" ~ x)))
+  (defun tilda(x)
+    (replace-regexp-in-string (concat "^" ~) "~" x))
+  (defun untilda(x)
+    (replace-regexp-in-string "^~" ~ x)))
 
 (defun cloud-locate-FN (FN)
   "find file by (true) name"
@@ -426,7 +442,9 @@
   "find file by (ciper) name"
   (find name file-DB :key #'cipher-name :test #'string=))
 
+ ;; Note sure if the following 2 functions are necessary, or, may be, they should be declared as macro or "inline":
 (defun plain-name  (df)(aref df plain))
+(defun cipher-name (df)(aref df cipher))
 
 (defun DBrec-from-file(file-name)
   (when-let ((FA (file-attributes file-name 'string)))
@@ -445,9 +463,7 @@
 ;; (defun grab-parameter (str parname); (grab-parameter "contentsName=z12"  "contentsName") => "z12"
 ;;   (when (string-match (concat parname "=\\(\\ca+\\)$") str)
 ;;       (match-string 1 str)))
-(defun plain-name  (df)(aref df plain))
-(defun cipher-name (df)(aref df cipher))
-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 (defun get-file-properties* (FN)
   (when-let ((FA (and (file-exists-p FN) (file-attributes FN 'string)))
 	     (DB-rec (make-vector (length file-fields) nil)))
@@ -474,10 +490,10 @@
 (defun forget-password(XYZ)
   "removes image password from password file"
 (let* ((str (progn
-	     (find-file (all-passes))
+	     (find-file (image-passes))
 	     (buffer-string)))
        (BN (buffer-name)))
-  (with-temp-file (all-passes)
+  (with-temp-file (image-passes)
     (insert (replace-regexp-in-string (format "%s .*
 " XYZ) "" str)))
   (kill-buffer BN)))
@@ -506,17 +522,7 @@
 		      password (untilda FN) tmp-gpg)))))
        (clog :error "failed to encrypt %s to %s!" (local/all) remote/files)
 (safe-delete-file tmp-gpg) t)))
-
-(defmacro directory-lock(DN &rest body)
-  (let ((lock-file (gensym "LF")))
-`(let ((,lock-file (concat ,DN (system-name))))
-  (if (member (safe-mkdir ,DN) '(:permission nil))
-  (clog :error "cannot cloud-sync -- unable to lock directory %s" ,DN) (write-region (TS (current-time)) nil ,lock-file)
-,@body
-(ifn (and (safe-delete-file ,lock-file) (safe-delete-dir ,DN))
-(clog :error "can not unlock %s" ,DN)
-t)))))
-;;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 ;; generated from cloud.org
 (defvar password nil); to be read from config or generated
 (defvar N-CPU-cores 1)
@@ -537,7 +543,6 @@ t)))))
 (defun local-dir() (concat emacs-d "cloud/"))
 (defun cloud-mk() (concat (local-dir) "cloud.mk"))
 (defun lock-dir() (concat (remote-dir) "now-syncing/"))
-(defun lock-file() (concat (lock-dir) (system-name)))
 (defun image-passes() (concat (local-dir) "individual.passes"))
 (defun local/() (concat (local-dir) (system-name) "/"))
 (defun local/log() (concat (local/) "log"))
@@ -620,8 +625,8 @@ conf)))
 ;;(clog :debug "print-hosts finished"))
 
 (defun print-actions()
-(clog :debug "print-action started")
 (dolist (action (reverse remote-actions))
+  (clog :debug "printing-action %s" (format-action action))
   (insert (format-action action))
   (drop remote-actions action)
   ;;(backspace) 
@@ -769,8 +774,9 @@ CF)))))
 (when-let ((CF (str-to-DBrec str)))
 
 (let* ((FN (plain-name CF))
-      (remote-file-exists (member FN CDFs))
-      (local-file-rec (or (cloud-locate-FN FN)
+       (CN (aref CF cipher))
+       (remote-file-exists (member CN CDFs))
+       (local-file-rec (or (cloud-locate-FN FN)
 (when-let ((LF (get-file-properties* FN)))
         (aset LF cipher (aref CF cipher))
         (push LF file-DB)
@@ -783,6 +789,7 @@ CF)))))
  (and (not local-file-rec) remote-file-exists)
  (and local-file-rec remote-file-exists (time< (aref local-file-rec mtime) (aref CF mtime))))
 
+(unless local-file-rec (push CF file-DB))
 (download CF))
 ((or
  (and local-file-rec remote-file-exists (time< (aref CF mtime) (aref local-file-rec mtime)))
@@ -792,7 +799,6 @@ t)))))
 
 (defun touch (FN)
 "called when the file named FN is changed"
-(clog :debug "touch(%s)" FN)
 (when (and FN (stringp FN))
   (when-let ((file-data (cloud-locate-FN (file-chase-links FN))))
     (aset file-data mtime (current-time))
@@ -926,7 +932,8 @@ password (cloud-mk) (cloud-mk))
  (read-all (local/all)))
 
 (ifn (cloud-connected-p) (clog :warning "remote directory not mounted, so we will not encrypt %s-->%s" (local/all) (remote-files))
-  (directory-lock (lock-dir)
+  (let ((DL (directory-lock (lock-dir) (format "%s
+%s" (system-name) (TS (current-time)))
     (when (file-newer-than-file-p (remote-files) (local/all))
       (clog :info "detected NEW %s, will now update %s from it" (remote-files) (local/all))
       (ifn (gpg-decrypt (local/all) (remote/files))
@@ -937,7 +944,7 @@ password (cloud-mk) (cloud-mk))
 (when (or added-files upload-queue removed-files)
   (ifn (write-all (local/all)) (setf ok (clog :error "could not save data to %s" (local/all)))
     (gpg-encrypt (local/all) (remote/files))
-    (setf added-files nil upload-queue nil)))
+    (setf added-files nil upload-queue nil removed-files nil)))
 
 (set-file-times (local/all) (current-time))
 
@@ -946,7 +953,10 @@ password (cloud-mk) (cloud-mk))
   (clog :debug "starting %s" make)
   (shell-command make)
   (clog :debug "finished %s" make))
-(reset-Makefile)))
+(safe-delete-file (cloud-mk))
+(reset-Makefile))))
+
+(unless (car DL) (setf ok (clog :error "Could not (un)lock remote directory! Please investigate")))))
 
 (dolist (msg (reverse important-msgs)) (message msg))
 (setf important-msgs nil)
@@ -1105,7 +1115,6 @@ ok))
 ok))
 
 (defun cloud-forget-file (local-FN); called *after* the file has already been sucessfully deleted
-   (push local-FN removed-files)
   (needs ((DB-rec (cloud-locate-FN local-FN) (clog :info "forget: doing nothing since %s is not clouded" local-FN))
           (CEXT (cip-ext local-FN))
 	  (cloud-FN (concat (remote-dir) (aref DB-rec cipher) CEXT) (clog :error "in DB entry for %s" local-FN)))
@@ -1203,4 +1212,4 @@ password (untilda (local/all)) (remote-files))))))
 (read-all (local/all)))
 (clog :error "cloud-start header failed") nil))
 (provide 'cloud)
-;;; cloud.el ends here
+;; cloud.el ends here
