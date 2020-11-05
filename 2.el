@@ -57,3 +57,9 @@
 		      password (untilda FN) tmp-gpg)))))
        (clog :error "failed to encrypt %s to %s!" (local/all) remote/files)
 (safe-delete-file tmp-gpg) t)))
+
+(let ((~ (getenv "HOME")))
+  (defun tilda(x)
+    (replace-regexp-in-string (concat "^" ~) "~" x))
+  (defun untilda(x)
+    (replace-regexp-in-string "^~" ~ x)))

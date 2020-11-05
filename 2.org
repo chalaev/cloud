@@ -65,3 +65,25 @@ So I decided that I will first encrypt the file locally and then move it to the 
        (clog :error "failed to encrypt %s to %s!" (local/all) remote/files)
 (safe-delete-file tmp-gpg) t)))
 #+END_SRC
+
+May be I should use =abbreviate-file-name= instead of =tilda=; but what do I use then as =untilda=?
+#+BEGIN_SRC emacs-lisp :tangle 2.el
+(let ((~ (getenv "HOME")))
+  (defun tilda(x)
+    (replace-regexp-in-string (concat "^" ~) "~" x))
+  (defun untilda(x)
+    (replace-regexp-in-string "^~" ~ x)))
+#+END_SRC
+
+The problem: =(safe-dired-delete)= asks for permission to recursively delete directory,
+even in (non-interactive) text mode, when I launch =emacs --daemon=!
+#+BEGIN_SRC 
+(defun safe-dired-delete (FN)
+  (let (failed)
+    (condition-case err (funcall DDF FN "always")
+      (file-error
+       (clog :error "in DDF: %s" (error-message-string err))
+       (setf failed t)))
+    (not failed)))
+#+END_SRC
+

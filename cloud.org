@@ -663,6 +663,7 @@ The decoding is similar:
 (defun download (file-record)
 (needs ((FN (aref file-record plain) (clog :error "download: file lacks plain name"))
         (stanza (dec-make-stanza file-record) (clog :error "download: could not create stanza for %s" FN)))
+(safe-mkdir (file-name-directory FN))
 (push (format " %s" FN) all)
 (push stanza Makefile) (NL)))
 #+END_SRC
@@ -932,10 +933,9 @@ IMHO, when ~FN~ is a directory, ~RECURSIVE~ (denoted by ~dirP~ here) must always
 The following function is used to perform pending delete ordered by another host:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (defun cloud-rm (args)
-  (interactive) 
 (let ((ok (cloud-forget-many args)))
   (dolist (arg args)
-    (setf ok (and (safe-dired-delete arg) (cloud-forget-recursive arg) ok)))
+    (setf ok (and (delete-directory arg t) (cloud-forget-recursive arg) ok)))
 ok))
 #+END_SRC
 

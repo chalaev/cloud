@@ -1,7 +1,4 @@
 * Errors
-To be checked:
-suppose 
-
 * To do
 1. Tired project
 2. Clouding directories

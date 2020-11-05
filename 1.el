@@ -18,14 +18,6 @@
     (time-less-p (time-add t1 1) t2)
     (not (time-less-p (time-add t2 1) t1))))
 
-(defun safe-dired-delete (FN)
-  (let (failed)
-    (condition-case err (funcall DDF FN "always")
-      (file-error
-       (clog :error "in DDF: %s" (error-message-string err))
-       (setf failed t)))
-    (not failed)))
-
 ;;(setf coding-system-for-read 'utf-8)
 (defun safe-insert-file(FN)
   (let (failed)
@@ -106,12 +98,6 @@
 	(setf str (cdr BW)))
       (cons (reverse result) str)))
    (t (begins-with* str what))))
-
-(let ((~ (getenv "HOME")))
-  (defun tilda(x)
-    (replace-regexp-in-string (concat "^" ~) "~" x))
-  (defun untilda(x)
-    (replace-regexp-in-string "^~" ~ x)))
 
 (defun cloud-locate-FN (FN)
   "find file by (true) name"

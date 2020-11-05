@@ -1,19 +1,19 @@
 
 # Table of Contents
 
-1.  [Description](#org5d8d298)
-2.  [Prerequisites](#orgb7ef0e2)
-3.  [Commands](#org3460e00)
-4.  [Quick start](#org7c618cb)
-5.  [Source code files](#orgac55500)
-6.  [Motivation](#org6ea6a29)
-7.  [Limitations](#org1787a6b)
-8.  [Support](#org40b035a)
+1.  [Description](#orge81e09a)
+2.  [Prerequisites](#org8114ff7)
+3.  [Commands](#orgaa7d935)
+4.  [Quick start](#org6897737)
+5.  [Source code files](#org8c503f6)
+6.  [Motivation](#orgbb6379a)
+7.  [Limitations](#org4fc1b42)
+8.  [Support](#org4fba926)
 
 Intended for linux users who have [emacs](https://www.gnu.org/software/emacs/) always open.
 
 
-<a id="org5d8d298"></a>
+<a id="orge81e09a"></a>
 
 # Description
 
@@ -32,7 +32,7 @@ Synchronizing important files on two or more computers using
 Encrypted files saved in the cloud have **random names** to minimize the amount of information Evil Corporations can extract by monitoring our cloud directory.
 
 
-<a id="orgb7ef0e2"></a>
+<a id="org8114ff7"></a>
 
 # Prerequisites
 
@@ -41,11 +41,9 @@ We need `emacs`, GNU `make`, `ImageMagick`, `gpg`, `sed`, and `gawk`; in Debian 
     aptitude install emacs make imagemagick gpg sed gawk
 
 
-<a id="org3460e00"></a>
+<a id="orgaa7d935"></a>
 
 # Commands
-
-See [manual.org](manual.org)
 
 -   `M-x cloud-add` adds one or several files to the list of "clouded" files. This means that `M-x cloud-sync` command will upload
     these "clouded" files to the remote server if they are updated. Supposed to be used in dired buffer for several (marked) files,
@@ -56,7 +54,7 @@ See [manual.org](manual.org)
     `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="org7c618cb"></a>
+<a id="org6897737"></a>
 
 # Quick start
 
@@ -68,13 +66,13 @@ and `~/.bash_logout`
 
     emacsclient -e "(kill-emacs)"
 
-Once  `~/.bash_login` has started  `emacs` in the server mode,
+Once  `~/.bash_login` has started  `emacs` in the daemon mode,
 I can use `emacsclient -c` to open a new (gui) emacs window.
 
 1.  Mount remote directory. The mounting point may be arbitrary (specified as `cloud-directory` in ``~/.emacs.d/cloud/`hostname`/config``), the default one is `/mnt/cloud/`.
 2.  You can create the file ``~/.emacs.d/cloud/`hostname`/config`` yourself, or it will be generated. Mine looks as follows:
     
-        remote/files=GWG
+        remote/files=XYZ
         password=*********
         number-of-CPU-cores=8
         remote-directory=/mnt/lws/cloud/
@@ -94,7 +92,7 @@ Every time we `M-x cloud-sync`, local files get synchronized with the cloud. For
 `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="orgac55500"></a>
+<a id="org8c503f6"></a>
 
 # Source code files
 
@@ -112,7 +110,7 @@ Every time we `M-x cloud-sync`, local files get synchronized with the cloud. For
     b. ideas on further development.
 
 
-<a id="org6ea6a29"></a>
+<a id="orgbb6379a"></a>
 
 # Motivation
 
@@ -135,7 +133,7 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 5.  Dired-compatible: whatever I do with a file in dired (delete, rename), will be automatically done on other computers.
 
 
-<a id="org1787a6b"></a>
+<a id="org4fc1b42"></a>
 
 # Limitations
 
@@ -146,7 +144,7 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 2.  After encrypting an image and then decrypting it back, we get the same, but not identical picture (file size is changed).
 
 
-<a id="org40b035a"></a>
+<a id="org4fba926"></a>
 
 # Support
 
