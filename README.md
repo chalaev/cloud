@@ -1,19 +1,19 @@
 
 # Table of Contents
 
-1.  [Description](#orge81e09a)
-2.  [Prerequisites](#org8114ff7)
-3.  [Commands](#orgaa7d935)
-4.  [Quick start](#org6897737)
-5.  [Source code files](#org8c503f6)
-6.  [Motivation](#orgbb6379a)
-7.  [Limitations](#org4fc1b42)
-8.  [Support](#org4fba926)
+1.  [Description](#org1684205)
+2.  [Prerequisites](#orgd7112cf)
+3.  [Commands](#orgde379fc)
+4.  [Quick start](#org3e197dc)
+5.  [Source code files](#org54c8cd6)
+6.  [Motivation](#org28dd0df)
+7.  [Limitations](#org2c4aa20)
+8.  [Support](#orgf218175)
 
 Intended for linux users who have [emacs](https://www.gnu.org/software/emacs/) always open.
 
 
-<a id="orge81e09a"></a>
+<a id="org1684205"></a>
 
 # Description
 
@@ -32,7 +32,7 @@ Synchronizing important files on two or more computers using
 Encrypted files saved in the cloud have **random names** to minimize the amount of information Evil Corporations can extract by monitoring our cloud directory.
 
 
-<a id="org8114ff7"></a>
+<a id="orgd7112cf"></a>
 
 # Prerequisites
 
@@ -41,7 +41,7 @@ We need `emacs`, GNU `make`, `ImageMagick`, `gpg`, `sed`, and `gawk`; in Debian 
     aptitude install emacs make imagemagick gpg sed gawk
 
 
-<a id="orgaa7d935"></a>
+<a id="orgde379fc"></a>
 
 # Commands
 
@@ -54,7 +54,7 @@ We need `emacs`, GNU `make`, `ImageMagick`, `gpg`, `sed`, and `gawk`; in Debian 
     `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="org6897737"></a>
+<a id="org3e197dc"></a>
 
 # Quick start
 
@@ -92,7 +92,7 @@ Every time we `M-x cloud-sync`, local files get synchronized with the cloud. For
 `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="org8c503f6"></a>
+<a id="org54c8cd6"></a>
 
 # Source code files
 
@@ -110,7 +110,7 @@ Every time we `M-x cloud-sync`, local files get synchronized with the cloud. For
     b. ideas on further development.
 
 
-<a id="orgbb6379a"></a>
+<a id="org28dd0df"></a>
 
 # Motivation
 
@@ -133,7 +133,7 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 5.  Dired-compatible: whatever I do with a file in dired (delete, rename), will be automatically done on other computers.
 
 
-<a id="org4fc1b42"></a>
+<a id="org2c4aa20"></a>
 
 # Limitations
 
@@ -144,7 +144,7 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 2.  After encrypting an image and then decrypting it back, we get the same, but not identical picture (file size is changed).
 
 
-<a id="org4fba926"></a>
+<a id="orgf218175"></a>
 
 # Support
 

@@ -1,5 +1,5 @@
 BTW, =(file-exists-p FN)= produces ~nil~ if the file resides in directory with (rx) permissions →
-#+BEGIN_SRC emacs-lisp :tangle 2.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+#+BEGIN_SRC emacs-lisp :tangle generated/2.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
 (defun get-file-properties* (FN)
   (when-let ((FA (and (file-exists-p FN) (file-attributes FN 'string)))
 	     (DB-rec (make-vector (length file-fields) nil)))
@@ -44,7 +44,7 @@ BTW, =(file-exists-p FN)= produces ~nil~ if the file resides in directory with (
 sometimes I could not unencrypt it as if there were some write errors!
 So I decided that I will first encrypt the file locally and then move it to the folder.
 
-#+BEGIN_SRC emacs-lisp :tangle 2.el
+#+BEGIN_SRC emacs-lisp :tangle generated/2.el
 (safe-mkdir "/tmp/cloud/")
 (defun gpg-encrypt(FN XYZ)
 (let ((tmp-gpg (concat "/tmp/cloud/" XYZ ".gpg")))
@@ -67,7 +67,7 @@ So I decided that I will first encrypt the file locally and then move it to the 
 #+END_SRC
 
 May be I should use =abbreviate-file-name= instead of =tilda=; but what do I use then as =untilda=?
-#+BEGIN_SRC emacs-lisp :tangle 2.el
+#+BEGIN_SRC emacs-lisp :tangle generated/2.el
 (let ((~ (getenv "HOME")))
   (defun tilda(x)
     (replace-regexp-in-string (concat "^" ~) "~" x))
@@ -77,7 +77,7 @@ May be I should use =abbreviate-file-name= instead of =tilda=; but what do I use
 
 The problem: =(safe-dired-delete)= asks for permission to recursively delete directory,
 even in (non-interactive) text mode, when I launch =emacs --daemon=!
-#+BEGIN_SRC 
+#+BEGIN_SRC emacs-lisp :tangle generated/2.el
 (defun safe-dired-delete (FN)
   (let (failed)
     (condition-case err (funcall DDF FN "always")

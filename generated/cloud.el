@@ -501,6 +501,14 @@
     (replace-regexp-in-string (concat "^" ~) "~" x))
   (defun untilda(x)
     (replace-regexp-in-string "^~" ~ x)))
+
+(defun safe-dired-delete (FN)
+  (let (failed)
+    (condition-case err (funcall DDF FN "always")
+      (file-error
+       (clog :error "in DDF: %s" (error-message-string err))
+       (setf failed t)))
+    (not failed)))
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 ;; generated from cloud.org
 (defvar password nil); to be read from config or generated
@@ -1055,9 +1063,10 @@ ok))
   (interactive)
   (if (string= major-mode "dired-mode")
       (dired-map-over-marks (add-files (dired-get-filename)) nil)
+(if-let ((FN (buffer-file-name))) (add-files FN)
     (unless
 	(add-files (read-string "file to be clouded=" (if FN FN "")))
-      (clog :error "could not cloud this file"))))
+      (clog :error "could not cloud this file")))))
 
 (defun add-file(FN)
 (let ((FN (tilda FN)))
@@ -1108,8 +1117,10 @@ ok))
  t))
 
 (defun cloud-forget-recursive(FN)
+(new-action i-forget FN)
 (dolist (sub-FN (mapcar #'plain-name (contained-in FN)))
-(cloud-forget-file sub-FN)))
+  (cloud-forget-file sub-FN))
+(cloud-forget-file FN))
 
 (defun cloud-forget (&optional FN)
   (interactive)

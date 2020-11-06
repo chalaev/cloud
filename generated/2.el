@@ -63,3 +63,11 @@
     (replace-regexp-in-string (concat "^" ~) "~" x))
   (defun untilda(x)
     (replace-regexp-in-string "^~" ~ x)))
+
+(defun safe-dired-delete (FN)
+  (let (failed)
+    (condition-case err (funcall DDF FN "always")
+      (file-error
+       (clog :error "in DDF: %s" (error-message-string err))
+       (setf failed t)))
+    (not failed)))

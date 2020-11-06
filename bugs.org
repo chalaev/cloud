@@ -1,4 +1,5 @@
 * Errors
+
 * To do
 1. Tired project
 2. Clouding directories
@@ -38,28 +39,6 @@ On the one hand, N and M can not be to small; on the other hand each inner recta
 This kind of protection is probably ok to protect innocent photos from face recognition robots.
 And in case someone writes an algorithm trying to guess the correct icons' position, 
 creating obstacles for it (so that decryption of a single photo would take at least an hour) seems easy.
-
-** Special JPEG treatment
-I assume that JPEG images are most probably photos and that most of them contain people's faces.
-
-*I had to postpone this idea* because both 
-(face recognition program) [[https://www.thregr.org/~wavexx/software/facedetect/][facedetect]] and
-(face distorting program) [[https://sandlab.cs.uchicago.edu/fawkes/][fawkes]] are very unreliable.
-
-*** striking them back
-Let us think of how could we damage the business of face-recognizers.
-1. At the very least least we can replace real faces on our photos with pictures of inexisting people generated (for example) by https://thispersondoesnotexist.com ; all this should be
-   done in a make file.
-2. Or even better, it is possible to to distort these faces of inexisting people in such a way that AI face recognition algorithms will be damaged (basically, they will learn
-   the wrong way of faces recognition). Unfortunately, the code https://sandlab.cs.uchicago.edu/fawkes/ is very unstable for now: it worked only once for me and I've tried a lot!
-
-*** The algorithm
-So at first we run ~facedetect~ to detect if there are any faces on the image.
-If there are no faces, we just [[permutate image blocks]].
-
-If there are faces, we examine their sizes provided by ~facedetect~.
-Ideally the size of rectangulars for permutation would be just equal to the largest face detected by ~facedetect~.
-Then we encrypt real faces using AES algorithm and put fake ones instead of them.
 
 ** Other ideas
 1. ~convert~ runs without parameters (e.g., controlling jpeg quality) for now. Thus, for example,

@@ -45,7 +45,7 @@ When those are copied from the cloud to the local hard drive, one should call, e
 From time to time (e.g., when we =M-x cloud-sync=)  we synchronize local information
 with the remote file whose (secret) name is stored in =remote/files=:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
-(defvar remote/files nil "encrypted DB (without .gpg suffix) stored on the server")
+(defvar remote/files nil "3-symbol DB name on the server, e.g., WzT")
 (defvar remote-dir  "/mnt/cloud/")
 (defun remote/files() remote/files)
 (defun remote-dir() remote-dir)
@@ -1000,9 +1000,10 @@ To add (or "cloud") a file I suggest opening a dired buffer, mark the files and 
   (interactive)
   (if (string= major-mode "dired-mode")
       (dired-map-over-marks (add-files (dired-get-filename)) nil)
+(if-let ((FN (buffer-file-name))) (add-files FN)
     (unless
 	(add-files (read-string "file to be clouded=" (if FN FN "")))
-      (clog :error "could not cloud this file"))))
+      (clog :error "could not cloud this file")))))
 #+END_SRC
 Pending upgrades for =cloud-add=:
 1. =cloud-add= must become more user-friendly: let the user know that file(s) are sucessfully clouded, and
@@ -1086,8 +1087,10 @@ Remove file from the database and erase its encrypted copy in the cloud:
 =cloud-forget-recursive= should be called *after* the file has already been sucessfully deleted:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (defun cloud-forget-recursive(FN)
+(new-action i-forget FN)
 (dolist (sub-FN (mapcar #'plain-name (contained-in FN)))
-(cloud-forget-file sub-FN)))
+  (cloud-forget-file sub-FN))
+(cloud-forget-file FN))
 #+END_SRC
 
 =cloud-forget= is excecuted either
