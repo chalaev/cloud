@@ -1,4 +1,16 @@
 * Errors
+** Recently fixed
+1. Suspect double downloading of the same file: the same file is downloaded twice.
+2. Renaming folders does not lead to renaming clouded files.
+3. Forgetting a file must result in cancellation of its (scheduled) pending uploads.
+
+** Unfixed as of 2020-11-09
+1. I suspect that  sometimes updated files are sometimes *not* transmitted to other hosts!
+   In order to detect tyhe source of the problem, I have to watch logs carefully (by clouding =~/.emacs.d/cloud/*/log= files).
+
+* Tests
+** Stranger test
+Someone slightly attracted by the project name must be happy that everything works out of the box.
 
 * To do
 1. Tired project

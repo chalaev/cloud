@@ -87,3 +87,15 @@ even in (non-interactive) text mode, when I launch =emacs --daemon=!
     (not failed)))
 #+END_SRC
 
+In =time<= I have to add 3 seconds of time to avoid chatter effects:
+if at some moment the files are synchronized between the host and the cloud,
+this situation might change due to time-desynchronization.
+#+BEGIN_SRC emacs-lisp :tangle generated/2.el
+(defun time< (t1 t2)
+  (and
+    (time-less-p (time-add t1 3) t2)
+    (not (time-less-p (time-add t2 3) t1))))
+#+END_SRC
+This problems demonstrates the importance of the time synchronization (via =ntpdate= or =ntp= server);
+however, it is not too serious because it just results in useless downloading or uploading,
+with replacement of files with their exact copies. This should not result in data loss.

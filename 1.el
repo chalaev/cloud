@@ -13,11 +13,6 @@
   (apply #'concat
          (loop repeat N collect (string (nth (random (length *all-chars*)) *all-chars*)))))
 
-(defun time< (t1 t2)
-  (and
-    (time-less-p (time-add t1 1) t2)
-    (not (time-less-p (time-add t2 1) t1))))
-
 ;;(setf coding-system-for-read 'utf-8)
 (defun safe-insert-file(FN)
   (let (failed)

@@ -320,11 +320,6 @@
   (apply #'concat
          (loop repeat N collect (string (nth (random (length *all-chars*)) *all-chars*)))))
 
-(defun time< (t1 t2)
-  (and
-    (time-less-p (time-add t1 1) t2)
-    (not (time-less-p (time-add t2 1) t1))))
-
 ;;(setf coding-system-for-read 'utf-8)
 (defun safe-insert-file(FN)
   (let (failed)
@@ -509,6 +504,11 @@
        (clog :error "in DDF: %s" (error-message-string err))
        (setf failed t)))
     (not failed)))
+
+(defun time< (t1 t2)
+  (and
+    (time-less-p (time-add t1 3) t2)
+    (not (time-less-p (time-add t2 3) t1))))
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 ;; generated from cloud.org
 (defvar password nil); to be read from config or generated
@@ -518,7 +518,7 @@
 (defvar upload-queue nil "names of edited files")
 (defvar added-files nil "newly clouded files")
 
-(defvar remote/files nil "encrypted DB (without .gpg suffix) stored on the server")
+(defvar remote/files nil "3-symbol DB name on the server, e.g., WzT")
 (defvar remote-dir  "/mnt/cloud/")
 (defun remote/files() remote/files)
 (defun remote-dir() remote-dir)
@@ -797,8 +797,6 @@ t)))))
 (macrolet ((NL () '(push "
 " Makefile))
 (inl (&rest format-pars) `(progn (push ,(cons 'format format-pars) Makefile) (NL))))
-(cl-flet ((pass-d()  (concat (local-dir) "pass.d/")))
-(cl-flet ((updated() (concat (pass-d) "updated")))
 (let (all Makefile uploaded
 
 (specially-encoded '(
@@ -818,6 +816,10 @@ t)))))
 ("%s: $(cloud)%s.png  %s
 \tconvert $< -decipher %s%s $@
 " "jpg" "jpeg" "png"))))
+
+(defun cancel-upload(FN) (drop all FN))
+(cl-labels ((pass-d () (concat (local-dir) "pass.d/"))
+          (updated() (concat (pass-d) "updated")))
 
 (cl-flet ((enc-make-stanza(file-record)
 (when-let ((XYZ (aref file-record cipher)) (FN (tilda (aref file-record plain))))
@@ -909,7 +911,7 @@ all)
 (system-name)
 (concat (remote-dir) "history")
 password (cloud-mk) (cloud-mk))
-(write-region (apply #'concat (reverse Makefile)) nil (cloud-mk))))))))
+(write-region (apply #'concat (reverse Makefile)) nil (cloud-mk)))))))
 
 (defun cloud-sync()
 (interactive)
@@ -1024,13 +1026,13 @@ ok))
     (setf ok (and (cloud-forget-recursive arg) ok)))
 ok))
 
-(defun contained-in(dir-name); dir-name must end with a slash /
-    (let (res)
-      (dolist (DB-rec file-DB)
-	(when(and
+(defun contained-in(dir-name)
+  (let (res (dir-name (file-name-as-directory dir-name)))
+    (dolist (DB-rec file-DB)
+      (when(and
 (< (length dir-name) (length (aref DB-rec plain)))
 (string=(substring-no-properties (aref DB-rec plain) 0 (length dir-name)) dir-name))
-	  (push DB-rec res)))
+        (push DB-rec res)))
       res))
 
 (defun add-to-actions(hostname)
@@ -1106,6 +1108,7 @@ ok))
   (needs ((DB-rec (cloud-locate-FN local-FN) (clog :info "forget: doing nothing since %s is not clouded" local-FN))
           (CEXT (cip-ext local-FN))
 	  (cloud-FN (concat (remote-dir) (aref DB-rec cipher) CEXT) (clog :error "in DB entry for %s" local-FN)))
+(cancel-upload local-FN)
 
 (when (string= CEXT ".png")
 (clog :debug "forgetting password for %s" local-FN)
@@ -1148,13 +1151,35 @@ ok))
     (condition-case err
 	(funcall DRF old-FN new-FN ok-if-already-exists)
       (file-error
-       (clog :debug "DRF error!")
+       (clog :error "DRF error!")
        (message "%s" (error-message-string err))
        (setf failure t)))
     (unless failure
-      (clog :debug "launching my cloud rename %s --> %s" old-FN new-FN)
+      (clog :debug "cloud-rename-file %s --> %s" old-FN new-FN)
       (cloud-rename-file old-FN new-FN)
-      (new-action i-rename old-FN new-FN))))
+      (new-action i-rename old-FN new-FN)
+
+(when (file-directory-p old-FN)
+  (let* ((old-dir (file-name-as-directory old-FN)) (LOD (length old-dir))
+         (new-dir (file-name-as-directory new-FN)))
+    (dolist (rec (contained-in old-FN))
+      (let ((FN (aref rec plain)))
+        (when (and (<= LOD (length FN))
+	     (string= old-FN (substring FN 0 LOD)))
+	  (let ((new-name (concat new-dir (substring FN LOD))))
+            (cloud-rename-file FN new-name)
+	    (new-action i-rename FN new-name))))))))))
+
+(defun rename-directory (old-dir new-dir)
+"recursively update plain-names of clouded files due to renaming of a directory"
+(when (file-directory-p old-dir)
+  (let* ((old-dir (file-name-as-directory old-dir)) (LOD (length old-dir))
+         (new-dir (file-name-as-directory new-dir)))
+    (dolist (rec (contained-in old-dir))
+      (let ((FN (aref rec plain)))
+        (when (and (<= LOD (length FN))
+		   (string= old-dir (substring FN 0 LOD)))
+	  (aset rec plain (concat new-dir (substring FN LOD)))))))))
 
 (defun cloud-start()
   (interactive) (save-some-buffers)

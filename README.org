@@ -21,13 +21,18 @@ aptitude install emacs make imagemagick gpg sed gawk
 #+END_SRC
 
 * Commands
-- =M-x cloud-add= adds one or several files to the list of "clouded" files. This means that =M-x cloud-sync= command will upload
-  these "clouded" files to the remote server if they are updated. Supposed to be used in dired buffer for several (marked) files,
-  or (when no files are marked) for a single file. Currently works on files only, not on directories.
-- =M-x cloud-forget= is the opposite of =M-x cloud-add=. It is also called automatically when files are removed in dired buffer.
-  Currently works on files only, not on directories.
-- =M-x cloud-sync= syncronizes local files with the cloud. Could be regularly called with a =crontab= line, e.g.,\\
-  =43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null=
+- =M-x cloud-add= :: adds one or several files to the list of "clouded" files.
+     This means that =M-x cloud-sync= command will upload these "clouded" files to the remote server if they are updated. Supposed to be used in dired buffer for several
+     (marked) files, or (when no files are marked) for a single file. Currently works on files only, not on directories.
+- =M-x cloud-forget= :: is the opposite of =M-x cloud-add=. 
+     It is also called automatically when files are removed in dired buffer.  Currently works on files only, not on directories.
+- =M-x cloud-sync= :: syncronizes local files with the cloud. Could be regularly called with a =crontab= line, e.g.,\\
+     =43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null=
+- Suppose you have accidentally deleted important files.
+  - If you did that without using =emacs= (for example, with =rm= command), restart emacs:  =M-x kill-emacs= and =emacs --daemon=.
+    ~Emacs~ will restore the files from the cloud when it loads ~cloud.el~ next time.
+  - If the files were erased from emacs (e.g. in ~dired~ buffer), they have already been erased from the cloud as well,
+    but it is possible to prevent erasing them on other hosts by evaluating =(setf remote-actions nil)= (for example, in ~*scratch*~ buffer).
 * Quick start
 I am running ~emacs~ in daemon mode (in text console) using the following line in =~/.bash_login=
 #+BEGIN_SRC shell
@@ -101,6 +106,8 @@ Since emacs is my only text editor, it is enough to write eLisp code that
    In the future I hope to circumvent this limitation by creating soft links to badly named files.
 2. After encrypting an image and then decrypting it back, we get the same, but not identical picture (file size is changed).
 
+* License
+This app released under [[https://mit-license.org/][MIT license]].
 * Support
 You can support this project by sending
 1. comments/questions to [[mailto:oleg@chalaev.com][oleg@chalaev.com]] and

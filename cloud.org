@@ -575,8 +575,6 @@ When the make file is ready, we launch it with =make -jN ~/.emacs.d/cloud/cloud.
 (macrolet ((NL () '(push "
 " Makefile))
 (inl (&rest format-pars) `(progn (push ,(cons 'format format-pars) Makefile) (NL))))
-(cl-flet ((pass-d()  (concat (local-dir) "pass.d/")))
-(cl-flet ((updated() (concat (pass-d) "updated")))
 (let (all Makefile uploaded
 #+END_SRC
 (Already encrypted) gpg-files types are not supposed to be encrypted, and images should be encrypted in a special way.
@@ -613,6 +611,12 @@ Similarly, for decoding
 " "jpg" "jpeg" "png"))))
 #+END_SRC
 with the same number of arguments, as for encoding above.
+
+#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+(defun cancel-upload(FN) (drop all FN))
+(cl-labels ((pass-d () (concat (local-dir) "pass.d/"))
+          (updated() (concat (pass-d) "updated")))
+#+END_SRC
 
 ** Creating ~make~ stanza for encoding one file
 Non-standard case (an image or a ~gpg~-file):
@@ -731,7 +735,7 @@ all)
 (system-name)
 (concat (remote-dir) "history")
 password (cloud-mk) (cloud-mk))
-(write-region (apply #'concat (reverse Makefile)) nil (cloud-mk))))))))
+(write-region (apply #'concat (reverse Makefile)) nil (cloud-mk)))))))
 #+END_SRC
 
 * cloud-sync
@@ -951,13 +955,13 @@ ok))
 When we rename or delete a folder, we have to perform similar action on every cloud file contained inside the folder.
 The following function helps us finding such files:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
-(defun contained-in(dir-name); dir-name must end with a slash /
-    (let (res)
-      (dolist (DB-rec file-DB)
-	(when(and
+(defun contained-in(dir-name)
+  (let (res (dir-name (file-name-as-directory dir-name)))
+    (dolist (DB-rec file-DB)
+      (when(and
 (< (length dir-name) (length (aref DB-rec plain)))
 (string=(substring-no-properties (aref DB-rec plain) 0 (length dir-name)) dir-name))
-	  (push DB-rec res)))
+        (push DB-rec res)))
       res))
 #+END_SRC
 
@@ -1068,6 +1072,7 @@ ok))
   (needs ((DB-rec (cloud-locate-FN local-FN) (clog :info "forget: doing nothing since %s is not clouded" local-FN))
           (CEXT (cip-ext local-FN))
 	  (cloud-FN (concat (remote-dir) (aref DB-rec cipher) CEXT) (clog :error "in DB entry for %s" local-FN)))
+(cancel-upload local-FN)
 #+END_SRC
 Remove image's individual password:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
@@ -1130,13 +1135,40 @@ Updating =dired-rename-file= by overwriting it:
     (condition-case err
 	(funcall DRF old-FN new-FN ok-if-already-exists)
       (file-error
-       (clog :debug "DRF error!")
+       (clog :error "DRF error!")
        (message "%s" (error-message-string err))
        (setf failure t)))
     (unless failure
-      (clog :debug "launching my cloud rename %s --> %s" old-FN new-FN)
+      (clog :debug "cloud-rename-file %s --> %s" old-FN new-FN)
       (cloud-rename-file old-FN new-FN)
-      (new-action i-rename old-FN new-FN))))
+      (new-action i-rename old-FN new-FN)
+#+END_SRC
+In case we are renaming directories:
+#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+(when (file-directory-p old-FN)
+  (let* ((old-dir (file-name-as-directory old-FN)) (LOD (length old-dir))
+         (new-dir (file-name-as-directory new-FN)))
+    (dolist (rec (contained-in old-FN))
+      (let ((FN (aref rec plain)))
+        (when (and (<= LOD (length FN))
+	     (string= old-FN (substring FN 0 LOD)))
+	  (let ((new-name (concat new-dir (substring FN LOD))))
+            (cloud-rename-file FN new-name)
+	    (new-action i-rename FN new-name))))))))))
+#+END_SRC
+
+The above function needs =rename-directory=:
+#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+(defun rename-directory (old-dir new-dir)
+"recursively update plain-names of clouded files due to renaming of a directory"
+(when (file-directory-p old-dir)
+  (let* ((old-dir (file-name-as-directory old-dir)) (LOD (length old-dir))
+         (new-dir (file-name-as-directory new-dir)))
+    (dolist (rec (contained-in old-dir))
+      (let ((FN (aref rec plain)))
+        (when (and (<= LOD (length FN))
+		   (string= old-dir (substring FN 0 LOD)))
+	  (aset rec plain (concat new-dir (substring FN LOD)))))))))
 #+END_SRC
 
 * Starting all this machinery

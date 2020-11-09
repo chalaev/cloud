@@ -71,3 +71,8 @@
        (clog :error "in DDF: %s" (error-message-string err))
        (setf failed t)))
     (not failed)))
+
+(defun time< (t1 t2)
+  (and
+    (time-less-p (time-add t1 3) t2)
+    (not (time-less-p (time-add t2 3) t1))))
