@@ -1,24 +1,26 @@
 * Errors
-** Recently fixed
+** fixed within last week
 1. Suspect double downloading of the same file: the same file is downloaded twice.
 2. Renaming folders does not lead to renaming clouded files.
 3. Forgetting a file must result in cancellation of its (scheduled) pending uploads.
 
 ** Unfixed as of 2020-11-09
-1. I suspect that  sometimes updated files are sometimes *not* transmitted to other hosts!
+1. I still suspect that  sometimes updated files are sometimes *not* transmitted to other hosts.
    In order to detect tyhe source of the problem, I have to watch logs carefully (by clouding =~/.emacs.d/cloud/*/log= files).
+2. In =shell/cloud-git=,  recursive `rm -r` won't work.
 
 * Tests
 ** Stranger test
 Someone slightly attracted by the project name must be happy that everything works out of the box.
 
 * To do
-1. Tired project
-2. Clouding directories
-3. Garbage cleaning: some of the files in the remote directory are not referenced in =~/.emacs.d/cloud/`hostname`/all=;
+1. Files should be unclouded after, say, 30 days of being not updated. For such files, regular daily backup is enough.
+2. Tired project
+3. Clouding directories
+4. Garbage cleaning: some of the files in the remote directory are not referenced in =~/.emacs.d/cloud/`hostname`/all=;
    Such "abandoned" files were created during debugging; they should be identified and erased. Similarly, some of the lines in =~/.emacs.d/cloud/individual.passes= are unused
    and should be removed.
-4. Package the code.
+5. Package the code.
      
 * Ideas on future development
 

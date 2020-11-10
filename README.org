@@ -107,7 +107,7 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 2. After encrypting an image and then decrypting it back, we get the same, but not identical picture (file size is changed).
 
 * License
-This app released under [[https://mit-license.org/][MIT license]].
+This code is released under [[https://mit-license.org/][MIT license]].
 * Support
 You can support this project by sending
 1. comments/questions to [[mailto:oleg@chalaev.com][oleg@chalaev.com]] and

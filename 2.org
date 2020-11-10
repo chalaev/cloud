@@ -12,17 +12,23 @@ BTW, =(file-exists-p FN)= produces ~nil~ if the file resides in directory with (
 	(aset DB-rec modes (perms-from-str ms))
 	(aset DB-rec plain FN); (aset DB-rec write-me to-cloud); might be later adjusted in read-fileDB
 	DB-rec)))
-  
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/2.el
 (defun get-file-properties (FN)
   (or (cloud-locate-FN FN) (get-file-properties* FN)))
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp :tangle generated/2.el
 (defun cip-ext (FN)
 "extension of encrypted file based on the original name"
 (case* (file-name-extension FN) string=
        ("jpeg" ".png")
        ("jpg" ".png")
        (otherwise ".gpg")))
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp :tangle generated/2.el
 (defun forget-password(XYZ)
   "removes image password from password file"
 (let* ((str (progn
@@ -33,7 +39,9 @@ BTW, =(file-exists-p FN)= produces ~nil~ if the file resides in directory with (
     (insert (replace-regexp-in-string (format "%s .*
 " XYZ) "" str)))
   (kill-buffer BN)))
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp :tangle generated/2.el
 (defmacro bad-column (cType N &optional str)
 (if str
 `(clog :error "invalid %dth column in %s line = %s" ,N ,cType ,str)
@@ -96,6 +104,6 @@ this situation might change due to time-desynchronization.
     (time-less-p (time-add t1 3) t2)
     (not (time-less-p (time-add t2 3) t1))))
 #+END_SRC
-This problems demonstrates the importance of the time synchronization (via =ntpdate= or =ntp= server);
+This problem demonstrates the importance of the time synchronization (via =ntpdate= or an =ntp= server);
 however, it is not too serious because it just results in useless downloading or uploading,
 with replacement of files with their exact copies. This should not result in data loss.

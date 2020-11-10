@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Problem: recursive `rm -r` won't work!
+
 args=($*)
 if [[ $1 == "mv" ]]; then
     if [[ $# -ge 3 ]]; then

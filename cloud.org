@@ -939,7 +939,7 @@ The following function is used to perform pending delete ordered by another host
 (defun cloud-rm (args)
 (let ((ok (cloud-forget-many args)))
   (dolist (arg args)
-    (setf ok (and (delete-directory arg t) (cloud-forget-recursive arg) ok)))
+    (setf ok (and (safe-delete-dir arg t) (cloud-forget-recursive arg) ok)))
 ok))
 #+END_SRC
 
