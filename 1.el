@@ -2,17 +2,6 @@
 
 ;; I try to get rid of loop and other common-lisp stuff here
 
-(defvar *all-chars*
-(let ((forbidden-symbols '(?! ?@ ?# ?$ ?% ?& ?* ?\( ?\) ?+ ?= ?/ ?{ ?} ?\[ ?\] ?: ?\; ?< ?> ?_ ?- ?| ?, ?. ?` ?' ?~ ?^ ?\")))
-    (append
-     (loop for i from ?A to ?Z unless (member i forbidden-symbols) collect i)
-     (loop for i from ?a to ?z unless (member i forbidden-symbols) collect i)
-     (loop for i from ?0 to ?9 unless (member i forbidden-symbols) collect i))))
-
-(defun rand-str (N)
-  (apply #'concat
-         (loop repeat N collect (string (nth (random (length *all-chars*)) *all-chars*)))))
-
 ;;(setf coding-system-for-read 'utf-8)
 (defun safe-insert-file(FN)
   (let (failed)

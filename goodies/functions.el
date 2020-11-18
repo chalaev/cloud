@@ -1,3 +1,12 @@
+(defun remo (from-where &rest what)
+  (if (cdr what)
+      (remo
+       (apply #'remo (cons from-where (cdr what)))
+       (car what))
+ (remove (car what) from-where)))
+(defmacro drop (from-where &rest what)
+  `(setf ,from-where (remo ,from-where ,@what)))
+
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 (defun email (addr &optional subject body)
   "fast non-interactive way to send an email"
@@ -11,15 +20,6 @@
     (if (eql e el)
 	(setf r i)
       (incf i)))))
-
-(defun remo (from-where &rest what)
-  (if (cdr what)
-      (remo
-       (apply #'remo (cons from-where (cdr what)))
-       (car what))
- (remove (car what) from-where)))
-(defmacro drop (from-where &rest what)
-  `(setf ,from-where (remo ,from-where ,@what)))
 
 (defun perms-from-str (str)
 "parses file mode string into integer"
@@ -61,3 +61,18 @@
   "returning first N elments of the list"
   (when (and (< 0 N) (car lista))
     (cons (car lista) (firstN (cdr lista) (1- N)))))
+
+(defvar *good-chars*
+(let ((forbidden-symbols '(?! ?@ ?# ?$ ?% ?& ?* ?\( ?\) ?+ ?= ?/ ?{ ?} ?\[ ?\] ?: ?\; ?< ?> ?_ ?- ?| ?, ?. ?` ?' ?~ ?^ ?\")))
+    (append
+     (loop for i from ?A to ?Z unless (member i forbidden-symbols) collect i)
+     (loop for i from ?a to ?z unless (member i forbidden-symbols) collect i)
+     (loop for i from ?0 to ?9 unless (member i forbidden-symbols) collect i)))
+"safe characters for file names")
+(defun rand-str(N)
+  (apply #'concat
+     (loop repeat N collect (string (nth (random (length *good-chars*)) *good-chars*)))))
+
+(defun end-push (what where)
+"wrapper over end-push* macro"
+(if where (end-push* what where) (setf where (list what))))

@@ -4,7 +4,7 @@
 #+LaTeX_HEADER: \usepackage[russian,english]{babel}
 #+LATEX_HEADER: \usepackage[letterpaper,hmargin={1.5cm,1.5cm},vmargin={1.3cm,2cm},nohead,nofoot]{geometry}
 
-Uses ~macros.el~, ~functions.el~, ~file-functions.el~, and ~logging.el~ from the [[https://notabug.org/shalaev/elisp-goodies][elisp-goodies]] project.
+Uses ~macros.el~, ~functions.el~, ~file-functions.el~, and ~logging.el~ from the [[https://notabug.org/shalaev/lisp-goodies][lisp-goodies]] project.
 
 Github vs Emacs: since ~github~
 1. does not understand ~org-mode~ internal links,
@@ -47,6 +47,11 @@ with the remote file whose (secret) name is stored in =remote/files=:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (defvar remote/files nil "3-symbol DB name on the server, e.g., WzT")
 (defvar remote-dir  "/mnt/cloud/")
+#+END_SRC
+← for portability it is better to avoid backslashes in path names.
+
+#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+(defvar /tmp/cloud/ (file-name-as-directory (make-temp-file "cloud" t)))
 (defun remote/files() remote/files)
 (defun remote-dir() remote-dir)
 (defun remote-files() (concat (remote-dir) remote/files ".gpg"))
@@ -101,8 +106,12 @@ Generating random password and saving it in the local configuration file:
 #+END_SRC
 – one password for all text files – 
 for now this software is designed for single person only, and I do not see why should I use individual passwords for different
-text files. Note that I already use individual passwords for images so (from the technical point of view) it is easy to use
+text files. 
+
+#+begin_note
+I already use individual passwords for images so (from the technical point of view) it is easy to use
 individuall passwords for some (or all) text files ← might facilitate gradual password replacement.
+#+end_note
 
 The concept "one password for many text files" might be changed later if I ever upgrade the code for sharing files within a group of people;
 but if this happens, I will probably have to abandon symmetric encryption and deal with public/private keys.
@@ -200,7 +209,7 @@ The content of ~file-DB~ is locally stored in the file named =(local/all)=:
 **** actions
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (defun print-actions()
-(dolist (action (reverse remote-actions))
+(dolist (action remote-actions)
   (clog :debug "printing-action %s" (format-action action))
   (insert (format-action action))
   (drop remote-actions action)
@@ -356,7 +365,9 @@ Checking if the internet connection is established:
    (file-readable-p remote-dir)))
 ;;(file-readable-p (remote-files)
 #+END_SRC
-← note that =cloud-connected-p= should *not* be called before local file has been read by =read-conf=.
+#+begin_note
+=cloud-connected-p= should *not* be called before local file has been read by =read-conf=.
+#+end_note
 
 ** SSH
 Sometimes internet connection can be unstable or shut down unexpectedly,
@@ -494,7 +505,7 @@ If the action is still pending on some hosts, we will store it in =remote-action
 which is going later to be saved into the [[Contents file][remote file DB]]:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (when (drop (aref action i-hostnames) (system-name))
-  (push action remote-actions)))))
+  (end-push action remote-actions))
 #+END_SRC
 
 An empty line ends the action reading loop;
@@ -504,7 +515,6 @@ the next thing to do is to read/parse the files' block of lines.
 For files that need to be (up/down)loaded (to/from) the cloud =(read-fileDB)= forms ~cloud.mk~
 which can be fed to GNU make as =make --jobs=N -f cloud.mk=, where ~jobs~ parameter ~N~ is the (configurable) number of CPU cores.
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
-;;(forward-line)
 (needs ((CDFs
 #+END_SRC
 ← =CDFs= will contain the data about the files in the remote directory.
@@ -513,8 +523,8 @@ Our ~.gpg~ files are named as  ~XYZ.gpg~; the next line cuts the extension  ~.gp
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
  (mapcar #'(lambda(s) (replace-regexp-in-string "....$" "" s))
       (directory-files remote-dir nil "...\...." t)) (clog :error "can not read %s" remote-dir)))
-(while (< 10 (length (setf str (read-line))))
-(when-let ((CF (str-to-DBrec str)))
+(while(< 10 (length (setf str (read-line))))
+(when-let((CF (str-to-DBrec str)))
 #+END_SRC
 Ideally every file mentioned in =file-DB= should exist on a local hard disk.
 In reality either file, the local one, or the remote one, or both, might be absent,
@@ -535,6 +545,10 @@ and we have to address all of these situations:
 ((or
  (and (not local-file-rec) remote-file-exists)
  (and local-file-rec remote-file-exists (time< (aref local-file-rec mtime) (aref CF mtime))))
+(when (and local-file-rec remote-file-exists)
+(clog :debug "read-all/download: %s(%s) is older than %s(%s)"
+(aref local-file-rec plain) (TS(aref local-file-rec mtime))
+(aref CF plain) (TS(aref CF mtime))))
 #+END_SRC
 =download= queues the file for downloading from the cloud (by updating the [[Creating make file][make file]]):
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
@@ -543,7 +557,11 @@ and we have to address all of these situations:
 ((or
  (and local-file-rec remote-file-exists (time< (aref CF mtime) (aref local-file-rec mtime)))
  (and local-file-rec (not remote-file-exists)))
-(upload CF))))))
+(when (and local-file-rec remote-file-exists)
+(clog :debug "read-all/upload: %s(%s) is younger than %s(%s)"
+(aref local-file-rec plain) (TS(aref local-file-rec mtime))
+(aref CF plain) (TS(aref CF mtime))))
+(upload CF)))))))))
 t)))))
 #+END_SRC
 ← similarly, =upload= queues the file for uploading to the cloud.
@@ -755,7 +773,9 @@ and must be loaded at start (when =file-DB= is empty):
  (clog :info "loading data from disk at start")
  (read-all (local/all)))
 #+END_SRC
-← note that this local DB night be obsolete; some files recently clouded on other hosts are missing there.
+#+begin_note
+this local DB might be obsolete; some files recently clouded on other hosts are missing there.
+#+end_note
 
 Now if we realize that clouded data is younger, we update the local one from it and =read-all= once again.
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
@@ -789,7 +809,7 @@ Now let us copy the files from/to the cloud:
   (clog :debug "starting %s" make)
   (shell-command make)
   (clog :debug "finished %s" make))
-(safe-delete-file (cloud-mk))
+(rm (cloud-mk))
 (reset-Makefile))))
 #+END_SRC
 If director (un)locking fails, we
@@ -814,9 +834,12 @@ Let us =cloud-sync= before the user quits ~emacs~:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (defun before-exit()
 ;; (write-conf)
-  (cloud-sync))
+(when (cloud-sync)
+  (safe-delete-dir /tmp/cloud/)))
 #+END_SRC
-Note: if the connection with the cloud is unstable, an attempt to access the cloud can take more than 10 seconds.
+#+begin_note
+if the connection with the cloud is unstable, an attempt to access the cloud can take more than 10 seconds.
+#+end_note
 
 So don't be surprised if quitting emacs takes a long time; the reason for that might be just broken connection to the cloud.
 Let it wait for about 30 seconds, and it quits without syncing.
@@ -851,7 +874,7 @@ where =i-Nargs= is used only when parsing action lines from the remote file DB.
     (aset action i-time (current-time))
     (aset action i-args args)
     (aset action i-hostnames (remove (system-name) cloud-hosts))
-    (push action remote-actions)))
+    (end-push action remote-actions)))
 #+END_SRC
 Later more actions will be introduced:
 1. =i-reset-pass= for (gradual – not for all files at once) password renewal
@@ -914,25 +937,14 @@ Now let us write code for each of the following actions:
 We ovewrite standard emacs =dired-delete-file= function:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
 (defun dired-delete-file (FN &optional dirP TRASH)
-  (let (failure (FN (tilda FN)))
+  (let ((FN (tilda FN))); ~/programming/emacs/functions.el
+(when (car    
+       (condition-case err (cons t (funcall DDF FN dirP TRASH))
+	 (file-error (clog :error "in DDF: %s" (error-message-string err)))))
+  (cons t (and (cloud-forget-recursive FN)
+	       (new-action i-delete FN))))))
 #+END_SRC
-Note that ~FN~ might be a directory.
-
-IMHO, when ~FN~ is a directory, ~RECURSIVE~ (denoted by ~dirP~ here) must always be t!
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
-(condition-case err (funcall DDF FN dirP TRASH)
-  (file-error
-    (clog :error "in DDF: %s" (error-message-string err))
-    (setf failure t)))
-(unless failure
-#+END_SRC
-=file-DB= does *not* contain any directories, so if =FN= is a directory, the following block will do nothing:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
-(cloud-forget-recursive FN) (new-action i-delete FN)
-(when dirP
-  (dolist (sub-FN (mapcar #'plain-name (contained-in FN)))
-    (when (cloud-forget-file sub-FN) (new-action i-delete sub-FN)))))))
-#+END_SRC
+where ~FN~ might be a directory.
 
 The following function is used to perform pending delete ordered by another host:
 #+BEGIN_SRC emacs-lisp :tangle generated/main.el
@@ -1117,7 +1129,6 @@ Remove file from the database and erase its encrypted copy in the cloud:
 (defun cloud-rename-file (old new)
   (let ((source (cloud-locate-FN old))
         (target (cloud-locate-FN new)))
-(cloud-forget-recursive old)
     (cond
      ((and source target); overwriting one cloud file with another one
       (dolist (property (list mtime modes uname gname)) do

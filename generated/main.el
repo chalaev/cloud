@@ -9,6 +9,8 @@
 
 (defvar remote/files nil "3-symbol DB name on the server, e.g., WzT")
 (defvar remote-dir  "/mnt/cloud/")
+
+(defvar /tmp/cloud/ (file-name-as-directory (make-temp-file "cloud" t)))
 (defun remote/files() remote/files)
 (defun remote-dir() remote-dir)
 (defun remote-files() (concat (remote-dir) remote/files ".gpg"))
@@ -101,7 +103,7 @@ conf)))
 ;;(clog :debug "print-hosts finished"))
 
 (defun print-actions()
-(dolist (action (reverse remote-actions))
+(dolist (action remote-actions)
   (clog :debug "printing-action %s" (format-action action))
   (insert (format-action action))
   (drop remote-actions action)
@@ -239,15 +241,14 @@ CF)))))
       (clog :error " action %s failed, will NOT retry it" AID))
 
 (when (drop (aref action i-hostnames) (system-name))
-  (push action remote-actions)))))
+  (end-push action remote-actions))
 
-;;(forward-line)
 (needs ((CDFs
 
 (mapcar #'(lambda(s) (replace-regexp-in-string "....$" "" s))
       (directory-files remote-dir nil "...\...." t)) (clog :error "can not read %s" remote-dir)))
-(while (< 10 (length (setf str (read-line))))
-(when-let ((CF (str-to-DBrec str)))
+(while(< 10 (length (setf str (read-line))))
+(when-let((CF (str-to-DBrec str)))
 
 (let* ((FN (plain-name CF))
        (CN (aref CF cipher))
@@ -264,13 +265,21 @@ CF)))))
 ((or
  (and (not local-file-rec) remote-file-exists)
  (and local-file-rec remote-file-exists (time< (aref local-file-rec mtime) (aref CF mtime))))
+(when (and local-file-rec remote-file-exists)
+(clog :debug "read-all/download: %s(%s) is older than %s(%s)"
+(aref local-file-rec plain) (TS(aref local-file-rec mtime))
+(aref CF plain) (TS(aref CF mtime))))
 
 (unless local-file-rec (push CF file-DB))
 (download CF))
 ((or
  (and local-file-rec remote-file-exists (time< (aref CF mtime) (aref local-file-rec mtime)))
  (and local-file-rec (not remote-file-exists)))
-(upload CF))))))
+(when (and local-file-rec remote-file-exists)
+(clog :debug "read-all/upload: %s(%s) is younger than %s(%s)"
+(aref local-file-rec plain) (TS(aref local-file-rec mtime))
+(aref CF plain) (TS(aref CF mtime))))
+(upload CF)))))))))
 t)))))
 
 (defun touch (FN)
@@ -432,7 +441,7 @@ password (cloud-mk) (cloud-mk))
   (clog :debug "starting %s" make)
   (shell-command make)
   (clog :debug "finished %s" make))
-(safe-delete-file (cloud-mk))
+(rm (cloud-mk))
 (reset-Makefile))))
 
 (unless (car DL) (setf ok (clog :error "Could not (un)lock remote directory! Please investigate")))))
@@ -446,7 +455,8 @@ ok))
 
 (defun before-exit()
 ;; (write-conf)
-  (cloud-sync))
+(when (cloud-sync)
+  (safe-delete-dir /tmp/cloud/)))
 
 (defvar action-fields '(i-time i-ID i-args i-hostnames i-Nargs))
 (let ((i 0)) (dolist (AF action-fields) (setf i (1+ (set AF i)))))
@@ -460,7 +470,7 @@ ok))
     (aset action i-time (current-time))
     (aset action i-args args)
     (aset action i-hostnames (remove (system-name) cloud-hosts))
-    (push action remote-actions)))
+    (end-push action remote-actions)))
 
 (defun perform(action)
 (write-region
@@ -489,23 +499,17 @@ nil (local/log) t)
 (unless (boundp 'DDF) (defvar DDF (indirect-function (symbol-function 'dired-delete-file)) "original dired-delete-file function"))
 
 (defun dired-delete-file (FN &optional dirP TRASH)
-  (let (failure (FN (tilda FN)))
-
-(condition-case err (funcall DDF FN dirP TRASH)
-  (file-error
-    (clog :error "in DDF: %s" (error-message-string err))
-    (setf failure t)))
-(unless failure
-
-(cloud-forget-recursive FN) (new-action i-delete FN)
-(when dirP
-  (dolist (sub-FN (mapcar #'plain-name (contained-in FN)))
-    (when (cloud-forget-file sub-FN) (new-action i-delete sub-FN)))))))
+  (let ((FN (tilda FN))); ~/programming/emacs/functions.el
+(when (car    
+       (condition-case err (cons t (funcall DDF FN dirP TRASH))
+	 (file-error (clog :error "in DDF: %s" (error-message-string err)))))
+  (cons t (and (cloud-forget-recursive FN)
+	       (new-action i-delete FN))))))
 
 (defun cloud-rm (args)
 (let ((ok (cloud-forget-many args)))
   (dolist (arg args)
-    (setf ok (and (delete-directory arg t) (cloud-forget-recursive arg) ok)))
+    (setf ok (and (safe-delete-dir arg t) (cloud-forget-recursive arg) ok)))
 ok))
 
 (defun cloud-forget-many (args)
@@ -625,7 +629,6 @@ ok))
 (defun cloud-rename-file (old new)
   (let ((source (cloud-locate-FN old))
         (target (cloud-locate-FN new)))
-(cloud-forget-recursive old)
     (cond
      ((and source target); overwriting one cloud file with another one
       (dolist (property (list mtime modes uname gname)) do

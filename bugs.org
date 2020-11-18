@@ -1,13 +1,12 @@
 * Errors
-** fixed within last week
-1. Suspect double downloading of the same file: the same file is downloaded twice.
-2. Renaming folders does not lead to renaming clouded files.
-3. Forgetting a file must result in cancellation of its (scheduled) pending uploads.
-
-** Unfixed as of 2020-11-09
-1. I still suspect that  sometimes updated files are sometimes *not* transmitted to other hosts.
+1. I create new file on ~kolmogorov~, then =(cloud-add)= and =(cloud-sync)=.
+   Then I  =(cloud-sync)= on ~kalinin~ file adds up to the local DB, but is not downloaded.
+2. I still suspect that  sometimes updated files are sometimes *not* transmitted to other hosts.
    In order to detect tyhe source of the problem, I have to watch logs carefully (by clouding =~/.emacs.d/cloud/*/log= files).
-2. In =shell/cloud-git=,  recursive `rm -r` won't work.
+3. In =shell/cloud-git=,  recursive `rm -r` won't work.
+4. Suppose I updated the file, then =(cloud-sync)=, then renamed it, then updated the renamed file, and finally =(cloud-sync)= again.
+   Will all these changes be correctly performed on another host after =(cloud-sync)=?
+   See [[file:investigation.txt][investigation.txt]]
 
 * Tests
 ** Stranger test
@@ -34,8 +33,12 @@ some of the desired functions are still not implemented or half-implemented.
 [[http://lftp.yar.ru][lftp]] supports torrents.
 
 I will think of using torrents instead of clouds or using them together.
-Note that (at least when mounted using ~WebDav~) clouds are probably *even slowlier* than torrents for large files:
+
+#+begin_note
+(At least when mounted using ~WebDav~) clouds are probably *even slowlier* than torrents for large files:
 for example, it took me 13+ hours (!) to copy 403-megabyte archive to [[https://disk.yandex.com/][Yandex Disk]].
+#+end_note
+
 (This is not an exception – I am used to the fact that ~WebDav~-clouds are very slow.)
 I did not use torrents for looong time but I think they we faster even 10 years ago.
 

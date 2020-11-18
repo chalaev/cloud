@@ -53,9 +53,8 @@ sometimes I could not unencrypt it as if there were some write errors!
 So I decided that I will first encrypt the file locally and then move it to the folder.
 
 #+BEGIN_SRC emacs-lisp :tangle generated/2.el
-(safe-mkdir "/tmp/cloud/")
 (defun gpg-encrypt(FN XYZ)
-(let ((tmp-gpg (concat "/tmp/cloud/" XYZ ".gpg")))
+(let ((tmp-gpg (concat /tmp/cloud/ XYZ ".gpg")))
 (ifn (= 0 (apply #'call-process
 (append (list "gpg" nil nil nil)
 (split-string (format "--batch --yes --pinentry-mode loopback --passphrase %S -o %s --symmetric %s"
@@ -64,14 +63,14 @@ So I decided that I will first encrypt the file locally and then move it to the 
 (rename-file tmp-gpg (concat (remote-dir) XYZ ".gpg") t) t)))
 
 (defun gpg-decrypt(FN XYZ)
-(let ((tmp-gpg (concat "/tmp/cloud/" XYZ ".gpg")))
+(let ((tmp-gpg (concat /tmp/cloud/ XYZ ".gpg")))
   (copy-file (concat (remote-dir) XYZ ".gpg") tmp-gpg t)
   (ifn (= 0 (apply #'call-process
 (append (list "gpg" nil nil nil)
 (split-string (format "--batch --yes --pinentry-mode loopback --passphrase %S -o %s --decrypt %s"
 		      password (untilda FN) tmp-gpg)))))
        (clog :error "failed to encrypt %s to %s!" (local/all) remote/files)
-(safe-delete-file tmp-gpg) t)))
+(rm tmp-gpg) t)))
 #+END_SRC
 
 May be I should use =abbreviate-file-name= instead of =tilda=; but what do I use then as =untilda=?

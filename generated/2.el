@@ -11,7 +11,7 @@
 	(aset DB-rec modes (perms-from-str ms))
 	(aset DB-rec plain FN); (aset DB-rec write-me to-cloud); might be later adjusted in read-fileDB
 	DB-rec)))
-  
+
 (defun get-file-properties (FN)
   (or (cloud-locate-FN FN) (get-file-properties* FN)))
 
@@ -38,9 +38,8 @@
 `(clog :error "invalid %dth column in %s line = %s" ,N ,cType ,str)
 `(clog :error "invalid %dth column in %s line" ,N ,cType)))
 
-(safe-mkdir "/tmp/cloud/")
 (defun gpg-encrypt(FN XYZ)
-(let ((tmp-gpg (concat "/tmp/cloud/" XYZ ".gpg")))
+(let ((tmp-gpg (concat /tmp/cloud/ XYZ ".gpg")))
 (ifn (= 0 (apply #'call-process
 (append (list "gpg" nil nil nil)
 (split-string (format "--batch --yes --pinentry-mode loopback --passphrase %S -o %s --symmetric %s"
@@ -49,14 +48,14 @@
 (rename-file tmp-gpg (concat (remote-dir) XYZ ".gpg") t) t)))
 
 (defun gpg-decrypt(FN XYZ)
-(let ((tmp-gpg (concat "/tmp/cloud/" XYZ ".gpg")))
+(let ((tmp-gpg (concat /tmp/cloud/ XYZ ".gpg")))
   (copy-file (concat (remote-dir) XYZ ".gpg") tmp-gpg t)
   (ifn (= 0 (apply #'call-process
 (append (list "gpg" nil nil nil)
 (split-string (format "--batch --yes --pinentry-mode loopback --passphrase %S -o %s --decrypt %s"
 		      password (untilda FN) tmp-gpg)))))
        (clog :error "failed to encrypt %s to %s!" (local/all) remote/files)
-(safe-delete-file tmp-gpg) t)))
+(rm tmp-gpg) t)))
 
 (let ((~ (getenv "HOME")))
   (defun tilda(x)
