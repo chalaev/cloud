@@ -100,9 +100,9 @@
   (when-let ((FA (file-attributes file-name 'string)))
     (let ((DBrec (make-vector (length file-fields) nil)))
       (destructuring-bind
-	  (uid gid acess-time mod-time status-time size ms void inode fsNum)
+	  (uid gid acess-time mod-time status-time fsize ms void inode fsNum)
 	  (cddr FA)
-	(aset DBrec-from-file uname "unused")
+	(aset DBrec-from-file size fsize)
 	(aset DBrec-from-file gname gid)
 	(aset DBrec-from-file mtime mod-time); list of 4 integers
 	(aset DBrec-from-file modes (perms-from-str ms))

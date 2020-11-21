@@ -1,20 +1,20 @@
 
 # Table of Contents
 
-1.  [Description](#orgcb2a938)
-2.  [Prerequisites](#org965906c)
-3.  [Commands](#orgf2538a7)
-4.  [Quick start](#orge431566)
-5.  [Source code files](#orgf7ee0ba)
-6.  [Motivation](#orgc76cfa3)
-7.  [Limitations](#orgc9d9339)
-8.  [License](#orgcaa1436)
-9.  [Support](#org29209dd)
+1.  [Description](#orgfc21726)
+2.  [Prerequisites](#orgefdd734)
+3.  [Commands](#org84af9d3)
+4.  [Quick start](#org41dc46b)
+5.  [Source code files](#org7645fc6)
+6.  [Motivation](#orgdfabacd)
+7.  [Limitations](#orgd3fc67f)
+8.  [License](#orgca5f6e5)
+9.  [Support](#org350f1b8)
 
 Intended for linux users who have [emacs](https://www.gnu.org/software/emacs/) always open.
 
 
-<a id="orgcb2a938"></a>
+<a id="orgfc21726"></a>
 
 # Description
 
@@ -33,7 +33,7 @@ Synchronizing important files on two or more computers using
 Encrypted files saved in the cloud have **random names** to minimize the amount of information Evil Corporations can extract by monitoring our cloud directory.
 
 
-<a id="org965906c"></a>
+<a id="orgefdd734"></a>
 
 # Prerequisites
 
@@ -42,13 +42,14 @@ We need `emacs`, GNU `make`, `ImageMagick`, `gpg`, `sed`, and `gawk`; in Debian 
     aptitude install emacs make imagemagick gpg sed gawk
 
 
-<a id="orgf2538a7"></a>
+<a id="org84af9d3"></a>
 
 # Commands
 
 -   **`M-x cloud-add`:** adds one or several files to the list of "clouded" files.
     This means that `M-x cloud-sync` command will upload these "clouded" files to the remote server if they are updated. Supposed to be used in dired buffer for several
-    (marked) files, or (when no files are marked) for a single file. Currently works on files only, not on directories.
+    (marked) files, or (when no files are marked) for a single file. **Files edited in emacs are clouded automatically.**
+    Works both on files and directories. When called on directory, files found in sub-directories are (not) clouded according to the black/white-listing functions `black-p` and `white-p`.
 -   **`M-x cloud-forget`:** is the opposite of `M-x cloud-add`. 
     It is also called automatically when files are removed in dired buffer.  Currently works on files only, not on directories.
 -   **`M-x cloud-sync`:** syncronizes local files with the cloud. Could be regularly called with a `crontab` line, e.g.,  
@@ -60,7 +61,7 @@ We need `emacs`, GNU `make`, `ImageMagick`, `gpg`, `sed`, and `gawk`; in Debian 
         but it is possible to prevent erasing them on other hosts by evaluating `(setf remote-actions nil)` (for example, in `*scratch*` buffer).
 
 
-<a id="orge431566"></a>
+<a id="org41dc46b"></a>
 
 # Quick start
 
@@ -78,10 +79,11 @@ I can use `emacsclient -c` to open a new (gui) emacs window.
 1.  Mount remote directory. The mounting point may be arbitrary (specified as `cloud-directory` in ``~/.emacs.d/cloud/`hostname`/config``), the default one is `/mnt/cloud/`.
 2.  You can create the file ``~/.emacs.d/cloud/`hostname`/config`` yourself, or it will be generated. Mine looks as follows:
     
-        remote/files=XYZ
-        password=*********
-        number-of-CPU-cores=8
         remote-directory=/mnt/lws/cloud/
+        junk-extensions=ac3 afm aux idx ilg ind avi bak bbl blg brf bst bz2 cache chm cp cps dat deb dvi dv eps fb2 fn fls img iso gpx segments ky mjpeg m md mov mpg mkv jpg gif jpeg png log mp3 mp4 m2v ogg ogm out part pbm pdf pfb pg pod pgm pnm ps rar raw gz sfd woff tbz tgz tga tif tiff toc tp vob vr wav xcf xml xz Z zip 
+        remote/files=XYZ
+        number-of-CPU-cores=8
+        password=*********
 3.  Evaluate `cloud.el` in `emacs` at start by placing the following lines
     
         (mapcar #'require '(cl dired-aux timezone diary-lib subr-x))
@@ -98,7 +100,7 @@ Every time we `M-x cloud-sync`, local files get synchronized with the cloud. For
 `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="orgf7ee0ba"></a>
+<a id="org7645fc6"></a>
 
 # Source code files
 
@@ -116,7 +118,7 @@ Every time we `M-x cloud-sync`, local files get synchronized with the cloud. For
     b. ideas on further development.
 
 
-<a id="orgc76cfa3"></a>
+<a id="orgdfabacd"></a>
 
 # Motivation
 
@@ -139,7 +141,7 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 5.  Dired-compatible: whatever I do with a file in dired (delete, rename), will be automatically done on other computers.
 
 
-<a id="orgc9d9339"></a>
+<a id="orgd3fc67f"></a>
 
 # Limitations
 
@@ -150,14 +152,14 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 2.  After encrypting an image and then decrypting it back, we get the same, but not identical picture (file size is changed).
 
 
-<a id="orgcaa1436"></a>
+<a id="orgca5f6e5"></a>
 
 # License
 
 This code is released under [MIT license](https://mit-license.org/).
 
 
-<a id="org29209dd"></a>
+<a id="org350f1b8"></a>
 
 # Support
 
