@@ -65,7 +65,7 @@ To see more messages, set =*log-level*=  to =:debug= (zero) level:
 #+END_SRC
 
 * Other files
-1. =~/.emacs.d/cloud/config= (contains gpg password – don't cloud it!) Created by the user or by the code at the very first code run.
+1. [[file:config][~/.emacs.d/cloud/`hostname`/config]] (contains gpg password – don't cloud it!) Created by the user or by the code at the very first code run.
 2. [[file:make-files/1.mk][~/.emacs.d/cloud/cloud.mk]] is the last GNU make file created during the previous =(cloud-sync)=
 3. =~/.emacs.d/cloud/individual.passes= contains individual password for *all* images, e.g.,\\
    cL2 EKPBqTxuHoo8CF4v

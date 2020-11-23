@@ -49,19 +49,19 @@
 (clog :info "use M-x cloud-add in the dired to cloud important files and directories" ))))))
 
 (defvar numerical-parameters '("number-of-CPU-cores"))
-(defvar lists-of-strings '("junk-extensions"))
+(defvar lists-of-strings '("junk-extensions" "ignored-dirs"))
 
 (defun format-conf(CP)
 (cond
-  ((member CP numerical-parameters) (format "%s=%d" CP (eval (intern CP))))
+  ((member CP numerical-parameters) (format "%s=%d" CP (symbol-value(intern CP))))
   ((member CP lists-of-strings) (format "%s=%s" CP
-(apply #'concat (mapcar #'(lambda(item) (format "%s " item)) (eval (intern CP))))))
-  (t (format "%s=%s" CP (eval (intern CP))))))
+(apply #'concat (mapcar #'(lambda(item) (format "%s " item)) (sort (symbol-value(intern CP)) #'string<)))))
+  (t (format "%s=%s" CP (symbol-value(intern CP))))))
 (defun write-conf()
 (clog :debug "starting write-conf")
 (with-temp-file (local/config)
 (mapcar #'(lambda(CP) (insert(format-conf CP)) (newline)) 
-  '("remote-directory" "junk-extensions" "remote/files" "number-of-CPU-cores" "password")))
+  '("remote-directory" "junk-extensions" "ignored-dirs" "remote/files" "number-of-CPU-cores" "password")))
 (clog :debug "ended write-conf") t)
 
 (defun read-conf* (file-name)
@@ -95,6 +95,7 @@ conf)))
 (defvar file-DB nil "list of vectors, each corresponding to a clouded file")
 
 (defvar *blacklist* nil "list of manually blcklisted files")
+(defvar ignored-dirs '("/tmp/" "/mnt/") "temporary or remote directories")
 
 (defvar junk-extensions '("ac3" "afm" "aux" "idx" "ilg" "ind" "avi" "bak" "bbl" "blg" "brf" "bst" "bz2" "cache" "chm" "cp" "cps" "dat" "deb" "dvi" "dv" "eps" "fb2"
 "fn" "fls" "img" "iso" "gpx" "segments" "ky" "mjpeg" "m" "md" "mov" "mpg" "mkv" "jpg" "gif" "jpeg" "png" "log" "mp3" "mp4" "m2v" "ogg" "ogm" "out" "part" "pbm" "pdf"
@@ -286,8 +287,13 @@ CF)))))
   (aref local-file-rec plain) (TS(aref local-file-rec mtime))
   (aref CF cipher) (TS(aref CF mtime))))
 
-(unless local-file-rec (push CF file-DB))
-(download CF))
+(if local-file-rec
+   (aset local-file-rec mtime (aref CF mtime))
+   (push CF file-DB))
+(let*((DN(safe-mkdir(file-name-directory(aref CF mtime)))) (mkdir DN))
+(if(or(car mkdir)(eql :exists(cdr mkdir)))
+(download CF)
+(clog :error "could not mkdir %s" DN))))
 ((or
  (and local-file-rec remote-file-exists (time< (aref CF mtime) (aref local-file-rec mtime)))
  (and local-file-rec (not remote-file-exists)))
@@ -433,7 +439,7 @@ password (cloud-mk) (cloud-mk))
 (interactive)
 (let ((ok t))
 
-(ifn (cloud-connected-p) (clog :warning "remote directory not mounted, will be using (probably OBSOLETE) local DB")
+(ifn (cloud-connected-p) (clog :warning "refuse to sync because remote directory not mounted")
 
 (let ((DL (directory-lock (lock-dir) (format "%s
 %s" (system-name) (TS (current-time)))
@@ -571,14 +577,15 @@ ok))
 	  (safe-dired-delete (local/config))
 	(clog :error "sync failed, so I will not erase local configuration")))))
 
-(defun cloud-add (&optional FN)
-  (interactive)
+(defun cloud-add(&optional FN)
+(interactive)
+(if FN (add-file FN)
   (if (string= major-mode "dired-mode")
       (dired-map-over-marks (add-file (dired-get-filename)) nil)
 (if-let ((FN (buffer-file-name))) (add-file FN)
     (unless
 	(add-file (read-string "file to be clouded=" (if FN FN "")))
-      (clog :error "could not cloud this file")))))
+      (clog :error "could not cloud this file"))))))
 
 (defun blacklist(FN)
 (let ((FN (tilda FN)))
@@ -587,15 +594,18 @@ ok))
  (push FN *blacklist*))))
 (defun black-p(FN &optional file-rec)
 (let ((result
-(or (member (file-name-extension FN) junk-extensions)
-
+(or
+(member FN *blacklist*) (string-match "tmp" FN)
+(member (file-name-extension FN) junk-extensions)
 (backup-file-name-p FN)
-(string-match "tmp" FN)
+(when ignored-dirs (string-match(substring(apply #'concat
+  (mapcar #'(lambda(d)(format "\\(^%s\\)\\|" d)) ignored-dirs)) 0 -2) FN))
 (progn
   (unless file-rec (setf file-rec (get-file-properties FN)))
+(when file-rec
   (or
     (member (aref file-rec gname) '("tmp"))
-    (< 1000000 (aref file-rec size)))))))
+    (< 1000000 (aref file-rec size))))))))
 (cons result file-rec)))
 
 (defun white-p(FN &optional file-rec)
@@ -622,23 +632,19 @@ ok))
 
 (let ((DN (file-name-as-directory FN)))
 (dolist (FN (directory-files DN nil nil t))
+(unless (member FN '("." ".."))
 (let ((FN (concat DN FN)) FR)
-(if (or 
-(let ((r (white-p FN)))
-   (setf FR (cdr r)) (car r))
-(not(or (member FN '("." ".."))
-(let ((r (black-p FN)))
-   (setf FR (cdr r)) (car r)))))
+
+(if (or
+(let ((r (white-p FN))) (setf FR (cdr r)) (car r))
+(not
+(let ((r (black-p FN FR))) (setf FR (cdr r)) (car r))))
 (add-file FN FR)
-(clog :debug "not auto-clouding %s" FN)))))))))
+(clog :debug "not auto-clouding %s" FN))))))))))
 
 (defun auto-add-file(FN &optional file-rec)
 "when the file is clouded automatically"
-(unless (or
-
-(string-match "tmp" FN)
-   (member FN *blacklist*))
-(add-file FN file-rec)) t)
+(unless (car(black-p FN file-rec)) (add-file FN file-rec)) t)
 
 (defun cloud-forget-file (local-FN); called *after* the file has already been sucessfully deleted
   (needs ((DB-rec (cloud-locate-FN local-FN) (clog :info "forget: doing nothing since %s is not clouded" local-FN))
@@ -731,7 +737,7 @@ ok))
   (when (cloud-init)
   (clog :info "check newly created configuraion %s and then M-x cloud-start" (local/config))))
 
-(update-conf conf "remote-directory" "junk-extensions" "remote/files" "number-of-CPU-cores" "password")
+(update-conf conf "remote-directory" "junk-extensions" "ignored-dirs" "remote/files" "number-of-CPU-cores" "password")
 
 (ifn remote-directory (clog :error "You have to set remote-directory for me before I can proceed")
 (ifn password (clog :error "You have to set encryption password for me before I can proceed")
