@@ -290,7 +290,7 @@ CF)))))
 (if local-file-rec
    (aset local-file-rec mtime (aref CF mtime))
    (push CF file-DB))
-(let*((DN(safe-mkdir(file-name-directory(aref CF mtime)))) (mkdir DN))
+(let*((DN(file-name-directory(aref CF plain))) (mkdir(safe-mkdir DN)))
 (if(or(car mkdir)(eql :exists(cdr mkdir)))
 (download CF)
 (clog :error "could not mkdir %s" DN))))
