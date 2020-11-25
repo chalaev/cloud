@@ -47,7 +47,7 @@
   (format-time-string "%02m/%02d %H:%M:%S" time))
 
 (defmacro when-let (vars &rest body)
-  "when with let using stndard let-notation"
+  "when with let using standard let-notation"
   (if (caar vars)
   `(let ((,(caar vars) ,(cadar vars)))
      ,(if (cdr vars)
@@ -60,7 +60,7 @@
     (append `(when ,(cadar vars)) body))))
 
 (defmacro if-let (vars ifyes &rest body)
-  "if with let using stndard let-notation"
+  "if with let using standard let-notation"
   (let ((if-true (gensym "it")) (result (gensym "r")))
     `(let (,if-true ,result)
        (when-let ,vars
@@ -411,7 +411,7 @@
 
 (defun cloud-locate-FN (FN)
   "find file by (true) name"
-  (find FN file-DB :key #'plain-name
+  (find (file-chase-links FN) file-DB :key #'plain-name
 	:test #'(lambda(x y)(string= (tilda x) (tilda y)))))
 
 (defun cloud-locate-CN (name)
@@ -619,7 +619,8 @@ conf)))
 (defvar remote-actions nil "actions to be saved in the cloud")
 (defvar file-DB nil "list of vectors, each corresponding to a clouded file")
 
-(defvar *blacklist* nil "list of manually blcklisted files")
+(defvar *blacklist* '("~/.bash_login" "~/.bash_logout" "~/.bashrc") "list of manually blcklisted files")
+
 (defvar ignored-dirs '("/tmp/" "/mnt/") "temporary or remote directories")
 
 (defvar junk-extensions '("ac3" "afm" "aux" "idx" "ilg" "ind" "avi" "bak" "bbl" "blg" "brf" "bst" "bz2" "cache" "chm" "cp" "cps" "dat" "deb" "dvi" "dv" "eps" "fb2"
@@ -832,7 +833,7 @@ t)))))
 (defun touch (FN)
 "called when the file named FN is changed"
 (when (and FN (stringp FN))
-  (when-let ((file-data (cloud-locate-FN (file-chase-links FN))))
+  (when-let ((file-data (cloud-locate-FN FN)))
     (aset file-data mtime (current-time))
     (clog :debug "touch/upload: %s(%s)" FN (TS(aref file-data mtime)))
     (upload file-data) t)))
@@ -921,7 +922,7 @@ t)))))
 (clog :debug "started upload(%s)" FN)
 (unless (or (member FN uploaded) (member FN *blacklist*))
 (push FN upload-queue)
-(clog :debug "will indeed upload(%s)" FN)
+(clog :debug "will add upload(%s) stanza to Makefile" FN)
 (make-cloud-older file-record)
 (push FN uploaded)
 (push (format " %s" (concat (remote-directory) CN
@@ -992,13 +993,13 @@ password (cloud-mk) (cloud-mk))
 (rm (cloud-mk))
 (reset-Makefile))))
 
-(unless (car DL) (setf ok (clog :error "Could not (un)lock remote directory! Please investigate")))))
+(unless (car DL) (setf ok (clog :error "Could not (un)lock remote directory! Please investigate"))))
 
 (dolist (msg (reverse important-msgs)) (message msg))
 (setf important-msgs nil)
 (clog :info "done syncing")
 (write-region (format "%s: %s -- %s
-" (system-name)  (TS (current-time)) (format-time-string "%H:%M:%S" (current-time))) nil (history))
+" (system-name)  (TS (current-time)) (format-time-string "%H:%M:%S" (current-time))) nil (history)))
 ok))
 
 (defun before-exit()
@@ -1138,7 +1139,7 @@ ok))
 (cons (member (aref file-rec gname) '("important" "keepOneYear" "keepTwoYears" "keepThreeYears")) file-rec))
 
 (defun add-file(FN &optional file-rec)
-(let ((FN (tilda FN)))
+(let ((FN (tilda (file-chase-links FN))))
 (unless (cloud-locate-FN FN)
 (ifn (file-directory-p FN)
   (needs ((GFP (or file-rec (get-file-properties* FN)) (clog :error "Aborting attempt to cloud inexisting file %s" FN))

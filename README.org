@@ -48,7 +48,7 @@ I can use =emacsclient -c= to open a new (gui) emacs window.
 
 Every time we =M-x cloud-sync=, local files get synchronized with the cloud.
 (The same happens when we start/quit emacs.)
-For this purpose I have a line in my ~crontab~:
+For this purpose I have a line in my ~crontab~:\\
 =43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null=
 
 * Commands

@@ -1,5 +1,5 @@
 (defmacro when-let (vars &rest body)
-  "when with let using stndard let-notation"
+  "when with let using standard let-notation"
   (if (caar vars)
   `(let ((,(caar vars) ,(cadar vars)))
      ,(if (cdr vars)
@@ -12,7 +12,7 @@
     (append `(when ,(cadar vars)) body))))
 
 (defmacro if-let (vars ifyes &rest body)
-  "if with let using stndard let-notation"
+  "if with let using standard let-notation"
   (let ((if-true (gensym "it")) (result (gensym "r")))
     `(let (,if-true ,result)
        (when-let ,vars
