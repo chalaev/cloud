@@ -86,12 +86,9 @@ The problem: =(safe-dired-delete)= asks for permission to recursively delete dir
 even in (non-interactive) text mode, when I launch =emacs --daemon=!
 #+BEGIN_SRC emacs-lisp :tangle generated/2.el
 (defun safe-dired-delete (FN)
-  (let (failed)
-    (condition-case err (funcall DDF FN "always")
-      (file-error
-       (clog :error "in DDF: %s" (error-message-string err))
-       (setf failed t)))
-    (not failed)))
+  (condition-case err (cons t (funcall DDF FN "always"))
+    (file-error
+      (cons nil (clog :error "in DDF: %s" (error-message-string err))))))
 #+END_SRC
 
 In =time<= I have to add 3 seconds of time to avoid chatter effects:

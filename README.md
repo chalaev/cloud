@@ -1,20 +1,20 @@
 
 # Table of Contents
 
-1.  [Description](#org3481651)
-2.  [Prerequisites](#org12c4c1a)
-3.  [Quick start](#org81e71a0)
-4.  [Commands](#orgae4a872)
-5.  [Source code files](#org9005803)
-6.  [Motivation](#orgbba9e37)
-7.  [Limitations](#org89179be)
-8.  [License](#orgdb5cc14)
-9.  [Support](#org4c07a15)
+1.  [Description](#orgf8f387f)
+2.  [Prerequisites](#org6d7233c)
+3.  [Quick start](#orge46c38c)
+4.  [Commands](#orgeaeeb30)
+5.  [Source code files](#orgcb7b05d)
+6.  [Motivation](#org65b262f)
+7.  [Limitations](#orgf0262af)
+8.  [License](#orge6de98c)
+9.  [Support](#orgfb17431)
 
 Intended for linux users who have [emacs](https://www.gnu.org/software/emacs/) always open.
 
 
-<a id="org3481651"></a>
+<a id="orgf8f387f"></a>
 
 # Description
 
@@ -33,7 +33,7 @@ Synchronizing important files on two or more computers using
 Encrypted files saved in the cloud have **random names** to minimize the amount of information Evil Corporations can extract by monitoring our cloud directory.
 
 
-<a id="org12c4c1a"></a>
+<a id="org6d7233c"></a>
 
 # Prerequisites
 
@@ -42,7 +42,7 @@ We need `emacs`, GNU `make`, `ImageMagick`, `gpg`, `sed`, and `gawk`; in Debian 
     aptitude install emacs make imagemagick gpg sed gawk
 
 
-<a id="org81e71a0"></a>
+<a id="orge46c38c"></a>
 
 # Quick start
 
@@ -78,7 +78,7 @@ For this purpose I have a line in my `crontab`:
 `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="orgae4a872"></a>
+<a id="orgeaeeb30"></a>
 
 # Commands
 
@@ -95,7 +95,7 @@ Except for `M-x cloud-sync`, commands are barely used:
     `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="org9005803"></a>
+<a id="orgcb7b05d"></a>
 
 # Source code files
 
@@ -106,14 +106,14 @@ Except for `M-x cloud-sync`, commands are barely used:
 3.  [0.el](0.el), [1.el](1.el), and [2.org](2.org) are kind of "Appendix" containing some pieces of code which not interesting enough to be included in `cloud.org`.
 4.  goodies/{[macros](goodies/macros.el),[functions](goodies/functions.el),[file-functions](goodies/file-functions.el),[logging](goodies/logging.el)}.el are copied from the [elisp-goodies](https://notabug.org/shalaev/elisp-goodies) project.
 5.  [Makefile](Makefile) merges all the code into [generated/cloud.el](generated/cloud.el) which is the main file to be launched when `emacs` starts.
-6.  [shell/cloud-git](shell/cloud-git) synchronizes file operations in `git` with this code, for example:
-    `cloud-git rm files.org` and `cloud-git mv log-files.org files.org`
+6.  [shell/cloud-git](shell/cloud-git) synchronizes file operations in `git` with this code, for example:  
+    `cloud-git rm files.org` or `cloud-git mv log-files.org files.org`
 7.  [bugs.org](bugs.org) contains
     a. error and problem list, and
     b. ideas on further development.
 
 
-<a id="orgbba9e37"></a>
+<a id="org65b262f"></a>
 
 # Motivation
 
@@ -135,7 +135,7 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 4.  Dired-compatible: whatever I do with a file in dired (delete, rename), will be automatically done on other computers.
 
 
-<a id="org89179be"></a>
+<a id="orgf0262af"></a>
 
 # Limitations
 
@@ -147,14 +147,14 @@ Since emacs is my only text editor, it is enough to write eLisp code that
     After encrypting an image file and then decrypting it back, we get the same, but not identical picture (file size is changed).
 
 
-<a id="orgdb5cc14"></a>
+<a id="orge6de98c"></a>
 
 # License
 
 This code is released under [MIT license](https://mit-license.org/).
 
 
-<a id="org4c07a15"></a>
+<a id="orgfb17431"></a>
 
 # Support
 

@@ -64,12 +64,9 @@
     (replace-regexp-in-string "^~" ~ x)))
 
 (defun safe-dired-delete (FN)
-  (let (failed)
-    (condition-case err (funcall DDF FN "always")
-      (file-error
-       (clog :error "in DDF: %s" (error-message-string err))
-       (setf failed t)))
-    (not failed)))
+  (condition-case err (cons t (funcall DDF FN "always"))
+    (file-error
+      (cons nil (clog :error "in DDF: %s" (error-message-string err))))))
 
 (defun time< (t1 t2)
   (and

@@ -70,8 +70,8 @@ Except for =M-x cloud-sync=, commands are barely used:
 3. [[file:0.el][0.el]], [[file:1.el][1.el]], and [[file:2.org][2.org]] are kind of "Appendix" containing some pieces of code which not interesting enough to be included in ~cloud.org~.
 4. goodies/{[[file:goodies/macros.el][macros]],[[file:goodies/functions.el][functions]],[[file:goodies/file-functions.el][file-functions]],[[file:goodies/logging.el][logging]]}.el are copied from the [[https://notabug.org/shalaev/elisp-goodies][elisp-goodies]] project.
 5. [[file:Makefile][Makefile]] merges all the code into [[file:generated/cloud.el][generated/cloud.el]] which is the main file to be launched when ~emacs~ starts.
-6. [[file:shell/cloud-git][shell/cloud-git]] synchronizes file operations in ~git~ with this code, for example:
-   =cloud-git rm files.org= and =cloud-git mv log-files.org files.org=
+6. [[file:shell/cloud-git][shell/cloud-git]] synchronizes file operations in ~git~ with this code, for example:\\
+   =cloud-git rm files.org= or =cloud-git mv log-files.org files.org=
 7. [[file:bugs.org][bugs.org]] contains
    a. error and problem list, and
    b. ideas on further development.

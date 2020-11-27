@@ -180,10 +180,6 @@
 
 (defmacro ifn (test ifnot &rest ifyes)
 `(if (not ,test) ,ifnot ,@ifyes))
-
-(defmacro end-push* (what where)
-  "works only if 'where' is not nil"
-  `(push ,what (cdr (last ,where))))
 (defun remo (from-where &rest what)
   (if (cdr what)
       (remo
@@ -258,10 +254,6 @@
 (defun rand-str(N)
   (apply #'concat
      (loop repeat N collect (string (nth (random (length *good-chars*)) *good-chars*)))))
-
-(defun end-push (what where)
-"wrapper over end-push* macro"
-(if where (end-push* what where) (setf where (list what))))
 (defun safe-mkdir (dirname)
 "creates a directory returning the report"
 (condition-case err
@@ -409,6 +401,11 @@
       (cons (reverse result) str)))
    (t (begins-with* str what))))
 
+(defun old-cloud-locate-FN (FN)
+  "find file by (true) name"
+  (find FN file-DB :key #'plain-name
+	:test #'(lambda(x y)(string= (tilda x) (tilda y)))))
+
 (defun cloud-locate-FN (FN)
   "find file by (true) name"
   (find (file-chase-links FN) file-DB :key #'plain-name
@@ -505,12 +502,9 @@
     (replace-regexp-in-string "^~" ~ x)))
 
 (defun safe-dired-delete (FN)
-  (let (failed)
-    (condition-case err (funcall DDF FN "always")
-      (file-error
-       (clog :error "in DDF: %s" (error-message-string err))
-       (setf failed t)))
-    (not failed)))
+  (condition-case err (cons t (funcall DDF FN "always"))
+    (file-error
+      (cons nil (clog :error "in DDF: %s" (error-message-string err))))))
 
 (defun time< (t1 t2)
   (and
@@ -741,7 +735,7 @@ CF)))))
     ;;   (load-file FN))
 )))
 
-(defvar removed-files  nil "files that were just removed (or renamed) on local host before (cloud-sync)")
+(defvar removed-files  nil "files that were just removed (or renamed or forgotten) on local host before (cloud-sync)")
 
 (defvar important-msgs nil "these messages will be typically printed at the end of the process")
 (defvar gpg-process nil "assyncronous make-process for (en/de)cryption")
@@ -776,6 +770,7 @@ CF)))))
 (unless (member (system-name) cloud-hosts) (cloud-host-add))
 
 (while (< 0 (length (setf str (read-line))))
+(clog :debug "action string=%s" str)
 (when-let ((AA (parse-action str)) (AID (car AA)) (action (cdr AA)))
   (ifn (member (system-name) (aref action i-hostnames))
       (clog :info "this host is unaffected by action %s" AID)
@@ -797,10 +792,11 @@ CF)))))
        (CN (aref CF cipher))
        (remote-file-exists (member CN CDFs))
        (local-file-rec (or (cloud-locate-FN FN)
+(and (not (member FN removed-files))
 (when-let ((LF (get-file-properties* FN)))
         (aset LF cipher (aref CF cipher))
         (push LF file-DB)
-        LF))))
+        LF)))))
 (cond
 ((not (or local-file-rec remote-file-exists))
  (clog :error "forgetting file %s which is marked as clouded but is neither on local disk nor in the cloud" FN)
@@ -865,7 +861,7 @@ t)))))
 \tconvert $< -decipher %s%s $@
 " "jpg" "jpeg" "png"))))
 
-(defun cancel-upload(FN) (drop all FN))
+(defun cancel-pending-upload(FN) (drop all FN))
 (cl-labels ((pass-d () (concat (local-dir) "pass.d/"))
           (updated() (concat (pass-d) "updated")))
 
@@ -1014,6 +1010,7 @@ ok))
 (let ((i 0)) (dolist (AI action-IDs) (setf i (1+ (set AI i)))))
 
 (defun new-action (a-ID &rest args)
+(mapcar #'(lambda(FN) (clog :debug "new-action(%d %s)" a-ID FN)) args)
   (let ((action (make-vector (length action-fields) nil)))
     (aset action i-ID a-ID)
     (aset action i-time (current-time))
@@ -1068,8 +1065,8 @@ ok))
     (setf ok (and (cloud-forget-recursive arg) ok)))
 ok))
 
-(defun contained-in(dir-name)
-  (let (res (dir-name (file-name-as-directory dir-name)))
+(defun contained-in(DN)
+  (let* ((dir-name (tilda DN)) res (dir-name (file-name-as-directory dir-name)))
     (dolist (DB-rec file-DB)
       (when(and
 (< (length dir-name) (length (aref DB-rec plain)))
@@ -1173,10 +1170,11 @@ ok))
 (unless (car(black-p FN file-rec)) (add-file FN file-rec)) t)
 
 (defun cloud-forget-file (local-FN); called *after* the file has already been sucessfully deleted
-  (needs ((DB-rec (cloud-locate-FN local-FN) (clog :info "forget: doing nothing since %s is not clouded" local-FN))
+  (needs ((DB-rec (or (cloud-locate-FN local-FN) (old-cloud-locate-FN local-FN))
+ (clog :warning "forget: doing nothing since %s is not clouded" local-FN))
           (CEXT (cip-ext local-FN))
 	  (cloud-FN (concat (remote-directory) (aref DB-rec cipher) CEXT) (clog :error "in DB entry for %s" local-FN)))
-(cancel-upload local-FN)
+(cancel-pending-upload local-FN)
 
 (when (string= CEXT ".png")
 (clog :debug "forgetting password for %s" local-FN)
@@ -1184,10 +1182,13 @@ ok))
 
 (drop file-DB DB-rec)
 (push local-FN removed-files)
-(safe-dired-delete cloud-FN)
+(if (car (safe-dired-delete cloud-FN))
+  (clog :info "erased %s" cloud-FN)
+  (clog :warning "could not erase %s" cloud-FN))
  t))
 
 (defun cloud-forget-recursive(FN)
+(clog :debug "cloud-forget-recursive(%s)" FN)
 (new-action i-forget FN)
 (dolist (sub-FN (mapcar #'plain-name (contained-in FN)))
   (cloud-forget-file sub-FN))
@@ -1195,18 +1196,20 @@ ok))
 
 (defun cloud-forget (&optional FN)
   (interactive)
+(if FN (cloud-forget-recursive FN)
   (if (string= major-mode "dired-mode")
       (dired-map-over-marks (cloud-forget-recursive (dired-get-filename)) nil)
+(if-let ((FN (buffer-file-name))) (cloud-forget-recursive FN)
     (unless
 	(cloud-forget-recursive (read-string "file to be forgotten=" (if FN FN "")))
-      (clog :error "could not forget this file"))))
+      (clog :error "could not forget this file"))))))
 
-(defun cloud-rename-file (old new)
+(defun cloud-rename-file(old new)
   (let ((source (cloud-locate-FN old))
         (target (cloud-locate-FN new)))
     (cond
      ((and source target); overwriting one cloud file with another one
-      (dolist (property (list mtime modes gname)) do
+      (dolist (property (list mtime modes gname))
             (aset target property (aref source property)))
       (drop file-DB source))
      (source (aset source plain new))
