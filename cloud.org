@@ -22,14 +22,14 @@ gpg --pinentry-mode loopback --passphrase "somepass" -o ~/myFile.txt --decrypt /
 #+END_SRC
 
 * Initialization
-[[https://stallman.org/][Stallman]] recommends not to use  ~CL~, but for now I am still requiring it.
+Although [[https://stallman.org/][Stallman]] recommends not to use ~CL~, for now I am still requiring it.
 ** Local configuration
 *** variables (configuration parameters)
 The variables with the names starting with "cloud-" should probably be kept global; the others will be "localized".
 
 =cloud-file-hooks= is used for special files (e.g., diary or bookmarks);
 When those are copied from the cloud to the local hard drive, one should call, e.g., =diary-view-entries= or =bookmark-load=:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+#+BEGIN_SRC emacs-lisp :tangle generated/variables.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
 ;; generated from cloud.org
 (defvar password nil); to be read from config or generated
 (defvar number-of-CPU-cores 1)
@@ -37,20 +37,22 @@ When those are copied from the cloud to the local hard drive, one should call, e
 #+END_SRC
 ← for example, after we have updated local ~emacs-diary~ file from the cloud, we may want to re-scan it.
 
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
 (defvar upload-queue nil "names of edited files")
 (defvar added-files nil "newly clouded files")
 #+END_SRC
 
 From time to time (e.g., when we =M-x cloud-sync=)  we synchronize local information
 with the remote file whose (secret) name is stored in =remote/files=:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
 (defvar remote/files nil "3-symbol DB name on the server, e.g., WzT")
+(defvar localhost (system-name))
+(defvar ~ (file-name-as-directory(expand-file-name "~")))
 (defvar remote-directory  "/mnt/cloud/")
 #+END_SRC
 ← for portability it is better to avoid backslashes in path names.
 
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
 (defvar /tmp/cloud/ (file-name-as-directory (make-temp-file "cloud." t)))
 (defun remote/files() remote/files)
 (defun remote-directory() remote-directory)
@@ -58,25 +60,25 @@ with the remote file whose (secret) name is stored in =remote/files=:
 (defun history() (concat (remote-directory) "history"))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
 (defvar emacs-d "~/.emacs.d/")
 (defvar cloud-was-connected t "normally t, nill when there was no connection")
 #+END_SRC
 ← ~cloud-was-connected~ is set to ~nil~ when ~(cloud-sync)~ fails, and is set to ~t~ once =(read-fileDB)= succeeds.
 
 Similarly to how they do it in ~JavaScript~, let me call the following functions "dynamic variables":
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
 (defun local-dir() (concat emacs-d "cloud/"))
 (defun cloud-mk() (concat (local-dir) "cloud.mk"))
 (defun lock-dir() (concat (remote-directory) "now-syncing/"))
 (defun image-passes() (concat (local-dir) "individual.passes"))
-(defun local/() (concat (local-dir) (system-name) "/"))
+(defun local/() (concat (local-dir) localhost "/"))
 (defun local/log() (concat (local/) "log"))
 #+END_SRC
 
 Instead of storing configuration in =~/.emacs= I prefer to store it in a separate file:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
-(defun local/config() (concat (local-dir) (system-name) "/config"))
+#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
+(defun local/config() (concat (local-dir) localhost "/config"))
 #+END_SRC
 This is because
 1. sometimes the code will update its configuration, and
@@ -85,7 +87,7 @@ This is because
 *** creating (only once, during the first run)
 Before we start for the very first time, when cloud directory is inexistent or empty, 
 we create the password for encryption by =(cloud-init)=:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun cloud-init() "initializes cloud directory and generates password -- runs only once"
 (clog :info "atempting to create new configuration for this host")
 ;;(when (yes-or-no-p "Is cloud mounted?")
@@ -94,7 +96,7 @@ we create the password for encryption by =(cloud-init)=:
 (clog :error "could not create/access directory %s" remote-directory)
 #+END_SRC
 For safety reasons refusing to initialize a directory already containing encrypted files:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (if (directory-files remote-directory nil "^.\+.gpg$" t)
     (clog :error "please clean the directory %s before asking me to initialize it" remote-directory)
 (clog :info "creating (main) remote file DB in unused directory %s" remote-directory)
@@ -102,7 +104,7 @@ For safety reasons refusing to initialize a directory already containing encrypt
   (clog :error "could not create DB file in the directory %s" remote-directory)
 #+END_SRC
 Generating random password and saving it in the local configuration file:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (setf password (rand-str 9))
 #+END_SRC
 – one password for all text files – 
@@ -116,7 +118,7 @@ individuall passwords for some (or all) text files ← might facilitate gradual 
 
 The concept "one password for many text files" might be changed later if I ever upgrade the code for sharing files within a group of people;
 but if this happens, I will probably have to abandon symmetric encryption and deal with public/private keys.
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (ifn (member (safe-mkdir (local-dir)) '(:exists t))
   (clog :error "could not create/acess directory %s" (local-dir))
 (write-conf)
@@ -125,18 +127,29 @@ but if this happens, I will probably have to abandon symmetric encryption and de
 
 *** reading and writing
 By default we assume that our configuration parameters have a string value. There are exceptions:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
 (defvar numerical-parameters '("number-of-CPU-cores"))
 (defvar lists-of-strings '("junk-extensions" "ignored-dirs"))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun format-conf(CP)
 (cond
   ((member CP numerical-parameters) (format "%s=%d" CP (symbol-value(intern CP))))
   ((member CP lists-of-strings) (format "%s=%s" CP
 (apply #'concat (mapcar #'(lambda(item) (format "%s " item)) (sort (symbol-value(intern CP)) #'string<)))))
   (t (format "%s=%s" CP (symbol-value(intern CP))))))
+#+END_SRC
+
+#+BEGIN_SRC lisp :tangle generated/tests.el
+(ert-deftest format-conf()
+(let ((numerical-parameters '("number-of-CPU-cores"))
+      (number-of-CPU-cores 123))
+  (should (string= "number-of-CPU-cores=123"
+     (format-conf "number-of-CPU-cores")))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun write-conf()
 (clog :debug "starting write-conf")
 (with-temp-file (local/config)
@@ -145,7 +158,7 @@ By default we assume that our configuration parameters have a string value. Ther
 (clog :debug "ended write-conf") t)
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun read-conf* (file-name)
   "reads configuration file"
 (with-temp-buffer
@@ -158,7 +171,7 @@ By default we assume that our configuration parameters have a string value. Ther
     res)))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun read-conf()
   "reads configuration file"
 (let ((conf (read-conf* (local/config))))
@@ -181,7 +194,7 @@ We got three variables (or databases) describing
 1. host names participating in file synchronization,
 2. actions to be performed on other hosts, and
 3. names of the clouded files:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
 (defvar cloud-hosts nil "host names participating in file synchronization")
 (defvar remote-actions nil "actions to be saved in the cloud")
 (defvar file-DB nil "list of vectors, each corresponding to a clouded file")
@@ -192,7 +205,7 @@ We got three variables (or databases) describing
 3. on the server, in a file named =remote/files=.
 
 We have to manually blacklist files generated by emacs, see ~README.md~ stanza in [[file:Makefile][Makefile]]:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
 (defvar *blacklist* '("~/.bash_login" "~/.bash_logout" "~/.bashrc") "list of manually blcklisted files")
 #+END_SRC
 ← temporary solution for dot files.
@@ -204,12 +217,12 @@ The following block will probably not be used:
 (when (member FN *onetime-blacklist*) (drop *onetime-blacklist* FN) t)))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
-(defvar ignored-dirs '("/tmp/" "/mnt/") "temporary or remote directories")
+#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
+(defvar ignored-dirs '("/tmp/" "/mnt/" "/etc/") "temporary or system or remote directories")
 #+END_SRC
 
 Suppose we opened a ~dired~ buffer, and =M-x cloud-add= on a directory. Files with certain extensions in the (sub)directory should not be clouded by default:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
 (defvar junk-extensions '("ac3" "afm" "aux" "idx" "ilg" "ind" "avi" "bak" "bbl" "blg" "brf" "bst" "bz2" "cache" "chm" "cp" "cps" "dat" "deb" "dvi" "dv" "eps" "fb2"
 "fn" "fls" "img" "iso" "gpx" "segments" "ky" "mjpeg" "m" "md" "mov" "mpg" "mkv" "jpg" "gif" "jpeg" "png" "log" "mp3" "mp4" "m2v" "ogg" "ogm" "out" "part" "pbm" "pdf"
 "pfb" "pg" "pod" "pgm" "pnm" "ps" "rar" "raw" "gz" "sfd" "woff" "tbz" "tgz" "tga" "tif" "tiff" "toc" "tp" "vob" "vr" "wav" "xcf" "xml" "xz" "Z" "zip")
@@ -218,7 +231,7 @@ Suppose we opened a ~dired~ buffer, and =M-x cloud-add= on a directory. Files wi
 ← can be overwritten by config file.
 
 Every element of ~file-DB~ is a vector having the following structure:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
 (defvar file-fields; indices numerating array fields
 (list 'plain; original (local) file name
 'cipher; encrypted file name (base name)
@@ -231,21 +244,20 @@ Every element of ~file-DB~ is a vector having the following structure:
 
 *** hosts and actions
 The content of ~file-DB~ is locally stored in the file named =(local/all)=:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
 (defun local/all() (concat (local/) "all"))
 #+END_SRC
 
 *** printing
 **** hosts
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun print-hosts()
-(dolist (hostname cloud-hosts) (insert (format "%s " hostname)))
-(backspace)
-(newline))
-;;(clog :debug "print-hosts finished"))
+  (dolist (hostname cloud-hosts) (insert (format "%s " hostname)))
+  (backspace)
+  (newline))
 #+END_SRC
 **** actions
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun print-actions()
 (dolist (action remote-actions)
   (clog :debug "printing-action %s" (format-action action))
@@ -255,7 +267,7 @@ The content of ~file-DB~ is locally stored in the file named =(local/all)=:
 (newline)))
 #+END_SRC
 **** file info
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun format-file (DB-rec)
   (format "%S %s %s %s %d %S"
 	  (tilda (aref DB-rec plain))
@@ -267,7 +279,7 @@ The content of ~file-DB~ is locally stored in the file named =(local/all)=:
 #+END_SRC
 
 *** parsing
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun safe-FL()
   (if (< (line-end-position) (point-max))
      (forward-line)
@@ -283,7 +295,7 @@ The content of ~file-DB~ is locally stored in the file named =(local/all)=:
 #+END_SRC
 
 **** action lines
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun parse-action(str)
 (clog :debug "parse-action(%s) ..." str)
 (let ((action (make-vector (length action-fields) nil)))
@@ -292,7 +304,7 @@ An action string has unknown number of fields (columns); some of them are quoted
 We use =begins-with= from ~common.el~ to read the fields.
 
 Let us parse the string =str= and save extracted parameters (values) in the vector =action=:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (dolist (column (list
                  `(:time-stamp . ,i-time)
                  `(:int . ,i-ID)
@@ -302,7 +314,7 @@ Let us parse the string =str= and save extracted parameters (values) in the vect
      (setf str (cdr col-value))))
 #+END_SRC
 =(aref action i-Nargs)= must be evaluated _after_ =`(:int . ,i-Nargs)=, but _before_ we proceed with =(cons (cons  :string  (aref action i-Nargs)) i-args)=:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (dolist (column 
 (list
   (cons (cons  :string  (aref action i-Nargs)) i-args)
@@ -315,14 +327,14 @@ So, we have just got information about pending action.
 We perform it immediately if our hostname is in the list =(aref action i-hostnames)=.
 
 In this sigle-user code action's time stamp =AID= may serve as its unique ID:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (let ((AID (format-time-string "%02m/%02d %H:%M:%S" (aref action i-time))))
 (clog :info "... will later be referenced as %s" AID)
 (cons AID action))))
 #+END_SRC
 
 **** file lines
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun str-to-DBrec(str)
 "parses one file line from the remote file DB"
 (ifn (string-match "\"\\(.+\\)\"\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([[:digit:]]+\\)\s+\"\\(.+\\)\"" str)
@@ -330,17 +342,17 @@ In this sigle-user code action's time stamp =AID= may serve as its unique ID:
 #+END_SRC
 We've got a valid string describing a clouded file, now let us parse it.
 The first column is the file name:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (let ((CF (make-vector (length file-fields) nil))
       (FN (match-string 1 str)))
   (aset CF plain FN)
   (aset CF cipher (match-string 2 str))
-  (aset CF size (match-string 3 str))
+  (aset CF size (string-to-number (match-string 3 str)))
 #+END_SRC
 ← the last field is no more used.
 
 We syncronize ~gname~ (name of the group), ~modes~ (permissions), and ~mtime~ (modification time) for every file:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
   (aset CF gname (match-string 4 str))
   (aset CF modes (string-to-number (match-string 5 str)))
   (let ((mtime-str (match-string 6 str)))
@@ -353,7 +365,7 @@ CF)))))
 ** (En/De)cryption
 Especially when ~(= 0 *log-level*)~ this code might print many log messages.
 For most important ones I will use this function
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun end-log (fstr &rest args)
   "message + time"
   (push
@@ -367,7 +379,7 @@ For most important ones I will use this function
 which is going to print them at the end of the syncronization session.
 
 Some files require special treatment after they are updated on the local disk from the cloud:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun post-decrypt (FN)
   "special treatment for certain files"
   (let ((ext (file-name-extension FN))
@@ -384,18 +396,18 @@ Some files require special treatment after they are updated on the local disk fr
 where =diary-check-diary-file= will raise an error (exception) in case of inexisting diary-file.
 
 ** Other variables
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
 (defvar removed-files  nil "files that were just removed (or renamed or forgotten) on local host before (cloud-sync)")
 #+END_SRC
 ← this variable serves to prevent recovering them from the cloud during the next =M-x cloud-sync=.
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
 (defvar important-msgs nil "these messages will be typically printed at the end of the process")
 (defvar gpg-process nil "assyncronous make-process for (en/de)cryption")
 #+END_SRC
 
 * Connection with the cloud
 Checking if the internet connection is established:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun cloud-connected-p()
   (and
    (remote-directory) (remote/files)
@@ -466,7 +478,7 @@ This file stores [[Host/Action/File information][Host/Action/File information]] 
 ←  without quotes, separated by spaces.
 
 In the following, ~DBname~ is the name of _decrypted_ remote file DB:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun write-all (DBname)
   (with-temp-file DBname
 (print-hosts)
@@ -486,18 +498,18 @@ In this block, every line is has the following fields (columns):
 
 The order of actions is important! For example, imagine that
 I renamed or moved a file twice; the order of these actions on a remote host should be the as on the local one:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (print-actions)
 #+END_SRC
 Pending actions block is ended by an empty line separating it from the rest of the file:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (newline)
 #+END_SRC
 
 *** List of clouded files
 This is the last (and, usually, the largest) block of lines.
 Here every line corresponds to one file:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (dolist (file-record file-DB)
   (insert (format-file file-record)) (newline))
 (setf removed-files nil) t))
@@ -507,7 +519,7 @@ Here every line corresponds to one file:
 ** Parsing
 *** list of host names
 The function =read-all= (returns =nil=) reads (previously decrypted) [[Host/Action/File information][host/action/file information]]:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun read-all(DBname)
   "reads content (text) file into the database file-DB"
   (temp-open DBname
@@ -520,29 +532,29 @@ The function =read-all= (returns =nil=) reads (previously decrypted) [[Host/Acti
 In case =read-all= is launched on an unknown computer
 (that is, its hostname is not yet mentioned in the first line of the file =DBname=),
 it is automatically added to the cloud network:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
-(unless (member (system-name) cloud-hosts) (cloud-host-add))
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(unless (member localhost cloud-hosts) (cloud-host-add))
 #+END_SRC
 
 *** list of pending actions
 The concept of actions is explained in the [[Actions][corresponding section]].
 
 Keep reading one action after another until we encounter an empty line:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (while (< 0 (length (setf str (read-line))))
 (clog :debug "action string=%s" str)
 (when-let ((AA (parse-action str)) (AID (car AA)) (action (cdr AA)))
-  (ifn (member (system-name) (aref action i-hostnames))
+  (ifn (member localhost (aref action i-hostnames))
       (clog :info "this host is unaffected by action %s" AID)
-    (if (perform action)
+    (if (perform action (aref action i-hostnames))
 	(clog :info "sucessfully performed action %s" AID)
       (clog :error " action %s failed, will NOT retry it" AID))
 #+END_SRC
 ← even if the action failed, we wash our hands and not retry it.
 If the action is still pending on some hosts, we will store it in =remote-actions=
 which is going later to be saved into the [[Contents file][remote file DB]]:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
-(when (drop (aref action i-hostnames) (system-name))
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(when (drop (aref action i-hostnames) localhost)
   (end-push action remote-actions)))))
 #+END_SRC
 
@@ -552,13 +564,13 @@ the next thing to do is to read/parse the files' block of lines.
 *** list of (clouded) files
 For files that need to be (up/down)loaded (to/from) the cloud =(read-fileDB)= forms ~cloud.mk~
 which can be fed to GNU make as =make --jobs=N -f cloud.mk=, where ~jobs~ parameter ~N~ is the (configurable) number of CPU cores.
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (needs ((CDFs
 #+END_SRC
 ← =CDFs= will contain the data about the files in the remote directory.
 
 Our ~.gpg~ files are named as  ~XYZ.gpg~; the next line cuts the extension  ~.gpg~ away:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
  (mapcar #'(lambda(s) (replace-regexp-in-string "....$" "" s))
       (directory-files remote-directory nil "...\...." t)) (clog :error "can not read %s" remote-directory)))
 (while(< 10 (length (setf str (read-line))))
@@ -567,7 +579,7 @@ Our ~.gpg~ files are named as  ~XYZ.gpg~; the next line cuts the extension  ~.gp
 Ideally every file mentioned in =file-DB= should exist on a local hard disk.
 In reality either file, the local one, or the remote one, or both, might be absent,
 and we have to address all of these situations:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (let* ((FN (plain-name CF))
        (CN (aref CF cipher))
        (remote-file-exists (member CN CDFs))
@@ -590,7 +602,7 @@ and we have to address all of these situations:
   (aref CF cipher) (TS(aref CF mtime))))
 #+END_SRC
 =download= queues the file for downloading from the cloud (by updating the [[Creating make file][make file]]):
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (if local-file-rec
    (aset local-file-rec mtime (aref CF mtime))
    (push CF file-DB))
@@ -616,7 +628,7 @@ At this point we ended up parsing the list of files.
 * On saving files in emacs
 When the file is saved in emacs (=C-x s=), we mark it so that it is going
 to be uploaded to the cloud when the user calls =cloud-sync= next time:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun touch (FN)
 "called when the file named FN is changed"
 (when (and FN (stringp FN))
@@ -635,19 +647,19 @@ Make file is useful because
 2. it simplifies debugging.
 
 When the make file is ready, we launch it with =make -jN ~/.emacs.d/cloud/cloud.mk=, where =N= is the number of CPU cores. 
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (macrolet ((NL () '(push "
 " Makefile))
 (inl (&rest format-pars) `(progn (push ,(cons 'format format-pars) Makefile) (NL))))
 (let (all Makefile uploaded
 #+END_SRC
 (Already encrypted) gpg-files types are not supposed to be encrypted, and images should be encrypted in a special way.
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (specially-encoded '(
 #+END_SRC
 Already encrypted (~gpg~) files are just copied
 #+END_SRC
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 ("$(cloud)%s.gpg: %s
 \tcp $< $@
 " "gpg")
@@ -655,7 +667,7 @@ Already encrypted (~gpg~) files are just copied
 ← this format string requires 2 arguments: =(aref file-record cipher)= and =(aref file-record plain)=.
 
 Make stanza for encrypting an image is more sophisticated:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 ("$(cloud)%s.png: %s %s
 \tconvert $< -encipher %s%s $@
 " "jpg" "jpeg" "png")))
@@ -665,7 +677,7 @@ Make stanza for encrypting an image is more sophisticated:
 =(pass-d)=, and (once again) =(aref file-record cipher)=.
 
 Similarly, for decoding
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (specially-decoded '(
 ("%s: $(cloud)%s.gpg
 \tcp $< $@
@@ -676,7 +688,7 @@ Similarly, for decoding
 #+END_SRC
 with the same number of arguments, as for encoding above.
 
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun cancel-pending-upload(FN) (drop all FN))
 (cl-labels ((pass-d () (concat (local-dir) "pass.d/"))
           (updated() (concat (pass-d) "updated")))
@@ -684,7 +696,7 @@ with the same number of arguments, as for encoding above.
 
 ** Creating ~make~ stanza for encoding one file
 Non-standard case (an image or a ~gpg~-file):
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (cl-flet ((enc-make-stanza(file-record)
 (when-let ((XYZ (aref file-record cipher)) (FN (tilda (aref file-record plain))))
 (let ((file-ext (file-name-extension FN)))
@@ -694,14 +706,27 @@ Non-standard case (an image or a ~gpg~-file):
 #+END_SRC
 where ~XYZ~ is the (random) 3-symbol cloud name of the file (without extension).
 
+.gz files receive even more special treatment (involving creation of a temporary file):
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(if(string= "gz" file-ext)
+(let ((gunzipped (make-temp-file "emacs-cloud.")))
+  (format "%s: %s
+\tzcat $< > $@
+
+$(cloud)%s.gpg: %s
+\t@$(enc) $@ $<
+\trm $<
+" gunzipped FN XYZ gunzipped))
+#+END_SRC
+
 All other files are treated with ~gpg~:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (format "$(cloud)%s.gpg: %s
 \t@$(enc) $@ $<
-" XYZ FN))
+" XYZ FN)))
 #+END_SRC
 At the end of every file (en/de)coding stanza we send a message to the log file:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (format "\t-echo \"$(date): uploaded %s\" >> $(localLog)
 " FN)))))
 #+END_SRC
@@ -709,13 +734,30 @@ Here ends the function =enc-make-stanza= that produces make-stanza for encoding.
 
 The decoding is similar:
 ** Creating ~make~ stanza for decoding one file
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (dec-make-stanza(file-record)
 (when-let ((XYZ (aref file-record cipher)) (FN (tilda (aref file-record plain))))
 (let ((file-ext (file-name-extension FN)))
 (concat
 (if-let ((fstr (car (find file-ext specially-decoded :key #'cdr :test #'(lambda(x y) (member x y))))))
 (format fstr FN XYZ (updated) (pass-d) XYZ)
+#+END_SRC
+
+.gz files receive even more special treatment (involving creation of a temporary file):
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(if(string= "gz" file-ext)
+(let ((gunzipped (make-temp-file "emacs-cloud.")))
+  (format "%s: %s
+\tcat $< | gzip > $@
+
+%s:$(cloud)%s.gpg
+\t@$(enc) $@ $<
+\trm $<
+" FN gunzipped gunzipped XYZ))
+#+END_SRC
+
+All other files are treated with ~gpg~:
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (format "%s: $(cloud)%s.gpg
 \t@$(dec) $@ $<
 " FN XYZ ))
@@ -723,11 +765,11 @@ The decoding is similar:
 \t-chmod %o $@
 \t-touch --date=%S $@
 \t-echo \"$(date): downloaded %s\" >> $(localLog)
-" (aref file-record gname) (aref file-record modes) (full-TS (aref file-record mtime)) FN))))))
+" (aref file-record gname) (aref file-record modes) (full-TS (aref file-record mtime)) FN)))))))
 #+END_SRC
 
 ** Putting this all together
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun download (file-record)
 (needs ((FN (aref file-record plain) (clog :error "download: file lacks plain name"))
         (stanza (dec-make-stanza file-record) (clog :error "download: could not create stanza for %s" FN)))
@@ -738,9 +780,8 @@ The decoding is similar:
 
 GNU make won't upload (with encryption) the file to the server if target is younger than the dependence.
 =make-cloud-older= ensures that the ~.gpg~ file is old enough to prevent this behavior:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun make-cloud-older(file-record)
-;;(clog :debug "make-cloud-older(%s)" (plain-name file-record))
 (when-let ((clouded (get-file-properties (aref file-record cipher)))
            (local-mtime (aref file-record mtime)))
 (when (time< local-mtime (aref clouded mtime))
@@ -750,7 +791,7 @@ GNU make won't upload (with encryption) the file to the server if target is youn
 (time-add local-mtime (- -60 (random 6000)))))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun upload (file-record)
 (needs ((FN (tilda (aref file-record plain)) (clog :error "upload: file lacks plain name"))
 	(CN (aref file-record cipher) (clog :error "upload: file %s lacks cipher name" FN))
@@ -767,7 +808,7 @@ all)
 (push stanza Makefile) (NL))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun reset-Makefile()
 "reseting make file"
 (when (or (and (file-exists-p (pass-d)) (file-directory-p (pass-d))) (safe-mkdir (pass-d)))
@@ -788,7 +829,7 @@ all)
 " (updated) (image-passes) (untilda (pass-d)) (pass-d))))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun save-Makefile()
 "flushing make file"
 (inl "all:%s
@@ -796,7 +837,7 @@ all)
 \t@sed 's/%s/******/g' %s > %s.bak
 "
 (apply #'concat all)
-(system-name)
+localhost
 (history)
 password (cloud-mk) (cloud-mk))
 (write-region (apply #'concat (reverse Makefile)) nil (cloud-mk)))))))
@@ -807,46 +848,46 @@ password (cloud-mk) (cloud-mk))
 
 We assume that files are changed only within emacs (either edited/saved or removed/renamed using ~dired~), so that
 =file-DB= always contains the most recent information about clouded files.
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun cloud-sync()
 (interactive)
 (let ((ok t))
 #+END_SRC
 Even if the cloud was changed by some other hosts, information from the file named =(local/all)= is still valuable (for resolving collissions)
 and must be loaded at start (when =file-DB= is empty):
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (ifn (cloud-connected-p) (clog :warning "refuse to sync because remote directory not mounted")
 #+END_SRC
 Before we start doing whatever with the remote directory (shared among several hosts) let us lock it:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (let ((DL (directory-lock (lock-dir) (format "%s
-%s" (system-name) (TS (current-time)))
+%s" localhost (TS (current-time)))
 #+END_SRC
 Now if we realize that another host has uploaded changes to the cloud, we should download them:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (when (file-newer-than-file-p (remote-files) (local/all))
   (clog :info "detected NEW %s, will now update %s from it" (remote-files) (local/all))
   (unless (gpg-decrypt (local/all) (remote/files))
     (setf ok (clog :error "could not decrypt file data from the cloud; SHUT DOWN the service and INVESTIGATE!"))))
 #+END_SRC
 O.k., now when we've got the most recent version of the file =(local/all)=, let us load and parse it:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (unless (read-all (local/all))
  (setf ok (clog :error "could not parse file data just downloaded from the cloud; SHUT DOWN the service and INVESTIGATE!")))
 #+END_SRC
 If we made any changes before =(cloud-sync)=, let us upload the updates to the cloud:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (when (or added-files upload-queue removed-files)
   (ifn (write-all (local/all)) (setf ok (clog :error "could not save data to %s" (local/all)))
     (gpg-encrypt (local/all) (remote/files))
     (setf added-files nil upload-queue nil removed-files nil)))
 #+END_SRC
 It is always easier to read local file, so let me make it a little bit younger than the (encrypted) remote one:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (set-file-times (local/all) (current-time))
 #+END_SRC
 The previous code prepared the make-file; let us call ~GNU make~ now:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (save-Makefile)
 (let ((make (format "make -j%d -f %s all &> %s.log" number-of-CPU-cores (cloud-mk) (cloud-mk))))
   (clog :debug "starting %s" make)
@@ -856,25 +897,25 @@ The previous code prepared the make-file; let us call ~GNU make~ now:
 (reset-Makefile))))
 #+END_SRC
 If director (un)locking fails, we
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (unless (car DL) (setf ok (clog :error "Could not (un)lock remote directory! Please investigate"))))
 #+END_SRC
 ← This is actually rather superficial treatment; in the future we might want to treat this error better based on the information contained in =(cdr DL)=.
 
 Otherwise we proceed in a normal way.
 Finally let us print stored messages (printed by =end-log=):
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (dolist (msg (reverse important-msgs)) (message msg))
 (setf important-msgs nil)
 (clog :info "done syncing")
 (write-region (format "%s: %s -- %s
-" (system-name)  (TS (current-time)) (format-time-string "%H:%M:%S" (current-time))) nil (history)))
+" localhost  (TS (current-time)) (format-time-string "%H:%M:%S" (current-time))) nil (history)))
 ok))
 #+END_SRC
 =cloud-sync= ends here.
 
 Let us =cloud-sync= before the user quits ~emacs~:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun before-exit()
 ;; (write-conf)
 (when (cloud-sync)
@@ -898,26 +939,26 @@ enumerated in =cloud-hosts=. This order will exist untill all hosts execute it, 
 ** Definitions
 Acctions can be applied to both files and directories. An action is a vector.
 =(i-time i-ID i-args i-hostnames i-Nargs)= are integer indices, each pointing to a field in an action:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
 (defvar action-fields '(i-time i-ID i-args i-hostnames i-Nargs))
 (let ((i 0)) (dolist (AF action-fields) (setf i (1+ (set AF i)))))
 #+END_SRC
 where =i-Nargs= is used only when parsing action lines from the remote file DB.
 
-=(i-forget i-delete i-rename i-host-add i-host-forget)= are integer IDs, each identifying some kind of action (e.g., "forget file/directory" or "delete file/directory"):
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
-(defvar action-IDs '(i-forget i-delete i-rename i-host-add i-host-forget))
+=(i-forget i-delete i-rename i-host-add i-host-forget i-share)= are integer IDs, each identifying some kind of action (e.g., "forget file/directory" or "delete file/directory"):
+#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
+(defvar action-IDs '(i-forget i-delete i-rename i-host-add i-host-forget i-share))
 (let ((i 0)) (dolist (AI action-IDs) (setf i (1+ (set AI i)))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun new-action (a-ID &rest args)
 (mapcar #'(lambda(FN) (clog :debug "new-action(%d %s)" a-ID FN)) args)
   (let ((action (make-vector (length action-fields) nil)))
     (aset action i-ID a-ID)
     (aset action i-time (current-time))
     (aset action i-args args)
-    (aset action i-hostnames (remove (system-name) cloud-hosts))
+    (aset action i-hostnames (remove localhost cloud-hosts))
     (end-push action remote-actions)))
 #+END_SRC
 Later more actions will be introduced:
@@ -925,8 +966,9 @@ Later more actions will be introduced:
 2. =i-reset-names= for gradual renaming of the files in the cloud.
 
 The function =perform= performs an action:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
-(defun perform(action)
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(defun perform(action &optional HNs)
+"performing an action locally"
 (write-region
 (format "%s: %s
 " (TS (current-time)) (format-action action))
@@ -938,13 +980,16 @@ nil (local/log) t)
       (i-forget (cloud-forget-many arguments) t)
       (i-delete (cloud-rm arguments) t)
       (i-rename (cloud-rename-file (first arguments) (second arguments)) t)
-      (otherwise (clog :error "unknown action %d" (aref action i-ID)))))
-   (drop remote-actions action) t)
+#+END_SRC
+When the file(s) are finally shared among /all/ hosts (so that ~localhost~ is the last one), we just forget the file(s):
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+      (i-share (when (= 1 (length HNs)) (cloud-forget-many arguments)))
+      (otherwise (clog :error "unknown action %d" (aref action i-ID))))) t)
 #+END_SRC
 
 We must inform other hosts about actions they have to perform; for that we write list of actions
 to the remote file DB using the function
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun format-action (action)
   (format "%S %d %d %s %s"
 (full-TS (aref action i-time)); 1. Time stamp,
@@ -964,7 +1009,7 @@ Since there is no hook on renaming or deleting files, we overwrite dired functio
 their new versions will now contain standard code plus mine.
 
 Storing standard definitions of =dired-rename-file= and =dired-delete-file= in variables ~DRF~ and ~DDF~:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
 (unless (boundp 'DRF) (defvar DRF (indirect-function (symbol-function 'dired-rename-file)) "original dired-rename-file function"))
 (unless (boundp 'DDF) (defvar DDF (indirect-function (symbol-function 'dired-delete-file)) "original dired-delete-file function"))
 #+END_SRC
@@ -989,7 +1034,7 @@ Now let us write code for each of the following actions:
 
 ** Delete
 We ovewrite standard emacs =dired-delete-file= function:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun dired-delete-file (FN &optional dirP TRASH)
   (let ((FN (tilda FN))); ~/programming/emacs/functions.el
 (when (car    
@@ -1001,7 +1046,7 @@ We ovewrite standard emacs =dired-delete-file= function:
 where ~FN~ might be a directory.
 
 The following function is used to perform pending delete ordered by another host:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun cloud-rm (args)
 (let ((ok (cloud-forget-many args)))
   (dolist (arg args)
@@ -1009,7 +1054,7 @@ The following function is used to perform pending delete ordered by another host
 ok))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun cloud-forget-many (args)
   (interactive) 
 (let ((ok t))
@@ -1020,7 +1065,7 @@ ok))
 
 When we rename or delete a folder, we have to perform similar action on every cloud file contained inside the folder.
 The following function helps us finding such files:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun contained-in(DN)
   (let* ((dir-name (tilda DN)) res (dir-name (file-name-as-directory dir-name)))
     (dolist (DB-rec file-DB)
@@ -1032,7 +1077,7 @@ The following function helps us finding such files:
 #+END_SRC
 
 ** Add/forget hosts
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun add-to-actions(hostname)
   (dolist (action remote-actions)
     (unless (member hostname (aref action i-hostnames))
@@ -1043,29 +1088,27 @@ The following function helps us finding such files:
       (aset action i-hostnames (remove hostname (aref action i-hostnames))))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun cloud-host-add ()
   "adding THIS host to the cloud sync-system"
-(let ((hostname (system-name)))
-  (unless (member hostname cloud-hosts)
-    (push hostname cloud-hosts))
-  (new-action i-host-add hostname)
-  (add-to-actions hostname)))
+  (unless (member localhost cloud-hosts)
+    (push localhost cloud-hosts))
+  (new-action i-host-add localhost)
+  (add-to-actions localhost))
 #+END_SRC
 As of 2020-10-20 =cloud-host-forget= is untested:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun cloud-host-forget ()
   "remove host from the cloud sync-system"
-  (let ((hostname (system-name)))
-    (when (yes-or-no-p (format "Forget the host %s?" hostname))
-      (new-action i-host-forget hostname)
+    (when (yes-or-no-p (format "Forget the host %s?" localhost))
+      (new-action i-host-forget localhost)
       (if (cloud-sync)
 	  (safe-dired-delete (local/config))
-	(clog :error "sync failed, so I will not erase local configuration")))))
+	(clog :error "sync failed, so I will not erase local configuration"))))
 #+END_SRC
 ** Add files
 To add (or "cloud") a file I suggest opening a dired buffer, mark the files and then =M-x cloud-add=:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun cloud-add(&optional FN)
 (interactive)
 (if FN (add-file FN)
@@ -1080,7 +1123,7 @@ Pending upgrades for =cloud-add=:
 1. =cloud-add= must become more user-friendly: let the user know that file(s) are sucessfully clouded, and
 2. =cloud-add= must work with directories. This is, however, not so straightforward because I almost never want to cloud _all_ files within a directory.
 
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun blacklist(FN)
 (let ((FN (tilda FN)))
  (cloud-forget-file FN)
@@ -1090,6 +1133,7 @@ Pending upgrades for =cloud-add=:
 (let ((result
 (or
 (member FN *blacklist*) (string-match "tmp" FN)
+(string-match (concat ~ ".") (untilda FN))
 (member (file-name-extension FN) junk-extensions)
 (backup-file-name-p FN)
 (when ignored-dirs (string-match(substring(apply #'concat
@@ -1103,14 +1147,14 @@ Pending upgrades for =cloud-add=:
 (cons result file-rec)))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun white-p(FN &optional file-rec)
 (unless file-rec (setf file-rec (get-file-properties FN)))
 (cons (member (aref file-rec gname) '("important" "keepOneYear" "keepTwoYears" "keepThreeYears")) file-rec))
 #+END_SRC
 
 In =add-file= if ~FN~ is a directory, it must end with a slash symbol:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun add-file(FN &optional file-rec)
 (let ((FN (tilda (file-chase-links FN))))
 (unless (cloud-locate-FN FN)
@@ -1131,21 +1175,21 @@ Since we are clouding an image, we need to
 2. save this password in the "all-passwords" file whose name is given by =(image-passes)=, and
 3. notify our code that "all-passwords" file was changed:
 #+END_SRC
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (write-region
   (format "%s %s
 " CN (rand-str 18)) nil (image-passes) t)
 (touch (image-passes))))
 #+END_SRC
 In case when ~FN~ is a directory:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (let ((DN (file-name-as-directory FN)))
 (dolist (FN (directory-files DN nil nil t))
 (unless (member FN '("." ".."))
 (let ((FN (concat DN FN)) FR)
 #+END_SRC
 where =FR= is the file record (an array containing file info)
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (if (or
 (let ((r (white-p FN))) (setf FR (cdr r)) (car r))
 (not
@@ -1154,17 +1198,16 @@ where =FR= is the file record (an array containing file info)
 (clog :debug "not auto-clouding %s" FN))))))))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun auto-add-file(FN &optional file-rec)
 "when the file is clouded automatically"
-(unless (car(black-p FN file-rec)) (add-file FN file-rec)) t)
+ (unless (car(black-p FN file-rec)) (add-file FN file-rec)) t)
 #+END_SRC
 ← For example, when I create emails in emacs, it saves temporary files that contain "tmp" in their names, e.g.,
 ~/tmp/mutt-kolmogorov-1000-22758-436807635268831134~; I do not want to cloud those.
 
 ** Forget files
-#+END_SRC
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun cloud-forget-file (local-FN); called *after* the file has already been sucessfully deleted
   (needs ((DB-rec (or (cloud-locate-FN local-FN) (old-cloud-locate-FN local-FN))
  (clog :warning "forget: doing nothing since %s is not clouded" local-FN))
@@ -1173,13 +1216,13 @@ where =FR= is the file record (an array containing file info)
 (cancel-pending-upload local-FN)
 #+END_SRC
 Remove image's individual password:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (when (string= CEXT ".png")
 (clog :debug "forgetting password for %s" local-FN)
   (forget-password (aref DB-rec cipher)))
 #+END_SRC
 Remove file from the database and erase its encrypted copy in the cloud:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (drop file-DB DB-rec)
 (push local-FN removed-files)
 (if (car (safe-dired-delete cloud-FN))
@@ -1190,7 +1233,7 @@ Remove file from the database and erase its encrypted copy in the cloud:
 ← returns t if the file was clouded; otherwise does nothing and returns nil.
 
 =cloud-forget-recursive= should be called *after* the file has already been sucessfully deleted:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun cloud-forget-recursive(FN)
 (clog :debug "cloud-forget-recursive(%s)" FN)
 (new-action i-forget FN)
@@ -1202,7 +1245,7 @@ Remove file from the database and erase its encrypted copy in the cloud:
 =cloud-forget= is excecuted either
 1. when a file/directory is removed or
 2. manually from the dired buffer
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun cloud-forget (&optional FN)
   (interactive)
 (if FN (cloud-forget-recursive FN)
@@ -1216,7 +1259,7 @@ Remove file from the database and erase its encrypted copy in the cloud:
 
 ** Rename
 =cloud-rename-file= updates the file data base *after* the file has already been sucessfully renamed:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun cloud-rename-file(old new)
   (let ((source (cloud-locate-FN old))
         (target (cloud-locate-FN new)))
@@ -1230,7 +1273,7 @@ Remove file from the database and erase its encrypted copy in the cloud:
 #+END_SRC
 
 Updating =dired-rename-file= by overwriting it:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun dired-rename-file (old-FN new-FN ok-if-already-exists)
   (let (failure)
     (clog :debug "DRF")
@@ -1246,7 +1289,7 @@ Updating =dired-rename-file= by overwriting it:
       (new-action i-rename old-FN new-FN)
 #+END_SRC
 In case we are renaming directories:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (when (file-directory-p old-FN)
   (let* ((old-dir (file-name-as-directory old-FN)) (LOD (length old-dir))
          (new-dir (file-name-as-directory new-FN)))
@@ -1260,7 +1303,7 @@ In case we are renaming directories:
 #+END_SRC
 
 The above function needs =rename-directory=:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun rename-directory (old-dir new-dir)
 "recursively update plain-names of clouded files due to renaming of a directory"
 (when (file-directory-p old-dir)
@@ -1276,7 +1319,7 @@ The above function needs =rename-directory=:
 * Starting all this machinery
 ** Every time we start ~emacs~
 We will update global configuration variables using
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun update-conf(conf &rest conf-params)
 (clog :debug "started update-conf")
   (dolist (CP conf-params)
@@ -1285,7 +1328,7 @@ We will update global configuration variables using
 #+END_SRC
 
 I suggest running =(cloud-start)= from =~/.emacs= every time you restart ~emacs~ (see [[file:README.org::Quick start][README.org]]):
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun cloud-start()
 (save-some-buffers)
 (clog :debug "cloud-start: local/config = %s" (local/config))
@@ -1296,32 +1339,32 @@ I suggest running =(cloud-start)= from =~/.emacs= every time you restart ~emacs~
   (clog :info "check newly created configuraion %s and then M-x cloud-start" (local/config))))
 #+END_SRC
 We have read configuration, and now let us check if it is correct:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (update-conf conf "remote-directory" "junk-extensions" "ignored-dirs" "remote/files" "number-of-CPU-cores" "password")
 #+END_SRC
 In case ~remote-directory~ configuration parameter is missing, let ask the user for the input:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (ifn remote-directory (clog :error "You have to set remote-directory for me before I can proceed")
 (ifn password (clog :error "You have to set encryption password for me before I can proceed")
 #+END_SRC
 At this point the configuration is o.k., so we can save it when we quit eamcs:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (add-hook 'kill-emacs-hook 'before-exit)
 #+END_SRC
 The file with the name given by =(image-passes)= contains individual passwords used to encode images;
 even if we've got no images clouded so there are no passwords for them, this file should still exist:
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (unless (file-exists-p (image-passes))
   (write-region "" nil (image-passes))
   (add-file (image-passes)))
 #+END_SRC
 ← and it must also be clouded.
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (reset-Makefile)
 (cloud-sync)))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun read-fileDB()
 (clog :debug "starting read-fileDB")
 (or
@@ -1334,7 +1377,7 @@ even if we've got no images clouded so there are no passwords for them, this fil
 #+END_SRC
 ← Strange: there will be errors if I quote password by writing =--passphrase %S= instead of =--passphrase %s=!
 
-#+BEGIN_SRC emacs-lisp :tangle generated/main.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 password (untilda (local/all)) (remote-files))))))
 (read-all (local/all)))
 (clog :error "cloud-start header failed") nil))

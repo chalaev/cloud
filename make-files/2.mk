@@ -28,7 +28,15 @@ $(cloud)ivh.png: ~/20-02.jpg ~/.emacs.d/cloud/pass.d/updated
 	convert $< -encipher ~/.emacs.d/cloud/pass.d/ivh $@
 	-echo "$(date): uploaded ~/20-02.jpg" >> $(localLog)
 
-all: /mnt/lws/cloud/ivh.png /mnt/lws/cloud/UJT.gpg /mnt/lws/cloud/vEV.gpg /mnt/lws/cloud/mel.gpg
+/tmp/emacs-cloud.58WR9D: ~/sample-file.gz
+	zcat $< > $@
+
+$(cloud)MuC.gpg: /tmp/emacs-cloud.58WR9D
+	@$(enc) $@ $<
+	rm $<
+	-echo "$(date): uploaded ~/sample-file.gz" >> $(localLog)
+
+all: /mnt/lws/cloud/MuC.gpg /mnt/lws/cloud/ivh.png /mnt/lws/cloud/UJT.gpg /mnt/lws/cloud/vEV.gpg /mnt/lws/cloud/mel.gpg
 	echo "background (en/de)cryption on kalinin finished $(date)" >> /mnt/lws/cloud/history
 	@sed 's/******/******/g' ~/.emacs.d/cloud/cloud.mk > ~/.emacs.d/cloud/cloud.mk.bak
 

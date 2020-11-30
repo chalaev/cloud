@@ -1,20 +1,20 @@
 
 # Table of Contents
 
-1.  [Description](#orgf8f387f)
-2.  [Prerequisites](#org6d7233c)
-3.  [Quick start](#orge46c38c)
-4.  [Commands](#orgeaeeb30)
-5.  [Source code files](#orgcb7b05d)
-6.  [Motivation](#org65b262f)
-7.  [Limitations](#orgf0262af)
-8.  [License](#orge6de98c)
-9.  [Support](#orgfb17431)
+1.  [Description](#org1301810)
+2.  [Prerequisites](#org837f265)
+3.  [Quick start](#org10e9bbc)
+4.  [Commands](#org6aec91d)
+5.  [Source code files](#org4aad27c)
+6.  [Motivation](#org757c1ca)
+7.  [Limitations](#orga6e0610)
+8.  [License](#orgd8c62cd)
+9.  [Support](#orgea142b7)
 
 Intended for linux users who have [emacs](https://www.gnu.org/software/emacs/) always open.
 
 
-<a id="orgf8f387f"></a>
+<a id="org1301810"></a>
 
 # Description
 
@@ -30,10 +30,10 @@ Synchronizing important files on two or more computers using
     a. using [ImageMagick](https://imagemagick.org/) for `JPEG` and `PNG` images or
     b. using [gpg](https://www.gnupg.org/) for other (presumably text) files.
 
-Encrypted files saved in the cloud have **random names** to minimize the amount of information Evil Corporations can extract by monitoring our cloud directory.
+Encrypted files saved in the cloud have **random names** to minimize the amount of information cloud owners can extract by monitoring our cloud directory.
 
 
-<a id="org6d7233c"></a>
+<a id="org837f265"></a>
 
 # Prerequisites
 
@@ -42,19 +42,19 @@ We need `emacs`, GNU `make`, `ImageMagick`, `gpg`, `sed`, and `gawk`; in Debian 
     aptitude install emacs make imagemagick gpg sed gawk
 
 
-<a id="orge46c38c"></a>
+<a id="org10e9bbc"></a>
 
 # Quick start
 
-I am running `emacs` in daemon mode (in text console) using the following line in `~/.bash_login`
+I am running `emacs` in daemon mode (in text console) using the following line in [~/.login](.login):
 
     emacs --daemon
 
-and `~/.bash_logout`
+and in `~/.logout`:
 
     emacsclient -e "(kill-emacs)"
 
-Once  `~/.bash_login` has started  `emacs` in the daemon mode,
+Once [~/.login](.login) has started  `emacs` in the daemon mode,
 I can use `emacsclient -c` to open a new (gui) emacs window.
 
 1.  Mount remote directory. The mounting point may be arbitrary (specified as `cloud-directory` in [~/.emacs.d/cloud/\`hostname\`/config](config)), the default one is `/mnt/cloud/`.
@@ -78,7 +78,7 @@ For this purpose I have a line in my `crontab`:
 `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="orgeaeeb30"></a>
+<a id="org6aec91d"></a>
 
 # Commands
 
@@ -95,7 +95,7 @@ Except for `M-x cloud-sync`, commands are barely used:
     `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="orgcb7b05d"></a>
+<a id="org4aad27c"></a>
 
 # Source code files
 
@@ -113,7 +113,7 @@ Except for `M-x cloud-sync`, commands are barely used:
     b. ideas on further development.
 
 
-<a id="org65b262f"></a>
+<a id="org757c1ca"></a>
 
 # Motivation
 
@@ -135,7 +135,7 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 4.  Dired-compatible: whatever I do with a file in dired (delete, rename), will be automatically done on other computers.
 
 
-<a id="orgf0262af"></a>
+<a id="orga6e0610"></a>
 
 # Limitations
 
@@ -147,14 +147,14 @@ Since emacs is my only text editor, it is enough to write eLisp code that
     After encrypting an image file and then decrypting it back, we get the same, but not identical picture (file size is changed).
 
 
-<a id="orge6de98c"></a>
+<a id="orgd8c62cd"></a>
 
 # License
 
 This code is released under [MIT license](https://mit-license.org/).
 
 
-<a id="orgfb17431"></a>
+<a id="orgea142b7"></a>
 
 # Support
 

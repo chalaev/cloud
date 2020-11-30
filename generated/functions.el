@@ -1,33 +1,3 @@
-;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-;; generated from cloud.org
-(defvar password nil); to be read from config or generated
-(defvar number-of-CPU-cores 1)
-(defvar cloud-file-hooks nil "for special files treatment")
-
-(defvar upload-queue nil "names of edited files")
-(defvar added-files nil "newly clouded files")
-
-(defvar remote/files nil "3-symbol DB name on the server, e.g., WzT")
-(defvar remote-directory  "/mnt/cloud/")
-
-(defvar /tmp/cloud/ (file-name-as-directory (make-temp-file "cloud." t)))
-(defun remote/files() remote/files)
-(defun remote-directory() remote-directory)
-(defun remote-files() (concat (remote-directory) remote/files ".gpg"))
-(defun history() (concat (remote-directory) "history"))
-
-(defvar emacs-d "~/.emacs.d/")
-(defvar cloud-was-connected t "normally t, nill when there was no connection")
-
-(defun local-dir() (concat emacs-d "cloud/"))
-(defun cloud-mk() (concat (local-dir) "cloud.mk"))
-(defun lock-dir() (concat (remote-directory) "now-syncing/"))
-(defun image-passes() (concat (local-dir) "individual.passes"))
-(defun local/() (concat (local-dir) (system-name) "/"))
-(defun local/log() (concat (local/) "log"))
-
-(defun local/config() (concat (local-dir) (system-name) "/config"))
-
 (defun cloud-init() "initializes cloud directory and generates password -- runs only once"
 (clog :info "atempting to create new configuration for this host")
 ;;(when (yes-or-no-p "Is cloud mounted?")
@@ -48,15 +18,13 @@
 (write-conf)
 (clog :info "use M-x cloud-add in the dired to cloud important files and directories" ))))))
 
-(defvar numerical-parameters '("number-of-CPU-cores"))
-(defvar lists-of-strings '("junk-extensions" "ignored-dirs"))
-
 (defun format-conf(CP)
 (cond
   ((member CP numerical-parameters) (format "%s=%d" CP (symbol-value(intern CP))))
   ((member CP lists-of-strings) (format "%s=%s" CP
 (apply #'concat (mapcar #'(lambda(item) (format "%s " item)) (sort (symbol-value(intern CP)) #'string<)))))
   (t (format "%s=%s" CP (symbol-value(intern CP))))))
+
 (defun write-conf()
 (clog :debug "starting write-conf")
 (with-temp-file (local/config)
@@ -90,35 +58,10 @@
 conf)))
 ;; 2020-11-20 (car (split-string "/mnt/cloud/"))
 
-(defvar cloud-hosts nil "host names participating in file synchronization")
-(defvar remote-actions nil "actions to be saved in the cloud")
-(defvar file-DB nil "list of vectors, each corresponding to a clouded file")
-
-(defvar *blacklist* '("~/.bash_login" "~/.bash_logout" "~/.bashrc") "list of manually blcklisted files")
-
-(defvar ignored-dirs '("/tmp/" "/mnt/") "temporary or remote directories")
-
-(defvar junk-extensions '("ac3" "afm" "aux" "idx" "ilg" "ind" "avi" "bak" "bbl" "blg" "brf" "bst" "bz2" "cache" "chm" "cp" "cps" "dat" "deb" "dvi" "dv" "eps" "fb2"
-"fn" "fls" "img" "iso" "gpx" "segments" "ky" "mjpeg" "m" "md" "mov" "mpg" "mkv" "jpg" "gif" "jpeg" "png" "log" "mp3" "mp4" "m2v" "ogg" "ogm" "out" "part" "pbm" "pdf"
-"pfb" "pg" "pod" "pgm" "pnm" "ps" "rar" "raw" "gz" "sfd" "woff" "tbz" "tgz" "tga" "tif" "tiff" "toc" "tp" "vob" "vr" "wav" "xcf" "xml" "xz" "Z" "zip")
-"files with these extensions will not be *automatically* clouded")
-
-(defvar file-fields; indices numerating array fields
-(list 'plain; original (local) file name
-'cipher; encrypted file name (base name)
-'mtime; modification time
-'modes; permissions
-'size; file size (should not be saved)
-'gname)); group name
-(let ((i 0)) (dolist (field-name file-fields) (setf i (1+ (set field-name i)))))
-
-(defun local/all() (concat (local/) "all"))
-
 (defun print-hosts()
-(dolist (hostname cloud-hosts) (insert (format "%s " hostname)))
-(backspace)
-(newline))
-;;(clog :debug "print-hosts finished"))
+  (dolist (hostname cloud-hosts) (insert (format "%s " hostname)))
+  (backspace)
+  (newline))
 
 (defun print-actions()
 (dolist (action remote-actions)
@@ -183,7 +126,7 @@ conf)))
       (FN (match-string 1 str)))
   (aset CF plain FN)
   (aset CF cipher (match-string 2 str))
-  (aset CF size (match-string 3 str))
+  (aset CF size (string-to-number (match-string 3 str)))
 
 (aset CF gname (match-string 4 str))
   (aset CF modes (string-to-number (match-string 5 str)))
@@ -216,11 +159,6 @@ CF)))))
     ;;   (load-file FN))
 )))
 
-(defvar removed-files  nil "files that were just removed (or renamed or forgotten) on local host before (cloud-sync)")
-
-(defvar important-msgs nil "these messages will be typically printed at the end of the process")
-(defvar gpg-process nil "assyncronous make-process for (en/de)cryption")
-
 (defun cloud-connected-p()
   (and
    (remote-directory) (remote/files)
@@ -248,18 +186,18 @@ CF)))))
   (split-string (setf str (read-line)))
   (clog :error "invalid first line in the remote file DB %s" DBname)))
 
-(unless (member (system-name) cloud-hosts) (cloud-host-add))
+(unless (member localhost cloud-hosts) (cloud-host-add))
 
 (while (< 0 (length (setf str (read-line))))
 (clog :debug "action string=%s" str)
 (when-let ((AA (parse-action str)) (AID (car AA)) (action (cdr AA)))
-  (ifn (member (system-name) (aref action i-hostnames))
+  (ifn (member localhost (aref action i-hostnames))
       (clog :info "this host is unaffected by action %s" AID)
-    (if (perform action)
+    (if (perform action (aref action i-hostnames))
 	(clog :info "sucessfully performed action %s" AID)
       (clog :error " action %s failed, will NOT retry it" AID))
 
-(when (drop (aref action i-hostnames) (system-name))
+(when (drop (aref action i-hostnames) localhost)
   (end-push action remote-actions)))))
 
 (needs ((CDFs
@@ -353,9 +291,19 @@ t)))))
 (if-let ((fstr (car (find file-ext specially-encoded :key #'cdr :test #'(lambda(x y) (member x y))))))
 (format fstr XYZ FN (updated) (pass-d) XYZ)
 
+(if(string= "gz" file-ext)
+(let ((gunzipped (make-temp-file "emacs-cloud.")))
+  (format "%s: %s
+\tzcat $< > $@
+
+$(cloud)%s.gpg: %s
+\t@$(enc) $@ $<
+\trm $<
+" gunzipped FN XYZ gunzipped))
+
 (format "$(cloud)%s.gpg: %s
 \t@$(enc) $@ $<
-" XYZ FN))
+" XYZ FN)))
 
 (format "\t-echo \"$(date): uploaded %s\" >> $(localLog)
 " FN)))))
@@ -366,6 +314,17 @@ t)))))
 (concat
 (if-let ((fstr (car (find file-ext specially-decoded :key #'cdr :test #'(lambda(x y) (member x y))))))
 (format fstr FN XYZ (updated) (pass-d) XYZ)
+
+(if(string= "gz" file-ext)
+(let ((gunzipped (make-temp-file "emacs-cloud.")))
+  (format "%s: %s
+\tcat $< | gzip > $@
+
+%s:$(cloud)%s.gpg
+\t@$(enc) $@ $<
+\trm $<
+" FN gunzipped gunzipped XYZ))
+
 (format "%s: $(cloud)%s.gpg
 \t@$(dec) $@ $<
 " FN XYZ ))
@@ -373,7 +332,7 @@ t)))))
 \t-chmod %o $@
 \t-touch --date=%S $@
 \t-echo \"$(date): downloaded %s\" >> $(localLog)
-" (aref file-record gname) (aref file-record modes) (full-TS (aref file-record mtime)) FN))))))
+" (aref file-record gname) (aref file-record modes) (full-TS (aref file-record mtime)) FN)))))))
 
 (defun download (file-record)
 (needs ((FN (aref file-record plain) (clog :error "download: file lacks plain name"))
@@ -383,7 +342,6 @@ t)))))
 (push stanza Makefile) (NL)))
 
 (defun make-cloud-older(file-record)
-;;(clog :debug "make-cloud-older(%s)" (plain-name file-record))
 (when-let ((clouded (get-file-properties (aref file-record cipher)))
            (local-mtime (aref file-record mtime)))
 (when (time< local-mtime (aref clouded mtime))
@@ -433,7 +391,7 @@ all)
 \t@sed 's/%s/******/g' %s > %s.bak
 "
 (apply #'concat all)
-(system-name)
+localhost
 (history)
 password (cloud-mk) (cloud-mk))
 (write-region (apply #'concat (reverse Makefile)) nil (cloud-mk)))))))
@@ -445,7 +403,7 @@ password (cloud-mk) (cloud-mk))
 (ifn (cloud-connected-p) (clog :warning "refuse to sync because remote directory not mounted")
 
 (let ((DL (directory-lock (lock-dir) (format "%s
-%s" (system-name) (TS (current-time)))
+%s" localhost (TS (current-time)))
 
 (when (file-newer-than-file-p (remote-files) (local/all))
   (clog :info "detected NEW %s, will now update %s from it" (remote-files) (local/all))
@@ -476,7 +434,7 @@ password (cloud-mk) (cloud-mk))
 (setf important-msgs nil)
 (clog :info "done syncing")
 (write-region (format "%s: %s -- %s
-" (system-name)  (TS (current-time)) (format-time-string "%H:%M:%S" (current-time))) nil (history)))
+" localhost  (TS (current-time)) (format-time-string "%H:%M:%S" (current-time))) nil (history)))
 ok))
 
 (defun before-exit()
@@ -484,22 +442,17 @@ ok))
 (when (cloud-sync)
   (safe-delete-dir /tmp/cloud/)))
 
-(defvar action-fields '(i-time i-ID i-args i-hostnames i-Nargs))
-(let ((i 0)) (dolist (AF action-fields) (setf i (1+ (set AF i)))))
-
-(defvar action-IDs '(i-forget i-delete i-rename i-host-add i-host-forget))
-(let ((i 0)) (dolist (AI action-IDs) (setf i (1+ (set AI i)))))
-
 (defun new-action (a-ID &rest args)
 (mapcar #'(lambda(FN) (clog :debug "new-action(%d %s)" a-ID FN)) args)
   (let ((action (make-vector (length action-fields) nil)))
     (aset action i-ID a-ID)
     (aset action i-time (current-time))
     (aset action i-args args)
-    (aset action i-hostnames (remove (system-name) cloud-hosts))
+    (aset action i-hostnames (remove localhost cloud-hosts))
     (end-push action remote-actions)))
 
-(defun perform(action)
+(defun perform(action &optional HNs)
+"performing an action locally"
 (write-region
 (format "%s: %s
 " (TS (current-time)) (format-action action))
@@ -511,8 +464,9 @@ nil (local/log) t)
       (i-forget (cloud-forget-many arguments) t)
       (i-delete (cloud-rm arguments) t)
       (i-rename (cloud-rename-file (first arguments) (second arguments)) t)
-      (otherwise (clog :error "unknown action %d" (aref action i-ID)))))
-   (drop remote-actions action) t)
+
+(i-share (when (= 1 (length HNs)) (cloud-forget-many arguments)))
+(otherwise (clog :error "unknown action %d" (aref action i-ID))))) t)
 
 (defun format-action (action)
   (format "%S %d %d %s %s"
@@ -521,9 +475,6 @@ nil (local/log) t)
 (length (aref action i-args)); 3. (integer) number of arguments for this action (one column),
 (apply #'concat (mapcar #'(lambda(arg) (format "%S " (tilda arg))) (aref action i-args))); 4. [arguments+] (several columns),
 (apply #'concat (mapcar #'(lambda(HN) (format "%S " HN)) (aref action i-hostnames))))); 5. hostnames, where the action has to be performed (several columns).
-
-(unless (boundp 'DRF) (defvar DRF (indirect-function (symbol-function 'dired-rename-file)) "original dired-rename-file function"))
-(unless (boundp 'DDF) (defvar DDF (indirect-function (symbol-function 'dired-delete-file)) "original dired-delete-file function"))
 
 (defun dired-delete-file (FN &optional dirP TRASH)
   (let ((FN (tilda FN))); ~/programming/emacs/functions.el
@@ -566,20 +517,18 @@ ok))
 
 (defun cloud-host-add ()
   "adding THIS host to the cloud sync-system"
-(let ((hostname (system-name)))
-  (unless (member hostname cloud-hosts)
-    (push hostname cloud-hosts))
-  (new-action i-host-add hostname)
-  (add-to-actions hostname)))
+  (unless (member localhost cloud-hosts)
+    (push localhost cloud-hosts))
+  (new-action i-host-add localhost)
+  (add-to-actions localhost))
 
 (defun cloud-host-forget ()
   "remove host from the cloud sync-system"
-  (let ((hostname (system-name)))
-    (when (yes-or-no-p (format "Forget the host %s?" hostname))
-      (new-action i-host-forget hostname)
+    (when (yes-or-no-p (format "Forget the host %s?" localhost))
+      (new-action i-host-forget localhost)
       (if (cloud-sync)
 	  (safe-dired-delete (local/config))
-	(clog :error "sync failed, so I will not erase local configuration")))))
+	(clog :error "sync failed, so I will not erase local configuration"))))
 
 (defun cloud-add(&optional FN)
 (interactive)
@@ -600,6 +549,7 @@ ok))
 (let ((result
 (or
 (member FN *blacklist*) (string-match "tmp" FN)
+(string-match (concat ~ ".") (untilda FN))
 (member (file-name-extension FN) junk-extensions)
 (backup-file-name-p FN)
 (when ignored-dirs (string-match(substring(apply #'concat
@@ -648,7 +598,7 @@ ok))
 
 (defun auto-add-file(FN &optional file-rec)
 "when the file is clouded automatically"
-(unless (car(black-p FN file-rec)) (add-file FN file-rec)) t)
+ (unless (car(black-p FN file-rec)) (add-file FN file-rec)) t)
 
 (defun cloud-forget-file (local-FN); called *after* the file has already been sucessfully deleted
   (needs ((DB-rec (or (cloud-locate-FN local-FN) (old-cloud-locate-FN local-FN))
