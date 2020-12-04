@@ -1,3 +1,6 @@
+(defmacro string-from-macro(m)
+`(format "%s" (print (macroexpand-1 ,m) #'(lambda(x) (format "%s" x)))))
+
 (defmacro when-let (vars &rest body)
   "when with let using standard let-notation"
   (if (caar vars)
@@ -74,8 +77,20 @@
       (cons t ,result)
       (cons nil (cons :unlock (cons ,unlock ,result)))))))))
 
+(defmacro drop (from-where &rest what)
+`(setf ,from-where (without ,from-where ,@what)))
+
+(defmacro define-vars (varDefs)
+  "to make switching between local/global variables easier"
+(cons 'progn
+(mapcar #'(lambda(VD)
+  (if (consp VD)
+      `(defvar ,@VD)
+      `(defvar ,VD nil)))
+varDefs)))
+
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
+;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/shalaev.org
 (defmacro case* (expr test &rest cases)
   "case with arbitrary test function"
   (let ((v (gensym "v")))
@@ -132,3 +147,7 @@
 
 (defmacro ifn (test ifnot &rest ifyes)
 `(if (not ,test) ,ifnot ,@ifyes))
+
+(defmacro end-push (what where)
+  `(if ,where (push ,what (cdr (last ,where)))
+      (push ,what ,where)))

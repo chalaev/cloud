@@ -5,11 +5,11 @@ all: README.md generated/cloud.tbz $(addprefix generated/from/, $(ORGs)) git
 
 generated/cloud.tbz: generated/from/cloud.org generated/from/2.org version.org
 	echo ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-" > generated/cloud.el
-	cat goodies/macros.el goodies/functions.el goodies/file-functions.el \
+	cat goodies/cl.el goodies/macros.el goodies/functions.el goodies/file-functions.el \
 0.el  1.el generated/2.el \
 generated/variables.el generated/functions.el >> generated/cloud.el
 	@echo "Testing before we package it:"
-	emacs --no-site-file --batch -l ert  --eval "(require 'cl)" -l goodies/macros.el -l goodies/functions.el -l goodies/file-functions.el -l generated/functions.el -l generated/tests.el -f ert-run-tests-batch-and-exit
+	emacs --no-site-file --batch -l ert --eval "(mapcar #'require '(cl epg dired-aux timezone diary-lib subr-x))"  -l generated/cloud.el -l generated/tests.el -f ert-run-tests-batch-and-exit
 	@echo "`date '+%m/%d %H:%M'` TESTS PASSED :)\n"
 	tar jcfv $@ --transform s/^generated/cloud/ generated/cloud.el
 	-@chgrp tmp $@

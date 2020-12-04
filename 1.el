@@ -83,10 +83,10 @@
       (cons (reverse result) str)))
    (t (begins-with* str what))))
 
-(defun old-cloud-locate-FN (FN)
-  "find file by (true) name"
-  (find FN file-DB :key #'plain-name
-	:test #'(lambda(x y)(string= (tilda x) (tilda y)))))
+;; (defun old-cloud-locate-FN (FN)
+;;   "find file by (true) name"
+;;   (find FN file-DB :key #'plain-name
+;; 	:test #'(lambda(x y)(string= (tilda x) (tilda y)))))
 
 (defun cloud-locate-FN (FN)
   "find file by (true) name"

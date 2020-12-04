@@ -1,0 +1,64 @@
+Change log for the [[https://github.com/chalaev/cloud][cloud synchronizer]].
+
+* Freezing the code
+No more fountainng with ideas; just making the code more realiable.
+Mostly fixing the errors; the ideas are either implemented or postponed for (probably remote) future.
+
+** adding tests + packaging
+*** 2020-12-04
+Re-wrote =enc-make-stanza= and =dec-make-stanza=.
+
+*** 2020-12-02
+Removed closures for testing, writing macro to switch between presence and absence of closures.
+*** 2020-11-30
+1. dot config files/directories (e.g., ~/.bashrc) are no more automatically clouded.
+2. Introducing new action: share
+3. started adding tests
+4. added special treatment for .gz files (see [[file:bugs.org][bugs.org]] – should still be fixed)
+
+** (mostly) error correction
+*** 2020-11-28
+1. corrected an error in "str-to-DBrec"
+2. updated "perform"
+
+*** 2020-11-27
+updated "cloud-forget" + "contained-in" + "cloud-rename-file"
+
+*** 2020-11-25
+update to "cloud-sync" + fixed "not following links" bug
+
+** preventing certain files from being auto-clouded
+*** 2020-11-23
+corrected "read-all" + added "ignored-dirs" parameter + updated "cloud-add" 
+
+*** 2020-11-21
+rewrote "cloud-sync" + made "add-file" recursive + removed "add-files" + improved "cloud-start"
+
+*** 2020-11-18
+updated "new-action" + "cloud-rename-file" + "dired-delete-file"
+
+* Intensive development
+Implementing new ideas/features, the code changes significantly
+
+** 2020-11-02
+    heavilly edited "cloud.org" hoping to make it clearer + fixed the bugs
+
+*** 2020-11-06
+    updated "cloud-add" and "cloud-forget-recursive"
+
+*** 2020-11-05
+    updated "download" and "cloud-rm"
+
+*** 2020-11-04
+    updated "cloud-sync" and "read-all"
+
+*** 2020-11-03
+    1.simplified "cloud-sync" 2.added "2.org" 
+
+** 2020-10-27
+special treatment for JPEG and PNG images
+
+***  2020-10-28
+1. replaced obsolete string-to-int with string-to-number
+2. fixed errors
+3. added more ideas to bugs.org

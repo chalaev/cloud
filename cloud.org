@@ -31,29 +31,29 @@ The variables with the names starting with "cloud-" should probably be kept glob
 When those are copied from the cloud to the local hard drive, one should call, e.g., =diary-view-entries= or =bookmark-load=:
 #+BEGIN_SRC emacs-lisp :tangle generated/variables.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
 ;; generated from cloud.org
-(defvar password nil); to be read from config or generated
-(defvar number-of-CPU-cores 1)
-(defvar cloud-file-hooks nil "for special files treatment")
+(define-vars (password; to be read from config or generated
+(number-of-CPU-cores 1)
+cloud-file-hooks; "for special files treatment"
 #+END_SRC
 ← for example, after we have updated local ~emacs-diary~ file from the cloud, we may want to re-scan it.
 
 #+BEGIN_SRC emacs-lisp :tangle generated/variables.el
-(defvar upload-queue nil "names of edited files")
-(defvar added-files nil "newly clouded files")
+upload-queue; "names of edited files"
+added-files; "newly clouded files"
 #+END_SRC
 
 From time to time (e.g., when we =M-x cloud-sync=)  we synchronize local information
 with the remote file whose (secret) name is stored in =remote/files=:
 #+BEGIN_SRC emacs-lisp :tangle generated/variables.el
-(defvar remote/files nil "3-symbol DB name on the server, e.g., WzT")
-(defvar localhost (system-name))
-(defvar ~ (file-name-as-directory(expand-file-name "~")))
-(defvar remote-directory  "/mnt/cloud/")
+remote/files; "3-symbol DB name on the server, e.g., WzT"
+(localhost (system-name))
+(~ (file-name-as-directory(expand-file-name "~")))
+(remote-directory  "/mnt/cloud/")
 #+END_SRC
 ← for portability it is better to avoid backslashes in path names.
 
 #+BEGIN_SRC emacs-lisp :tangle generated/variables.el
-(defvar /tmp/cloud/ (file-name-as-directory (make-temp-file "cloud." t)))
+(/tmp/cloud/ (file-name-as-directory (make-temp-file "cloud." t)))))
 (defun remote/files() remote/files)
 (defun remote-directory() remote-directory)
 (defun remote-files() (concat (remote-directory) remote/files ".gpg"))
@@ -62,23 +62,23 @@ with the remote file whose (secret) name is stored in =remote/files=:
 
 #+BEGIN_SRC emacs-lisp :tangle generated/variables.el
 (defvar emacs-d "~/.emacs.d/")
-(defvar cloud-was-connected t "normally t, nill when there was no connection")
+(define-vars ((cloud-was-connected t))); normally t, nill when there was no connection
 #+END_SRC
 ← ~cloud-was-connected~ is set to ~nil~ when ~(cloud-sync)~ fails, and is set to ~t~ once =(read-fileDB)= succeeds.
 
 Similarly to how they do it in ~JavaScript~, let me call the following functions "dynamic variables":
-#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
-(defun local-dir() (concat emacs-d "cloud/"))
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(defun local-dir() (concat emacs-d (file-name-as-directory "cloud")))
 (defun cloud-mk() (concat (local-dir) "cloud.mk"))
-(defun lock-dir() (concat (remote-directory) "now-syncing/"))
+(defun lock-dir() (concat (remote-directory) (file-name-as-directory "now-syncing")))
 (defun image-passes() (concat (local-dir) "individual.passes"))
-(defun local/() (concat (local-dir) localhost "/"))
+(defun local/() (concat (local-dir) (file-name-as-directory localhost)))
 (defun local/log() (concat (local/) "log"))
 #+END_SRC
 
 Instead of storing configuration in =~/.emacs= I prefer to store it in a separate file:
 #+BEGIN_SRC emacs-lisp :tangle generated/variables.el
-(defun local/config() (concat (local-dir) localhost "/config"))
+(defun local/config() (concat (local-dir) (file-name-as-directory localhost) "config"))
 #+END_SRC
 This is because
 1. sometimes the code will update its configuration, and
@@ -128,8 +128,8 @@ but if this happens, I will probably have to abandon symmetric encryption and de
 *** reading and writing
 By default we assume that our configuration parameters have a string value. There are exceptions:
 #+BEGIN_SRC emacs-lisp :tangle generated/variables.el
-(defvar numerical-parameters '("number-of-CPU-cores"))
-(defvar lists-of-strings '("junk-extensions" "ignored-dirs"))
+(define-vars ((numerical-parameters '("number-of-CPU-cores"))
+ (lists-of-strings '("junk-extensions" "ignored-dirs"))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
@@ -141,12 +141,16 @@ By default we assume that our configuration parameters have a string value. Ther
   (t (format "%s=%s" CP (symbol-value(intern CP))))))
 #+END_SRC
 
-#+BEGIN_SRC lisp :tangle generated/tests.el
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
 (ert-deftest format-conf()
 (let ((numerical-parameters '("number-of-CPU-cores"))
-      (number-of-CPU-cores 123))
-  (should (string= "number-of-CPU-cores=123"
-     (format-conf "number-of-CPU-cores")))))
+	(lists-of-strings '("junk-extensions" "ignored-dirs"))
+	(remote-directory "/mnt/my-cloud/")
+	(number-of-CPU-cores 123)
+	(ignored-dirs '("/abc/" "/def/")))
+(should (string= "remote-directory=/mnt/my-cloud/"   (format-conf "remote-directory")))
+(should (string= "number-of-CPU-cores=123" (format-conf "number-of-CPU-cores")))
+(should (string= "ignored-dirs=/abc/ /def/ " (format-conf "ignored-dirs")))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
@@ -195,9 +199,9 @@ We got three variables (or databases) describing
 2. actions to be performed on other hosts, and
 3. names of the clouded files:
 #+BEGIN_SRC emacs-lisp :tangle generated/variables.el
-(defvar cloud-hosts nil "host names participating in file synchronization")
-(defvar remote-actions nil "actions to be saved in the cloud")
-(defvar file-DB nil "list of vectors, each corresponding to a clouded file")
+(define-vars (cloud-hosts; host names participating in file synchronization
+remote-actions; actions to be saved in the cloud
+file-DB; list of vectors, each corresponding to a clouded file
 #+END_SRC
 ← The content of these variables is stored
 1. in RAM: (=cloud-hosts=, =remote-actions=, =file-DB=),
@@ -206,39 +210,27 @@ We got three variables (or databases) describing
 
 We have to manually blacklist files generated by emacs, see ~README.md~ stanza in [[file:Makefile][Makefile]]:
 #+BEGIN_SRC emacs-lisp :tangle generated/variables.el
-(defvar *blacklist* '("~/.bash_login" "~/.bash_logout" "~/.bashrc") "list of manually blcklisted files")
-#+END_SRC
-← temporary solution for dot files.
-
-The following block will probably not be used:
-#+BEGIN_SRC emacs-lisp
-(defun blacklisted(FN)
-(or(member FN *blacklist*)
-(when (member FN *onetime-blacklist*) (drop *onetime-blacklist* FN) t)))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
-(defvar ignored-dirs '("/tmp/" "/mnt/" "/etc/") "temporary or system or remote directories")
+file-blacklist
+(ignored-dirs '("/tmp/" "/mnt/" "/etc/" "/ssh:")); temporary or system or remote directories
 #+END_SRC
 
 Suppose we opened a ~dired~ buffer, and =M-x cloud-add= on a directory. Files with certain extensions in the (sub)directory should not be clouded by default:
 #+BEGIN_SRC emacs-lisp :tangle generated/variables.el
-(defvar junk-extensions '("ac3" "afm" "aux" "idx" "ilg" "ind" "avi" "bak" "bbl" "blg" "brf" "bst" "bz2" "cache" "chm" "cp" "cps" "dat" "deb" "dvi" "dv" "eps" "fb2"
+(junk-extensions '("ac3" "afm" "aux" "idx" "ilg" "ind" "avi" "bak" "bbl" "blg" "brf" "bst" "bz2" "cache" "chm" "cp" "cps" "dat" "deb" "dvi" "dv" "eps" "fb2"
 "fn" "fls" "img" "iso" "gpx" "segments" "ky" "mjpeg" "m" "md" "mov" "mpg" "mkv" "jpg" "gif" "jpeg" "png" "log" "mp3" "mp4" "m2v" "ogg" "ogm" "out" "part" "pbm" "pdf"
-"pfb" "pg" "pod" "pgm" "pnm" "ps" "rar" "raw" "gz" "sfd" "woff" "tbz" "tgz" "tga" "tif" "tiff" "toc" "tp" "vob" "vr" "wav" "xcf" "xml" "xz" "Z" "zip")
-"files with these extensions will not be *automatically* clouded")
+"pfb" "pg" "pod" "pgm" "pnm" "ps" "rar" "raw" "gz" "sfd" "woff" "tbz" "tgz" "tga" "tif" "tiff" "toc" "tp" "vob" "vr" "wav" "xcf" "xml" "xz" "Z" "zip"))
 #+END_SRC
-← can be overwritten by config file.
+← files with these extensions will not be *automatically* clouded.
 
 Every element of ~file-DB~ is a vector having the following structure:
 #+BEGIN_SRC emacs-lisp :tangle generated/variables.el
-(defvar file-fields; indices numerating array fields
+(file-fields; indices numerating array fields
 (list 'plain; original (local) file name
 'cipher; encrypted file name (base name)
 'mtime; modification time
 'modes; permissions
 'size; file size (should not be saved)
-'gname)); group name
+'gname)))); group name
 (let ((i 0)) (dolist (field-name file-fields) (setf i (1+ (set field-name i)))))
 #+END_SRC
 
@@ -648,133 +640,275 @@ Make file is useful because
 
 When the make file is ready, we launch it with =make -jN ~/.emacs.d/cloud/cloud.mk=, where =N= is the number of CPU cores. 
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(macrolet ((NL () '(push "
+(defmacro NL () '(push "
 " Makefile))
-(inl (&rest format-pars) `(progn (push ,(cons 'format format-pars) Makefile) (NL))))
-(let (all Makefile uploaded
-#+END_SRC
-(Already encrypted) gpg-files types are not supposed to be encrypted, and images should be encrypted in a special way.
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(specially-encoded '(
-#+END_SRC
-Already encrypted (~gpg~) files are just copied
-#+END_SRC
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-("$(cloud)%s.gpg: %s
-\tcp $< $@
-" "gpg")
-#+END_SRC
-← this format string requires 2 arguments: =(aref file-record cipher)= and =(aref file-record plain)=.
-
-Make stanza for encrypting an image is more sophisticated:
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-("$(cloud)%s.png: %s %s
-\tconvert $< -encipher %s%s $@
-" "jpg" "jpeg" "png")))
-#+END_SRC
-← this format string requires 5 arguments:
-=(aref file-record cipher)=, =(aref file-record plain)=, =(updated)=,
-=(pass-d)=, and (once again) =(aref file-record cipher)=.
-
-Similarly, for decoding
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(specially-decoded '(
-("%s: $(cloud)%s.gpg
-\tcp $< $@
-" "gpg")
-("%s: $(cloud)%s.png  %s
-\tconvert $< -decipher %s%s $@
-" "jpg" "jpeg" "png"))))
-#+END_SRC
-with the same number of arguments, as for encoding above.
-
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun cancel-pending-upload(FN) (drop all FN))
-(cl-labels ((pass-d () (concat (local-dir) "pass.d/"))
-          (updated() (concat (pass-d) "updated")))
+(defmacro inl (&rest format-pars) `(progn (push ,(cons 'format format-pars) Makefile) (NL)))
+(define-vars (all Makefile uploaded))
 #+END_SRC
 
-** Creating ~make~ stanza for encoding one file
-Non-standard case (an image or a ~gpg~-file):
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(cl-flet ((enc-make-stanza(file-record)
-(when-let ((XYZ (aref file-record cipher)) (FN (tilda (aref file-record plain))))
-(let ((file-ext (file-name-extension FN)))
-(concat
-(if-let ((fstr (car (find file-ext specially-encoded :key #'cdr :test #'(lambda(x y) (member x y))))))
-(format fstr XYZ FN (updated) (pass-d) XYZ)
+(defun cancel-pending-upload(FN) (drop stanze FN))
+(defun pass-d () (concat (local-dir) (file-name-as-directory "pass.d")))
+(defun updated() (concat (pass-d) "updated"))
+#+END_SRC
+
+** enc-make-stanza
+creating ~make~ stanza for encoding one file
+*** definition
+#+BEGIN_SRC emacs-lisp  :tangle generated/functions.el
+(defun enc-make-stanza(file-record)
+  (when-let ((XYZ (aref file-record cipher)) (FN (tilda (aref file-record plain))))
 #+END_SRC
 where ~XYZ~ is the (random) 3-symbol cloud name of the file (without extension).
+#+BEGIN_SRC emacs-lisp  :tangle generated/functions.el
+(let ((file-ext (file-name-extension FN)))
+(concat (cond
+#+END_SRC
 
 .gz files receive even more special treatment (involving creation of a temporary file):
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(if(string= "gz" file-ext)
+((string= "gz" file-ext)
 (let ((gunzipped (make-temp-file "emacs-cloud.")))
-  (format "%s: %s
+(format "
+%s: %s
 \tzcat $< > $@
 
 $(cloud)%s.gpg: %s
-\t@$(enc) $@ $<
+\t$(enc) $@ $<
 \trm $<
-" gunzipped FN XYZ gunzipped))
+" gunzipped FN XYZ gunzipped)))
 #+END_SRC
+
+~.gpg~ files are just copied without additional encryption:
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+((string= "gpg" file-ext)
+(format "
+$(cloud)%s.gpg: %s
+\tcp $< $@
+" XYZ FN))
+#+END_SRC
+
+Images are encoded in a special way:
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+((member file-ext '("jpg" "jpeg" "png"))
+(format "
+$(cloud)%s.png: %s %s
+\tconvert $< -encipher %s%s $@
+"
+XYZ FN (updated)
+(pass-d) XYZ))
+#+END_SRC
+where we require =(updated)= because we want to create (or update) the password file for this image.
 
 All other files are treated with ~gpg~:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(format "$(cloud)%s.gpg: %s
-\t@$(enc) $@ $<
+(t (format "
+$(cloud)%s.gpg: %s
+\t$(enc) $@ $<
 " XYZ FN)))
 #+END_SRC
+
 At the end of every file (en/de)coding stanza we send a message to the log file:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(format "\t-echo \"$(date): uploaded %s\" >> $(localLog)
-" FN)))))
+"\t-@echo \"$$(date): uploaded $<\" >> $(localLog)
+"))))
 #+END_SRC
-Here ends the function =enc-make-stanza= that produces make-stanza for encoding.
 
-The decoding is similar:
-** Creating ~make~ stanza for decoding one file
+*** testing
+Note that this =(let ...)= spans over several sections:
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(let ((general-FR ["~/pam.d/xscreensaver" "qwe" (24506 18567 0 0) 416 41 "shalaev"])
+      (gzipped ["~/shalaev.1.obsolete.gz" "4R6" (21621 47298 0 0) 416 41 "shalaev"])
+      (encrypted ["~/big-secret.gpg" "sDF" (21621 47298 0 0) 416 41 "shalaev"])
+      (image ["~/photo.jpeg" "rd2" (21621 47298 0 0) 416 41 "shalaev"]))
+#+END_SRC
+*To be corrected: make-temp-file should really become LOCAL here.*
+А именно: надо в этот =let= вобрать вообще все файлы, включая ~functions.el~ 
+
+Locally redefining =make-temp-file= to eliminate randomness:
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(defun make-temp-file (FN) (concat "/tmp/" FN "bZIZVA"))
+#+END_SRC
+ ← because on Windows my local definition of =make-temp-file= will not work.
+
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(ert-deftest enc-make-stanza()
+(skip-unless (eql system-type 'gnu/linux))
+#+END_SRC
+
+For non-special files:
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(should (string= (enc-make-stanza general-FR)
+"
+$(cloud)qwe.gpg: ~/pam.d/xscreensaver
+	$(enc) $@ $<
+	-@echo \"$$(date): uploaded $<\" >> $(localLog)
+"))
+#+END_SRC
+
+Gzipped filles will be gunzipped before encoding:
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(should (string= (enc-make-stanza gzipped)
+"
+/tmp/emacs-cloud.bZIZVA: ~/shalaev.1.obsolete.gz
+	zcat $< > $@
+
+$(cloud)4R6.gpg: /tmp/emacs-cloud.bZIZVA
+	$(enc) $@ $<
+	rm $<
+	-@echo \"$$(date): uploaded $<\" >> $(localLog)
+"))
+#+END_SRC
+
+Encrypted files will be just copied to the cloud without additional encryption:
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(should (string= (enc-make-stanza encrypted)
+"
+$(cloud)sDF.gpg: ~/big-secret.gpg
+	cp $< $@
+	-@echo \"$$(date): uploaded $<\" >> $(localLog)
+"))
+#+END_SRC
+
+For images:
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(should (string= (enc-make-stanza image)
+"
+$(cloud)rd2.png: ~/photo.jpeg ~/.emacs.d/cloud/pass.d/updated
+	convert $< -encipher ~/.emacs.d/cloud/pass.d/rd2 $@
+	-@echo \"$$(date): uploaded $<\" >> $(localLog)
+")))
+#+END_SRC
+
+** dec-make-stanza
+Creating ~make~ stanza for decoding one file
+*** definition
+The decoding is more complicated than the encoding because we need to restore
+properties (time stamp, group, and permissions) of the decoded file:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(dec-make-stanza(file-record)
-(when-let ((XYZ (aref file-record cipher)) (FN (tilda (aref file-record plain))))
-(let ((file-ext (file-name-extension FN)))
+(defun dec-make-stanza(file-record)
+  (when-let ((XYZ (aref file-record cipher)) (FN (tilda (aref file-record plain))))
+    (let ((file-ext (file-name-extension FN)))
 (concat
-(if-let ((fstr (car (find file-ext specially-decoded :key #'cdr :test #'(lambda(x y) (member x y))))))
-(format fstr FN XYZ (updated) (pass-d) XYZ)
+(cond
 #+END_SRC
-
-.gz files receive even more special treatment (involving creation of a temporary file):
+gpg files are just copied without decryption:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(if(string= "gz" file-ext)
+((string= "gpg" file-ext)
+(format "
+%s: $(cloud)%s.gpg
+\tcp $< $@
+" FN XYZ))
+#+END_SRC
+images should be decoded in a particular way:
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+((member file-ext '("jpg" "jpeg" "png"))
+(format "
+%s: $(cloud)%s.png  %s
+\tconvert $< -decipher %s%s $@
+"
+FN XYZ (updated)
+(pass-d) XYZ))
+#+END_SRC
+.gz files need special treatment (involving creation of a temporary file):
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+((string= "gz" file-ext)
 (let ((gunzipped (make-temp-file "emacs-cloud.")))
-  (format "%s: %s
-\tcat $< | gzip > $@
-
+  (format "
 %s:$(cloud)%s.gpg
-\t@$(enc) $@ $<
-\trm $<
-" FN gunzipped gunzipped XYZ))
-#+END_SRC
+\t$(dec) $@ $<
 
-All other files are treated with ~gpg~:
+%s: %s
+\tcat $< | gzip > $@
+\trm $<
+" 
+gunzipped XYZ
+FN gunzipped)))
+#+END_SRC
+All other (non-special) files are treated with ~gpg~:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(format "%s: $(cloud)%s.gpg
-\t@$(dec) $@ $<
-" FN XYZ ))
+(t (format "
+%s: $(cloud)%s.gpg
+\t$(dec) $@ $<
+" FN XYZ)))
+#+END_SRC
+Common block for any make stanza:
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (format "\t-chgrp %s $@
 \t-chmod %o $@
 \t-touch --date=%S $@
-\t-echo \"$(date): downloaded %s\" >> $(localLog)
-" (aref file-record gname) (aref file-record modes) (full-TS (aref file-record mtime)) FN)))))))
+\t-@echo \"$$(date): downloaded $@\" >> $(localLog)
+
+"
+(aref file-record gname) (aref file-record modes) (full-TS (aref file-record mtime)))))))
+#+END_SRC
+
+*** Testing
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(ert-deftest dec-make-stanza()
+(skip-unless (eql system-type 'gnu/linux))
+(should (string= (dec-make-stanza general-FR)
+"
+~/pam.d/xscreensaver: $(cloud)qwe.gpg
+	$(dec) $@ $<
+	-chgrp shalaev $@
+	-chmod 640 $@
+	-touch --date=\"2020-11-22 06:16:23 EST\" $@
+	-@echo \"$$(date): downloaded $@\" >> $(localLog)
+
+"))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(should (string= (dec-make-stanza gzipped)
+"
+/tmp/emacs-cloud.bZIZVA:$(cloud)4R6.gpg
+	$(dec) $@ $<
+
+~/shalaev.1.obsolete.gz: /tmp/emacs-cloud.bZIZVA
+	cat $< | gzip > $@
+	rm $<
+	-chgrp shalaev $@
+	-chmod 640 $@
+	-touch --date=\"2014-11-26 06:25:54 EST\" $@
+	-@echo \"$$(date): downloaded $@\" >> $(localLog)
+
+"))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(should (string= (dec-make-stanza encrypted)
+"
+~/big-secret.gpg: $(cloud)sDF.gpg
+	cp $< $@
+	-chgrp shalaev $@
+	-chmod 640 $@
+	-touch --date=\"2014-11-26 06:25:54 EST\" $@
+	-@echo \"$$(date): downloaded $@\" >> $(localLog)
+
+"))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle generated/tests.el
+(should (string= (dec-make-stanza image)
+"
+~/photo.jpeg: $(cloud)rd2.png  ~/.emacs.d/cloud/pass.d/updated
+	convert $< -decipher ~/.emacs.d/cloud/pass.d/rd2 $@
+	-chgrp shalaev $@
+	-chmod 640 $@
+	-touch --date=\"2014-11-26 06:25:54 EST\" $@
+	-@echo \"$$(date): downloaded $@\" >> $(localLog)
+
+"))))
 #+END_SRC
 
 ** Putting this all together
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun download (file-record)
+(defun download(file-record)
 (needs ((FN (aref file-record plain) (clog :error "download: file lacks plain name"))
         (stanza (dec-make-stanza file-record) (clog :error "download: could not create stanza for %s" FN)))
 (safe-mkdir (file-name-directory FN))
-(push (format " %s" FN) all)
+(push (format " %s" FN) stanze)
 (push stanza Makefile) (NL)))
 #+END_SRC
 
@@ -797,14 +931,14 @@ GNU make won't upload (with encryption) the file to the server if target is youn
 	(CN (aref file-record cipher) (clog :error "upload: file %s lacks cipher name" FN))
 	(stanza (enc-make-stanza file-record) (clog :error "upload: could not create stanza for %s" FN)))
 (clog :debug "started upload(%s)" FN)
-(unless (or (member FN uploaded) (member FN *blacklist*))
+(unless (or (member FN uploaded) (member FN file-blacklist))
 (push FN upload-queue)
 (clog :debug "will add upload(%s) stanza to Makefile" FN)
 (make-cloud-older file-record)
 (push FN uploaded)
 (push (format " %s" (concat (remote-directory) CN
 (cip-ext FN)))
-all)
+stanze)
 (push stanza Makefile) (NL))))
 #+END_SRC
 
@@ -812,7 +946,7 @@ all)
 (defun reset-Makefile()
 "reseting make file"
 (when (or (and (file-exists-p (pass-d)) (file-directory-p (pass-d))) (safe-mkdir (pass-d)))
-(setf all nil Makefile nil uploaded nil)
+(setf stanze nil Makefile nil uploaded nil)
 (inl "cloud=%s" remote-directory)
 (inl "password=%S" password)
 (inl "gpg=gpg --pinentry-mode loopback --batch --yes")
@@ -836,11 +970,11 @@ all)
 \techo \"background (en/de)cryption on %s finished $(date)\" >> %s
 \t@sed 's/%s/******/g' %s > %s.bak
 "
-(apply #'concat all)
+(apply #'concat stanze)
 localhost
 (history)
 password (cloud-mk) (cloud-mk))
-(write-region (apply #'concat (reverse Makefile)) nil (cloud-mk)))))))
+(write-region (apply #'concat (reverse Makefile)) nil (cloud-mk)))
 #+END_SRC
 
 * cloud-sync
@@ -909,7 +1043,7 @@ Finally let us print stored messages (printed by =end-log=):
 (setf important-msgs nil)
 (clog :info "done syncing")
 (write-region (format "%s: %s -- %s
-" localhost  (TS (current-time)) (format-time-string "%H:%M:%S" (current-time))) nil (history)))
+" localhost  (TS (current-time)) (format-time-string "%H:%M:%S" (current-time))) nil (history) t))
 ok))
 #+END_SRC
 =cloud-sync= ends here.
@@ -1127,24 +1261,24 @@ Pending upgrades for =cloud-add=:
 (defun blacklist(FN)
 (let ((FN (tilda FN)))
  (cloud-forget-file FN)
-(unless (member FN *blacklist*)
- (push FN *blacklist*))))
+(unless (member FN file-blacklist)
+ (push FN file-blacklist))))
 (defun black-p(FN &optional file-rec)
 (let ((result
 (or
-(member FN *blacklist*) (string-match "tmp" FN)
-(string-match (concat ~ ".") (untilda FN))
-(member (file-name-extension FN) junk-extensions)
-(backup-file-name-p FN)
-(when ignored-dirs (string-match(substring(apply #'concat
-  (mapcar #'(lambda(d)(format "\\(^%s\\)\\|" d)) ignored-dirs)) 0 -2) FN))
-(progn
-  (unless file-rec (setf file-rec (get-file-properties FN)))
-(when file-rec
-  (or
-    (member (aref file-rec gname) '("tmp"))
-    (< 1000000 (aref file-rec size))))))))
-(cons result file-rec)))
+ (member FN file-blacklist) (string-match "tmp" FN)
+ (string-match (concat ~ "\\.") (untilda FN))
+ (member (file-name-extension FN) junk-extensions)
+ (backup-file-name-p FN)
+ (when ignored-dirs (string-match(substring(apply #'concat
+(mapcar #'(lambda(d)(format "\\(^%s\\)\\|" d)) ignored-dirs)) 0 -2) FN))
+ (progn
+   (unless file-rec (setf file-rec (get-file-properties FN)))
+   (when file-rec
+     (or
+      (member (aref file-rec gname) '("tmp"))
+      (< 1000000 (aref file-rec size))))))))
+  (cons result file-rec)))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
@@ -1207,24 +1341,27 @@ where =FR= is the file record (an array containing file info)
 ~/tmp/mutt-kolmogorov-1000-22758-436807635268831134~; I do not want to cloud those.
 
 ** Forget files
+If the file is supposed to be deleted as well, =cloud-forget-file= should be
+called *after* the file has already been sucessfully deleted:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun cloud-forget-file (local-FN); called *after* the file has already been sucessfully deleted
-  (needs ((DB-rec (or (cloud-locate-FN local-FN) (old-cloud-locate-FN local-FN))
- (clog :warning "forget: doing nothing since %s is not clouded" local-FN))
-          (CEXT (cip-ext local-FN))
-	  (cloud-FN (concat (remote-directory) (aref DB-rec cipher) CEXT) (clog :error "in DB entry for %s" local-FN)))
-(cancel-pending-upload local-FN)
+(defun cloud-forget-file (FN)
+(clog :debug "cloud-forget-file (%s)" FN)
+  (needs ((DB-rec (cloud-locate-FN FN); or (old-cloud-locate-FN FN))
+ (clog :warning "forget: doing nothing since %s is not clouded" FN))
+          (CEXT (cip-ext FN))
+	  (cloud-FN (concat (remote-directory) (aref DB-rec cipher) CEXT) (clog :error "in DB entry for %s" FN)))
+(cancel-pending-upload FN)
 #+END_SRC
 Remove image's individual password:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (when (string= CEXT ".png")
-(clog :debug "forgetting password for %s" local-FN)
+(clog :debug "forgetting password for %s" FN)
   (forget-password (aref DB-rec cipher)))
 #+END_SRC
 Remove file from the database and erase its encrypted copy in the cloud:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (drop file-DB DB-rec)
-(push local-FN removed-files)
+(push FN removed-files)
 (if (car (safe-dired-delete cloud-FN))
   (clog :info "erased %s" cloud-FN)
   (clog :warning "could not erase %s" cloud-FN))
@@ -1383,9 +1520,20 @@ password (untilda (local/all)) (remote-files))))))
 (clog :error "cloud-start header failed") nil))
 #+END_SRC
 
-* In case of emergency
+* Debugging / In case of emergency
+#+BEGIN_SRC emacs-lisp :tangle generated/debug.el
+(defun clean-DB()
+  "cleaning file-DB from bad files accidentally appeared there"
+(let ((S  (select file-DB #'(lambda(FR) (not (car (black-p (plain-name FR) FR)))))))
+  (mapcar #'(lambda(FR)
+(let ((FN (plain-name FR)))
+  (cloud-forget-file FN)
+  (new-action i-forget FN)))
+ (cdr S))))
+#+END_SRC
+
 Saving database to a file:
-#+BEGIN_SRC 
+#+BEGIN_SRC emacs-lisp :tangle generated/debug.el
 (defun write-fileDB-full (DBname)
   (with-temp-file DBname
     (dolist (file-record file-DB)
@@ -1393,7 +1541,7 @@ Saving database to a file:
 (write-fileDB-full "/home/shalaev/cloud.db")
 #+END_SRC
 
-#+BEGIN_SRC lisp
+#+BEGIN_SRC emacs-lisp
 (setf file-DB
 (loop for FR in file-DB unless
       (string-match "\\.\\./" (plain-name FR))

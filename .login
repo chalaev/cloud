@@ -5,7 +5,7 @@ emacs_detected=-1
 
 # (make-temp-file "emacs-" nil ".pid" (format "%d
 # " (emacs-pid))); saving emacs'es PID
-# ← fails on emacs version 25.1.1, but works on 26.1
+# ← fails on emacs version 25.1, but works on 26.1
 
 # Unless emacs is already launched let us start it:
 
@@ -25,7 +25,7 @@ for PIDfile in /tmp/emacs-*.pid; do
 done
 
 # Note, however that we did not check the process owner.
-# (But this is probably unneded for personal computers.)
+# (But this is probably not needed for personal computers.)
 
 if [ $emacs_detected -lt 0 ]; then
     echo "launching emacs"

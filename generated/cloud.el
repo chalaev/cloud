@@ -1,4 +1,50 @@
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/shalaev.org
+;; Some day this file will probably replace standard cl.el in my projects
+(let ((counter 0))
+  (defun gensym(&optional starts-with)
+    "for those who miss gensym from Common Lisp"
+    (unless starts-with (setf starts-with "gs"))
+    (let (sym)
+      (while (progn
+               (setf sym (make-symbol (concat starts-with (number-to-string counter))))
+               (or (special-form-p sym) (functionp sym) (macrop sym) (boundp sym)))
+        (incf counter))
+      (incf counter)
+      sym)))
+
+(defun s-find(item seq &optional key test)
+  (let ((test (or test #'=)))
+    (dolist (CS seq)
+      (when (funcall test item (if key (funcall key CS) CS))
+	(return CS)))))
+
+(unless (or (boundp 'decf) (functionp 'decf) (macrop 'decf))
+(defmacro decf (var &optional amount)
+  (unless amount (setf amount 1))
+  `(setf ,var (- ,var ,amount))))
+
+(unless (or (boundp 'incf) (functionp 'incf) (macrop 'incf))
+(defmacro incf (var &optional amount)
+  (unless amount (setf amount 1))
+  `(setf ,var (+ ,var ,amount))))
+
+(defmacro flet(fun-defs &rest body)
+(let ((GSs (mapcar #'(lambda(FD) (cons (car FD) (gensym))) fun-defs)))
+`(let ,(mapcar #'(lambda(FD)
+(list (cdr (assoc (car FD) GSs))
+`(lambda ,(cadr FD) ,@(cddr FD)))) fun-defs)
+(macrolet ,(mapcar #'(lambda(FD)
+(list (car FD) (cadr FD) `(funcall ,(cdr (assoc (car FD) GSs)) ,@(cadr FD)))) fun-defs)
+ ,@body))))
+
+(defun without(source &rest wrong-items)
+  "returns (copy of) source without wrong-items"
+  (car (select source #'(lambda(x) (not (member x wrong-items))))))
+(defmacro string-from-macro(m)
+`(format "%s" (print (macroexpand-1 ,m) #'(lambda(x) (format "%s" x)))))
+
 (defmacro when-let (vars &rest body)
   "when with let using standard let-notation"
   (if (caar vars)
@@ -75,8 +121,20 @@
       (cons t ,result)
       (cons nil (cons :unlock (cons ,unlock ,result)))))))))
 
+(defmacro drop (from-where &rest what)
+`(setf ,from-where (without ,from-where ,@what)))
+
+(defmacro define-vars (varDefs)
+  "to make switching between local/global variables easier"
+(cons 'progn
+(mapcar #'(lambda(VD)
+  (if (consp VD)
+      `(defvar ,@VD)
+      `(defvar ,VD nil)))
+varDefs)))
+
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
+;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/shalaev.org
 (defmacro case* (expr test &rest cases)
   "case with arbitrary test function"
   (let ((v (gensym "v")))
@@ -133,14 +191,18 @@
 
 (defmacro ifn (test ifnot &rest ifyes)
 `(if (not ,test) ,ifnot ,@ifyes))
-(defun remo (from-where &rest what)
-  (if (cdr what)
-      (remo
-       (apply #'remo (cons from-where (cdr what)))
-       (car what))
- (remove (car what) from-where)))
-(defmacro drop (from-where &rest what)
-  `(setf ,from-where (remo ,from-where ,@what)))
+
+(defmacro end-push (what where)
+  `(if ,where (push ,what (cdr (last ,where)))
+      (push ,what ,where)))
+(defun select (from-where match-test)
+  "select items matching the test"
+    (let (collected wasted)
+       (dolist (list-item from-where)
+	 (if (funcall match-test list-item)
+	   (push list-item collected)
+	   (push list-item wasted)))
+(cons (reverse collected) (reverse wasted))))
 
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 (defun email (addr &optional subject body)
@@ -207,6 +269,10 @@
 (defun rand-str(N)
   (apply #'concat
      (loop repeat N collect (string (nth (random (length *good-chars*)) *good-chars*)))))
+
+(defun land(args)
+"'and' for a list"
+  (reduce #'(lambda(x y) (and x y)) args :initial-value t))
 (defun safe-mkdir (dirname)
 "creates a directory returning the report"
 (condition-case err
@@ -215,7 +281,7 @@
  (file-error (cons nil :permission))))
 
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/goodies.org
+;; generated from https://notabug.org/shalaev/lisp-goodies/src/master/shalaev.org
 (defun chgrp(group file-name)
   (= 0 (call-process "chgrp" nil nil nil group file-name)))
 
@@ -339,10 +405,10 @@
       (cons (reverse result) str)))
    (t (begins-with* str what))))
 
-(defun old-cloud-locate-FN (FN)
-  "find file by (true) name"
-  (find FN file-DB :key #'plain-name
-	:test #'(lambda(x y)(string= (tilda x) (tilda y)))))
+;; (defun old-cloud-locate-FN (FN)
+;;   "find file by (true) name"
+;;   (find FN file-DB :key #'plain-name
+;; 	:test #'(lambda(x y)(string= (tilda x) (tilda y)))))
 
 (defun cloud-locate-FN (FN)
   "find file by (true) name"
@@ -457,59 +523,50 @@
   (car (sort FNs #'file-newer-than-file-p)))
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 ;; generated from cloud.org
-(defvar password nil); to be read from config or generated
-(defvar number-of-CPU-cores 1)
-(defvar cloud-file-hooks nil "for special files treatment")
+(define-vars (password; to be read from config or generated
+(number-of-CPU-cores 1)
+cloud-file-hooks; "for special files treatment"
 
-(defvar upload-queue nil "names of edited files")
-(defvar added-files nil "newly clouded files")
+upload-queue; "names of edited files"
+added-files; "newly clouded files"
 
-(defvar remote/files nil "3-symbol DB name on the server, e.g., WzT")
-(defvar localhost (system-name))
-(defvar ~ (file-name-as-directory(expand-file-name "~")))
-(defvar remote-directory  "/mnt/cloud/")
+remote/files; "3-symbol DB name on the server, e.g., WzT"
+(localhost (system-name))
+(~ (file-name-as-directory(expand-file-name "~")))
+(remote-directory  "/mnt/cloud/")
 
-(defvar /tmp/cloud/ (file-name-as-directory (make-temp-file "cloud." t)))
+(/tmp/cloud/ (file-name-as-directory (make-temp-file "cloud." t)))))
 (defun remote/files() remote/files)
 (defun remote-directory() remote-directory)
 (defun remote-files() (concat (remote-directory) remote/files ".gpg"))
 (defun history() (concat (remote-directory) "history"))
 
 (defvar emacs-d "~/.emacs.d/")
-(defvar cloud-was-connected t "normally t, nill when there was no connection")
+(define-vars ((cloud-was-connected t))); normally t, nill when there was no connection
 
-(defun local-dir() (concat emacs-d "cloud/"))
-(defun cloud-mk() (concat (local-dir) "cloud.mk"))
-(defun lock-dir() (concat (remote-directory) "now-syncing/"))
-(defun image-passes() (concat (local-dir) "individual.passes"))
-(defun local/() (concat (local-dir) localhost "/"))
-(defun local/log() (concat (local/) "log"))
+(defun local/config() (concat (local-dir) (file-name-as-directory localhost) "config"))
 
-(defun local/config() (concat (local-dir) localhost "/config"))
+(define-vars ((numerical-parameters '("number-of-CPU-cores"))
+ (lists-of-strings '("junk-extensions" "ignored-dirs"))))
 
-(defvar numerical-parameters '("number-of-CPU-cores"))
-(defvar lists-of-strings '("junk-extensions" "ignored-dirs"))
+(define-vars (cloud-hosts; host names participating in file synchronization
+remote-actions; actions to be saved in the cloud
+file-DB; list of vectors, each corresponding to a clouded file
 
-(defvar cloud-hosts nil "host names participating in file synchronization")
-(defvar remote-actions nil "actions to be saved in the cloud")
-(defvar file-DB nil "list of vectors, each corresponding to a clouded file")
+file-blacklist
+(ignored-dirs '("/tmp/" "/mnt/" "/etc/" "/ssh:")); temporary or system or remote directories
 
-(defvar *blacklist* '("~/.bash_login" "~/.bash_logout" "~/.bashrc") "list of manually blcklisted files")
-
-(defvar ignored-dirs '("/tmp/" "/mnt/" "/etc/") "temporary or system or remote directories")
-
-(defvar junk-extensions '("ac3" "afm" "aux" "idx" "ilg" "ind" "avi" "bak" "bbl" "blg" "brf" "bst" "bz2" "cache" "chm" "cp" "cps" "dat" "deb" "dvi" "dv" "eps" "fb2"
+(junk-extensions '("ac3" "afm" "aux" "idx" "ilg" "ind" "avi" "bak" "bbl" "blg" "brf" "bst" "bz2" "cache" "chm" "cp" "cps" "dat" "deb" "dvi" "dv" "eps" "fb2"
 "fn" "fls" "img" "iso" "gpx" "segments" "ky" "mjpeg" "m" "md" "mov" "mpg" "mkv" "jpg" "gif" "jpeg" "png" "log" "mp3" "mp4" "m2v" "ogg" "ogm" "out" "part" "pbm" "pdf"
-"pfb" "pg" "pod" "pgm" "pnm" "ps" "rar" "raw" "gz" "sfd" "woff" "tbz" "tgz" "tga" "tif" "tiff" "toc" "tp" "vob" "vr" "wav" "xcf" "xml" "xz" "Z" "zip")
-"files with these extensions will not be *automatically* clouded")
+"pfb" "pg" "pod" "pgm" "pnm" "ps" "rar" "raw" "gz" "sfd" "woff" "tbz" "tgz" "tga" "tif" "tiff" "toc" "tp" "vob" "vr" "wav" "xcf" "xml" "xz" "Z" "zip"))
 
-(defvar file-fields; indices numerating array fields
+(file-fields; indices numerating array fields
 (list 'plain; original (local) file name
 'cipher; encrypted file name (base name)
 'mtime; modification time
 'modes; permissions
 'size; file size (should not be saved)
-'gname)); group name
+'gname)))); group name
 (let ((i 0)) (dolist (field-name file-fields) (setf i (1+ (set field-name i)))))
 
 (defun local/all() (concat (local/) "all"))
@@ -527,6 +584,13 @@
 
 (unless (boundp 'DRF) (defvar DRF (indirect-function (symbol-function 'dired-rename-file)) "original dired-rename-file function"))
 (unless (boundp 'DDF) (defvar DDF (indirect-function (symbol-function 'dired-delete-file)) "original dired-delete-file function"))
+(defun local-dir() (concat emacs-d (file-name-as-directory "cloud")))
+(defun cloud-mk() (concat (local-dir) "cloud.mk"))
+(defun lock-dir() (concat (remote-directory) (file-name-as-directory "now-syncing")))
+(defun image-passes() (concat (local-dir) "individual.passes"))
+(defun local/() (concat (local-dir) (file-name-as-directory localhost)))
+(defun local/log() (concat (local/) "log"))
+
 (defun cloud-init() "initializes cloud directory and generates password -- runs only once"
 (clog :info "atempting to create new configuration for this host")
 ;;(when (yes-or-no-p "Is cloud mounted?")
@@ -786,88 +850,105 @@ t)))))
     (and (auto-add-file FN) (touch FN))))
 (add-hook 'after-save-hook 'on-current-buffer-save)
 
-(macrolet ((NL () '(push "
+(defmacro NL () '(push "
 " Makefile))
-(inl (&rest format-pars) `(progn (push ,(cons 'format format-pars) Makefile) (NL))))
-(let (all Makefile uploaded
+(defmacro inl (&rest format-pars) `(progn (push ,(cons 'format format-pars) Makefile) (NL)))
+(define-vars (all Makefile uploaded))
 
-(specially-encoded '(
+(defun cancel-pending-upload(FN) (drop stanze FN))
+(defun pass-d () (concat (local-dir) (file-name-as-directory "pass.d")))
+(defun updated() (concat (pass-d) "updated"))
 
-("$(cloud)%s.gpg: %s
-\tcp $< $@
-" "gpg")
+(defun enc-make-stanza(file-record)
+  (when-let ((XYZ (aref file-record cipher)) (FN (tilda (aref file-record plain))))
 
-("$(cloud)%s.png: %s %s
-\tconvert $< -encipher %s%s $@
-" "jpg" "jpeg" "png")))
-
-(specially-decoded '(
-("%s: $(cloud)%s.gpg
-\tcp $< $@
-" "gpg")
-("%s: $(cloud)%s.png  %s
-\tconvert $< -decipher %s%s $@
-" "jpg" "jpeg" "png"))))
-
-(defun cancel-pending-upload(FN) (drop all FN))
-(cl-labels ((pass-d () (concat (local-dir) "pass.d/"))
-          (updated() (concat (pass-d) "updated")))
-
-(cl-flet ((enc-make-stanza(file-record)
-(when-let ((XYZ (aref file-record cipher)) (FN (tilda (aref file-record plain))))
 (let ((file-ext (file-name-extension FN)))
-(concat
-(if-let ((fstr (car (find file-ext specially-encoded :key #'cdr :test #'(lambda(x y) (member x y))))))
-(format fstr XYZ FN (updated) (pass-d) XYZ)
+(concat (cond
 
-(if(string= "gz" file-ext)
+((string= "gz" file-ext)
 (let ((gunzipped (make-temp-file "emacs-cloud.")))
-  (format "%s: %s
+(format "
+%s: %s
 \tzcat $< > $@
 
 $(cloud)%s.gpg: %s
-\t@$(enc) $@ $<
+\t$(enc) $@ $<
 \trm $<
-" gunzipped FN XYZ gunzipped))
+" gunzipped FN XYZ gunzipped)))
 
-(format "$(cloud)%s.gpg: %s
-\t@$(enc) $@ $<
+((string= "gpg" file-ext)
+(format "
+$(cloud)%s.gpg: %s
+\tcp $< $@
+" XYZ FN))
+
+((member file-ext '("jpg" "jpeg" "png"))
+(format "
+$(cloud)%s.png: %s %s
+\tconvert $< -encipher %s%s $@
+"
+XYZ FN (updated)
+(pass-d) XYZ))
+
+(t (format "
+$(cloud)%s.gpg: %s
+\t$(enc) $@ $<
 " XYZ FN)))
 
-(format "\t-echo \"$(date): uploaded %s\" >> $(localLog)
-" FN)))))
+"\t-@echo \"$$(date): uploaded $<\" >> $(localLog)
+"))))
 
-(dec-make-stanza(file-record)
-(when-let ((XYZ (aref file-record cipher)) (FN (tilda (aref file-record plain))))
-(let ((file-ext (file-name-extension FN)))
+(defun dec-make-stanza(file-record)
+  (when-let ((XYZ (aref file-record cipher)) (FN (tilda (aref file-record plain))))
+    (let ((file-ext (file-name-extension FN)))
 (concat
-(if-let ((fstr (car (find file-ext specially-decoded :key #'cdr :test #'(lambda(x y) (member x y))))))
-(format fstr FN XYZ (updated) (pass-d) XYZ)
+(cond
 
-(if(string= "gz" file-ext)
+((string= "gpg" file-ext)
+(format "
+%s: $(cloud)%s.gpg
+\tcp $< $@
+" FN XYZ))
+
+((member file-ext '("jpg" "jpeg" "png"))
+(format "
+%s: $(cloud)%s.png  %s
+\tconvert $< -decipher %s%s $@
+"
+FN XYZ (updated)
+(pass-d) XYZ))
+
+((string= "gz" file-ext)
 (let ((gunzipped (make-temp-file "emacs-cloud.")))
-  (format "%s: %s
-\tcat $< | gzip > $@
-
+  (format "
 %s:$(cloud)%s.gpg
-\t@$(enc) $@ $<
-\trm $<
-" FN gunzipped gunzipped XYZ))
+\t$(dec) $@ $<
 
-(format "%s: $(cloud)%s.gpg
-\t@$(dec) $@ $<
-" FN XYZ ))
+%s: %s
+\tcat $< | gzip > $@
+\trm $<
+" 
+gunzipped XYZ
+FN gunzipped)))
+
+(t (format "
+%s: $(cloud)%s.gpg
+\t$(dec) $@ $<
+" FN XYZ)))
+
 (format "\t-chgrp %s $@
 \t-chmod %o $@
 \t-touch --date=%S $@
-\t-echo \"$(date): downloaded %s\" >> $(localLog)
-" (aref file-record gname) (aref file-record modes) (full-TS (aref file-record mtime)) FN)))))))
+\t-@echo \"$$(date): downloaded $@\" >> $(localLog)
 
-(defun download (file-record)
+"
+(aref file-record gname) (aref file-record modes) (full-TS (aref file-record mtime)))))))
+
+(defun download(file-record)
 (needs ((FN (aref file-record plain) (clog :error "download: file lacks plain name"))
         (stanza (dec-make-stanza file-record) (clog :error "download: could not create stanza for %s" FN)))
 (safe-mkdir (file-name-directory FN))
-(push (format " %s" FN) all)
+(push (format " %s" FN) stanze)
 (push stanza Makefile) (NL)))
 
 (defun make-cloud-older(file-record)
@@ -884,20 +965,20 @@ $(cloud)%s.gpg: %s
 	(CN (aref file-record cipher) (clog :error "upload: file %s lacks cipher name" FN))
 	(stanza (enc-make-stanza file-record) (clog :error "upload: could not create stanza for %s" FN)))
 (clog :debug "started upload(%s)" FN)
-(unless (or (member FN uploaded) (member FN *blacklist*))
+(unless (or (member FN uploaded) (member FN file-blacklist))
 (push FN upload-queue)
 (clog :debug "will add upload(%s) stanza to Makefile" FN)
 (make-cloud-older file-record)
 (push FN uploaded)
 (push (format " %s" (concat (remote-directory) CN
 (cip-ext FN)))
-all)
+stanze)
 (push stanza Makefile) (NL))))
 
 (defun reset-Makefile()
 "reseting make file"
 (when (or (and (file-exists-p (pass-d)) (file-directory-p (pass-d))) (safe-mkdir (pass-d)))
-(setf all nil Makefile nil uploaded nil)
+(setf stanze nil Makefile nil uploaded nil)
 (inl "cloud=%s" remote-directory)
 (inl "password=%S" password)
 (inl "gpg=gpg --pinentry-mode loopback --batch --yes")
@@ -919,11 +1000,11 @@ all)
 \techo \"background (en/de)cryption on %s finished $(date)\" >> %s
 \t@sed 's/%s/******/g' %s > %s.bak
 "
-(apply #'concat all)
+(apply #'concat stanze)
 localhost
 (history)
 password (cloud-mk) (cloud-mk))
-(write-region (apply #'concat (reverse Makefile)) nil (cloud-mk)))))))
+(write-region (apply #'concat (reverse Makefile)) nil (cloud-mk)))
 
 (defun cloud-sync()
 (interactive)
@@ -963,7 +1044,7 @@ password (cloud-mk) (cloud-mk))
 (setf important-msgs nil)
 (clog :info "done syncing")
 (write-region (format "%s: %s -- %s
-" localhost  (TS (current-time)) (format-time-string "%H:%M:%S" (current-time))) nil (history)))
+" localhost  (TS (current-time)) (format-time-string "%H:%M:%S" (current-time))) nil (history) t))
 ok))
 
 (defun before-exit()
@@ -1072,24 +1153,24 @@ ok))
 (defun blacklist(FN)
 (let ((FN (tilda FN)))
  (cloud-forget-file FN)
-(unless (member FN *blacklist*)
- (push FN *blacklist*))))
+(unless (member FN file-blacklist)
+ (push FN file-blacklist))))
 (defun black-p(FN &optional file-rec)
 (let ((result
 (or
-(member FN *blacklist*) (string-match "tmp" FN)
-(string-match (concat ~ ".") (untilda FN))
-(member (file-name-extension FN) junk-extensions)
-(backup-file-name-p FN)
-(when ignored-dirs (string-match(substring(apply #'concat
-  (mapcar #'(lambda(d)(format "\\(^%s\\)\\|" d)) ignored-dirs)) 0 -2) FN))
-(progn
-  (unless file-rec (setf file-rec (get-file-properties FN)))
-(when file-rec
-  (or
-    (member (aref file-rec gname) '("tmp"))
-    (< 1000000 (aref file-rec size))))))))
-(cons result file-rec)))
+ (member FN file-blacklist) (string-match "tmp" FN)
+ (string-match (concat ~ "\\.") (untilda FN))
+ (member (file-name-extension FN) junk-extensions)
+ (backup-file-name-p FN)
+ (when ignored-dirs (string-match(substring(apply #'concat
+(mapcar #'(lambda(d)(format "\\(^%s\\)\\|" d)) ignored-dirs)) 0 -2) FN))
+ (progn
+   (unless file-rec (setf file-rec (get-file-properties FN)))
+   (when file-rec
+     (or
+      (member (aref file-rec gname) '("tmp"))
+      (< 1000000 (aref file-rec size))))))))
+  (cons result file-rec)))
 
 (defun white-p(FN &optional file-rec)
 (unless file-rec (setf file-rec (get-file-properties FN)))
@@ -1129,19 +1210,20 @@ ok))
 "when the file is clouded automatically"
  (unless (car(black-p FN file-rec)) (add-file FN file-rec)) t)
 
-(defun cloud-forget-file (local-FN); called *after* the file has already been sucessfully deleted
-  (needs ((DB-rec (or (cloud-locate-FN local-FN) (old-cloud-locate-FN local-FN))
- (clog :warning "forget: doing nothing since %s is not clouded" local-FN))
-          (CEXT (cip-ext local-FN))
-	  (cloud-FN (concat (remote-directory) (aref DB-rec cipher) CEXT) (clog :error "in DB entry for %s" local-FN)))
-(cancel-pending-upload local-FN)
+(defun cloud-forget-file (FN)
+(clog :debug "cloud-forget-file (%s)" FN)
+  (needs ((DB-rec (cloud-locate-FN FN); or (old-cloud-locate-FN FN))
+ (clog :warning "forget: doing nothing since %s is not clouded" FN))
+          (CEXT (cip-ext FN))
+	  (cloud-FN (concat (remote-directory) (aref DB-rec cipher) CEXT) (clog :error "in DB entry for %s" FN)))
+(cancel-pending-upload FN)
 
 (when (string= CEXT ".png")
-(clog :debug "forgetting password for %s" local-FN)
+(clog :debug "forgetting password for %s" FN)
   (forget-password (aref DB-rec cipher)))
 
 (drop file-DB DB-rec)
-(push local-FN removed-files)
+(push FN removed-files)
 (if (car (safe-dired-delete cloud-FN))
   (clog :info "erased %s" cloud-FN)
   (clog :warning "could not erase %s" cloud-FN))

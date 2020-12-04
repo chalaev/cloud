@@ -1,58 +1,49 @@
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 ;; generated from cloud.org
-(defvar password nil); to be read from config or generated
-(defvar number-of-CPU-cores 1)
-(defvar cloud-file-hooks nil "for special files treatment")
+(define-vars (password; to be read from config or generated
+(number-of-CPU-cores 1)
+cloud-file-hooks; "for special files treatment"
 
-(defvar upload-queue nil "names of edited files")
-(defvar added-files nil "newly clouded files")
+upload-queue; "names of edited files"
+added-files; "newly clouded files"
 
-(defvar remote/files nil "3-symbol DB name on the server, e.g., WzT")
-(defvar localhost (system-name))
-(defvar ~ (file-name-as-directory(expand-file-name "~")))
-(defvar remote-directory  "/mnt/cloud/")
+remote/files; "3-symbol DB name on the server, e.g., WzT"
+(localhost (system-name))
+(~ (file-name-as-directory(expand-file-name "~")))
+(remote-directory  "/mnt/cloud/")
 
-(defvar /tmp/cloud/ (file-name-as-directory (make-temp-file "cloud." t)))
+(/tmp/cloud/ (file-name-as-directory (make-temp-file "cloud." t)))))
 (defun remote/files() remote/files)
 (defun remote-directory() remote-directory)
 (defun remote-files() (concat (remote-directory) remote/files ".gpg"))
 (defun history() (concat (remote-directory) "history"))
 
 (defvar emacs-d "~/.emacs.d/")
-(defvar cloud-was-connected t "normally t, nill when there was no connection")
+(define-vars ((cloud-was-connected t))); normally t, nill when there was no connection
 
-(defun local-dir() (concat emacs-d "cloud/"))
-(defun cloud-mk() (concat (local-dir) "cloud.mk"))
-(defun lock-dir() (concat (remote-directory) "now-syncing/"))
-(defun image-passes() (concat (local-dir) "individual.passes"))
-(defun local/() (concat (local-dir) localhost "/"))
-(defun local/log() (concat (local/) "log"))
+(defun local/config() (concat (local-dir) (file-name-as-directory localhost) "config"))
 
-(defun local/config() (concat (local-dir) localhost "/config"))
+(define-vars ((numerical-parameters '("number-of-CPU-cores"))
+ (lists-of-strings '("junk-extensions" "ignored-dirs"))))
 
-(defvar numerical-parameters '("number-of-CPU-cores"))
-(defvar lists-of-strings '("junk-extensions" "ignored-dirs"))
+(define-vars (cloud-hosts; host names participating in file synchronization
+remote-actions; actions to be saved in the cloud
+file-DB; list of vectors, each corresponding to a clouded file
 
-(defvar cloud-hosts nil "host names participating in file synchronization")
-(defvar remote-actions nil "actions to be saved in the cloud")
-(defvar file-DB nil "list of vectors, each corresponding to a clouded file")
+file-blacklist
+(ignored-dirs '("/tmp/" "/mnt/" "/etc/" "/ssh:")); temporary or system or remote directories
 
-(defvar *blacklist* '("~/.bash_login" "~/.bash_logout" "~/.bashrc") "list of manually blcklisted files")
-
-(defvar ignored-dirs '("/tmp/" "/mnt/" "/etc/") "temporary or system or remote directories")
-
-(defvar junk-extensions '("ac3" "afm" "aux" "idx" "ilg" "ind" "avi" "bak" "bbl" "blg" "brf" "bst" "bz2" "cache" "chm" "cp" "cps" "dat" "deb" "dvi" "dv" "eps" "fb2"
+(junk-extensions '("ac3" "afm" "aux" "idx" "ilg" "ind" "avi" "bak" "bbl" "blg" "brf" "bst" "bz2" "cache" "chm" "cp" "cps" "dat" "deb" "dvi" "dv" "eps" "fb2"
 "fn" "fls" "img" "iso" "gpx" "segments" "ky" "mjpeg" "m" "md" "mov" "mpg" "mkv" "jpg" "gif" "jpeg" "png" "log" "mp3" "mp4" "m2v" "ogg" "ogm" "out" "part" "pbm" "pdf"
-"pfb" "pg" "pod" "pgm" "pnm" "ps" "rar" "raw" "gz" "sfd" "woff" "tbz" "tgz" "tga" "tif" "tiff" "toc" "tp" "vob" "vr" "wav" "xcf" "xml" "xz" "Z" "zip")
-"files with these extensions will not be *automatically* clouded")
+"pfb" "pg" "pod" "pgm" "pnm" "ps" "rar" "raw" "gz" "sfd" "woff" "tbz" "tgz" "tga" "tif" "tiff" "toc" "tp" "vob" "vr" "wav" "xcf" "xml" "xz" "Z" "zip"))
 
-(defvar file-fields; indices numerating array fields
+(file-fields; indices numerating array fields
 (list 'plain; original (local) file name
 'cipher; encrypted file name (base name)
 'mtime; modification time
 'modes; permissions
 'size; file size (should not be saved)
-'gname)); group name
+'gname)))); group name
 (let ((i 0)) (dolist (field-name file-fields) (setf i (1+ (set field-name i)))))
 
 (defun local/all() (concat (local/) "all"))

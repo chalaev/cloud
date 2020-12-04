@@ -1,3 +1,10 @@
+(defun local-dir() (concat emacs-d (file-name-as-directory "cloud")))
+(defun cloud-mk() (concat (local-dir) "cloud.mk"))
+(defun lock-dir() (concat (remote-directory) (file-name-as-directory "now-syncing")))
+(defun image-passes() (concat (local-dir) "individual.passes"))
+(defun local/() (concat (local-dir) (file-name-as-directory localhost)))
+(defun local/log() (concat (local/) "log"))
+
 (defun cloud-init() "initializes cloud directory and generates password -- runs only once"
 (clog :info "atempting to create new configuration for this host")
 ;;(when (yes-or-no-p "Is cloud mounted?")
@@ -257,88 +264,105 @@ t)))))
     (and (auto-add-file FN) (touch FN))))
 (add-hook 'after-save-hook 'on-current-buffer-save)
 
-(macrolet ((NL () '(push "
+(defmacro NL () '(push "
 " Makefile))
-(inl (&rest format-pars) `(progn (push ,(cons 'format format-pars) Makefile) (NL))))
-(let (all Makefile uploaded
+(defmacro inl (&rest format-pars) `(progn (push ,(cons 'format format-pars) Makefile) (NL)))
+(define-vars (all Makefile uploaded))
 
-(specially-encoded '(
+(defun cancel-pending-upload(FN) (drop stanze FN))
+(defun pass-d () (concat (local-dir) (file-name-as-directory "pass.d")))
+(defun updated() (concat (pass-d) "updated"))
 
-("$(cloud)%s.gpg: %s
-\tcp $< $@
-" "gpg")
+(defun enc-make-stanza(file-record)
+  (when-let ((XYZ (aref file-record cipher)) (FN (tilda (aref file-record plain))))
 
-("$(cloud)%s.png: %s %s
-\tconvert $< -encipher %s%s $@
-" "jpg" "jpeg" "png")))
-
-(specially-decoded '(
-("%s: $(cloud)%s.gpg
-\tcp $< $@
-" "gpg")
-("%s: $(cloud)%s.png  %s
-\tconvert $< -decipher %s%s $@
-" "jpg" "jpeg" "png"))))
-
-(defun cancel-pending-upload(FN) (drop all FN))
-(cl-labels ((pass-d () (concat (local-dir) "pass.d/"))
-          (updated() (concat (pass-d) "updated")))
-
-(cl-flet ((enc-make-stanza(file-record)
-(when-let ((XYZ (aref file-record cipher)) (FN (tilda (aref file-record plain))))
 (let ((file-ext (file-name-extension FN)))
-(concat
-(if-let ((fstr (car (find file-ext specially-encoded :key #'cdr :test #'(lambda(x y) (member x y))))))
-(format fstr XYZ FN (updated) (pass-d) XYZ)
+(concat (cond
 
-(if(string= "gz" file-ext)
+((string= "gz" file-ext)
 (let ((gunzipped (make-temp-file "emacs-cloud.")))
-  (format "%s: %s
+(format "
+%s: %s
 \tzcat $< > $@
 
 $(cloud)%s.gpg: %s
-\t@$(enc) $@ $<
+\t$(enc) $@ $<
 \trm $<
-" gunzipped FN XYZ gunzipped))
+" gunzipped FN XYZ gunzipped)))
 
-(format "$(cloud)%s.gpg: %s
-\t@$(enc) $@ $<
+((string= "gpg" file-ext)
+(format "
+$(cloud)%s.gpg: %s
+\tcp $< $@
+" XYZ FN))
+
+((member file-ext '("jpg" "jpeg" "png"))
+(format "
+$(cloud)%s.png: %s %s
+\tconvert $< -encipher %s%s $@
+"
+XYZ FN (updated)
+(pass-d) XYZ))
+
+(t (format "
+$(cloud)%s.gpg: %s
+\t$(enc) $@ $<
 " XYZ FN)))
 
-(format "\t-echo \"$(date): uploaded %s\" >> $(localLog)
-" FN)))))
+"\t-@echo \"$$(date): uploaded $<\" >> $(localLog)
+"))))
 
-(dec-make-stanza(file-record)
-(when-let ((XYZ (aref file-record cipher)) (FN (tilda (aref file-record plain))))
-(let ((file-ext (file-name-extension FN)))
+(defun dec-make-stanza(file-record)
+  (when-let ((XYZ (aref file-record cipher)) (FN (tilda (aref file-record plain))))
+    (let ((file-ext (file-name-extension FN)))
 (concat
-(if-let ((fstr (car (find file-ext specially-decoded :key #'cdr :test #'(lambda(x y) (member x y))))))
-(format fstr FN XYZ (updated) (pass-d) XYZ)
+(cond
 
-(if(string= "gz" file-ext)
+((string= "gpg" file-ext)
+(format "
+%s: $(cloud)%s.gpg
+\tcp $< $@
+" FN XYZ))
+
+((member file-ext '("jpg" "jpeg" "png"))
+(format "
+%s: $(cloud)%s.png  %s
+\tconvert $< -decipher %s%s $@
+"
+FN XYZ (updated)
+(pass-d) XYZ))
+
+((string= "gz" file-ext)
 (let ((gunzipped (make-temp-file "emacs-cloud.")))
-  (format "%s: %s
-\tcat $< | gzip > $@
-
+  (format "
 %s:$(cloud)%s.gpg
-\t@$(enc) $@ $<
-\trm $<
-" FN gunzipped gunzipped XYZ))
+\t$(dec) $@ $<
 
-(format "%s: $(cloud)%s.gpg
-\t@$(dec) $@ $<
-" FN XYZ ))
+%s: %s
+\tcat $< | gzip > $@
+\trm $<
+" 
+gunzipped XYZ
+FN gunzipped)))
+
+(t (format "
+%s: $(cloud)%s.gpg
+\t$(dec) $@ $<
+" FN XYZ)))
+
 (format "\t-chgrp %s $@
 \t-chmod %o $@
 \t-touch --date=%S $@
-\t-echo \"$(date): downloaded %s\" >> $(localLog)
-" (aref file-record gname) (aref file-record modes) (full-TS (aref file-record mtime)) FN)))))))
+\t-@echo \"$$(date): downloaded $@\" >> $(localLog)
 
-(defun download (file-record)
+"
+(aref file-record gname) (aref file-record modes) (full-TS (aref file-record mtime)))))))
+
+(defun download(file-record)
 (needs ((FN (aref file-record plain) (clog :error "download: file lacks plain name"))
         (stanza (dec-make-stanza file-record) (clog :error "download: could not create stanza for %s" FN)))
 (safe-mkdir (file-name-directory FN))
-(push (format " %s" FN) all)
+(push (format " %s" FN) stanze)
 (push stanza Makefile) (NL)))
 
 (defun make-cloud-older(file-record)
@@ -355,20 +379,20 @@ $(cloud)%s.gpg: %s
 	(CN (aref file-record cipher) (clog :error "upload: file %s lacks cipher name" FN))
 	(stanza (enc-make-stanza file-record) (clog :error "upload: could not create stanza for %s" FN)))
 (clog :debug "started upload(%s)" FN)
-(unless (or (member FN uploaded) (member FN *blacklist*))
+(unless (or (member FN uploaded) (member FN file-blacklist))
 (push FN upload-queue)
 (clog :debug "will add upload(%s) stanza to Makefile" FN)
 (make-cloud-older file-record)
 (push FN uploaded)
 (push (format " %s" (concat (remote-directory) CN
 (cip-ext FN)))
-all)
+stanze)
 (push stanza Makefile) (NL))))
 
 (defun reset-Makefile()
 "reseting make file"
 (when (or (and (file-exists-p (pass-d)) (file-directory-p (pass-d))) (safe-mkdir (pass-d)))
-(setf all nil Makefile nil uploaded nil)
+(setf stanze nil Makefile nil uploaded nil)
 (inl "cloud=%s" remote-directory)
 (inl "password=%S" password)
 (inl "gpg=gpg --pinentry-mode loopback --batch --yes")
@@ -390,11 +414,11 @@ all)
 \techo \"background (en/de)cryption on %s finished $(date)\" >> %s
 \t@sed 's/%s/******/g' %s > %s.bak
 "
-(apply #'concat all)
+(apply #'concat stanze)
 localhost
 (history)
 password (cloud-mk) (cloud-mk))
-(write-region (apply #'concat (reverse Makefile)) nil (cloud-mk)))))))
+(write-region (apply #'concat (reverse Makefile)) nil (cloud-mk)))
 
 (defun cloud-sync()
 (interactive)
@@ -434,7 +458,7 @@ password (cloud-mk) (cloud-mk))
 (setf important-msgs nil)
 (clog :info "done syncing")
 (write-region (format "%s: %s -- %s
-" localhost  (TS (current-time)) (format-time-string "%H:%M:%S" (current-time))) nil (history)))
+" localhost  (TS (current-time)) (format-time-string "%H:%M:%S" (current-time))) nil (history) t))
 ok))
 
 (defun before-exit()
@@ -543,24 +567,24 @@ ok))
 (defun blacklist(FN)
 (let ((FN (tilda FN)))
  (cloud-forget-file FN)
-(unless (member FN *blacklist*)
- (push FN *blacklist*))))
+(unless (member FN file-blacklist)
+ (push FN file-blacklist))))
 (defun black-p(FN &optional file-rec)
 (let ((result
 (or
-(member FN *blacklist*) (string-match "tmp" FN)
-(string-match (concat ~ ".") (untilda FN))
-(member (file-name-extension FN) junk-extensions)
-(backup-file-name-p FN)
-(when ignored-dirs (string-match(substring(apply #'concat
-  (mapcar #'(lambda(d)(format "\\(^%s\\)\\|" d)) ignored-dirs)) 0 -2) FN))
-(progn
-  (unless file-rec (setf file-rec (get-file-properties FN)))
-(when file-rec
-  (or
-    (member (aref file-rec gname) '("tmp"))
-    (< 1000000 (aref file-rec size))))))))
-(cons result file-rec)))
+ (member FN file-blacklist) (string-match "tmp" FN)
+ (string-match (concat ~ "\\.") (untilda FN))
+ (member (file-name-extension FN) junk-extensions)
+ (backup-file-name-p FN)
+ (when ignored-dirs (string-match(substring(apply #'concat
+(mapcar #'(lambda(d)(format "\\(^%s\\)\\|" d)) ignored-dirs)) 0 -2) FN))
+ (progn
+   (unless file-rec (setf file-rec (get-file-properties FN)))
+   (when file-rec
+     (or
+      (member (aref file-rec gname) '("tmp"))
+      (< 1000000 (aref file-rec size))))))))
+  (cons result file-rec)))
 
 (defun white-p(FN &optional file-rec)
 (unless file-rec (setf file-rec (get-file-properties FN)))
@@ -600,19 +624,20 @@ ok))
 "when the file is clouded automatically"
  (unless (car(black-p FN file-rec)) (add-file FN file-rec)) t)
 
-(defun cloud-forget-file (local-FN); called *after* the file has already been sucessfully deleted
-  (needs ((DB-rec (or (cloud-locate-FN local-FN) (old-cloud-locate-FN local-FN))
- (clog :warning "forget: doing nothing since %s is not clouded" local-FN))
-          (CEXT (cip-ext local-FN))
-	  (cloud-FN (concat (remote-directory) (aref DB-rec cipher) CEXT) (clog :error "in DB entry for %s" local-FN)))
-(cancel-pending-upload local-FN)
+(defun cloud-forget-file (FN)
+(clog :debug "cloud-forget-file (%s)" FN)
+  (needs ((DB-rec (cloud-locate-FN FN); or (old-cloud-locate-FN FN))
+ (clog :warning "forget: doing nothing since %s is not clouded" FN))
+          (CEXT (cip-ext FN))
+	  (cloud-FN (concat (remote-directory) (aref DB-rec cipher) CEXT) (clog :error "in DB entry for %s" FN)))
+(cancel-pending-upload FN)
 
 (when (string= CEXT ".png")
-(clog :debug "forgetting password for %s" local-FN)
+(clog :debug "forgetting password for %s" FN)
   (forget-password (aref DB-rec cipher)))
 
 (drop file-DB DB-rec)
-(push local-FN removed-files)
+(push FN removed-files)
 (if (car (safe-dired-delete cloud-FN))
   (clog :info "erased %s" cloud-FN)
   (clog :warning "could not erase %s" cloud-FN))

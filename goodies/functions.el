@@ -1,11 +1,11 @@
-(defun remo (from-where &rest what)
-  (if (cdr what)
-      (remo
-       (apply #'remo (cons from-where (cdr what)))
-       (car what))
- (remove (car what) from-where)))
-(defmacro drop (from-where &rest what)
-  `(setf ,from-where (remo ,from-where ,@what)))
+(defun select (from-where match-test)
+  "select items matching the test"
+    (let (collected wasted)
+       (dolist (list-item from-where)
+	 (if (funcall match-test list-item)
+	   (push list-item collected)
+	   (push list-item wasted)))
+(cons (reverse collected) (reverse wasted))))
 
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 (defun email (addr &optional subject body)
@@ -72,3 +72,7 @@
 (defun rand-str(N)
   (apply #'concat
      (loop repeat N collect (string (nth (random (length *good-chars*)) *good-chars*)))))
+
+(defun land(args)
+"'and' for a list"
+  (reduce #'(lambda(x y) (and x y)) args :initial-value t))
