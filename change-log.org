@@ -5,6 +5,11 @@ No more fountainng with ideas; just making the code more realiable.
 Mostly fixing the errors; the ideas are either implemented or postponed for (probably remote) future.
 
 ** adding tests + packaging
+*** 2020-12-09
+1. removed obsolete files
+2. fixed problems with =cloud-init=
+3. introduced [[file:testing.org][multi-scale testing]], created one macro-test
+
 *** 2020-12-04
 Re-wrote =enc-make-stanza= and =dec-make-stanza=.
 

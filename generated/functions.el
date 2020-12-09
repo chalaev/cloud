@@ -1,4 +1,7 @@
 (defun local-dir() (concat emacs-d (file-name-as-directory "cloud")))
+(unless (ensure-dir-exists (local-dir)) (clog :error "fatal: cannot create %s" (local-dir)))
+(defun local/host/() (concat (local-dir) (file-name-as-directory localhost)))
+(unless (ensure-dir-exists (local/host/)) (clog :error "fatal: cannot create %s" (local-dir)))
 (defun cloud-mk() (concat (local-dir) "cloud.mk"))
 (defun lock-dir() (concat (remote-directory) (file-name-as-directory "now-syncing")))
 (defun image-passes() (concat (local-dir) "individual.passes"))
@@ -9,8 +12,8 @@
 (clog :info "atempting to create new configuration for this host")
 ;;(when (yes-or-no-p "Is cloud mounted?")
 ;;(setf remote-directory (read-string "cloud directory=" remote-directory))
-(ifn (member (safe-mkdir remote-directory) '(:exists t))
-(clog :error "could not create/access directory %s" remote-directory)
+(ifn (ensure-dir-exists remote-directory)
+  (clog :error "could not create/access directory %s" remote-directory)
 
 (if (directory-files remote-directory nil "^.\+.gpg$" t)
     (clog :error "please clean the directory %s before asking me to initialize it" remote-directory)
@@ -20,7 +23,7 @@
 
 (setf password (rand-str 9))
 
-(ifn (member (safe-mkdir (local-dir)) '(:exists t))
+(ifn (ensure-dir-exists (local-dir))
   (clog :error "could not create/acess directory %s" (local-dir))
 (write-conf)
 (clog :info "use M-x cloud-add in the dired to cloud important files and directories" ))))))
@@ -34,7 +37,7 @@
 
 (defun write-conf()
 (clog :debug "starting write-conf")
-(with-temp-file (local/config)
+(with-temp-file (local/host/conf)
 (mapcar #'(lambda(CP) (insert(format-conf CP)) (newline)) 
   '("remote-directory" "junk-extensions" "ignored-dirs" "remote/files" "number-of-CPU-cores" "password")))
 (clog :debug "ended write-conf") t)
@@ -42,7 +45,7 @@
 (defun read-conf* (file-name)
   "reads configuration file"
 (with-temp-buffer
-(safe-insert-file (local/config))
+(safe-insert-file (local/host/conf))
   (let (res str)
     (while (< 0 (length (setf str (read-line))))
      (if (string-match "^\\(\\ca+\\)=\\(\\ca+\\)$" str)
@@ -52,8 +55,8 @@
 
 (defun read-conf()
   "reads configuration file"
-(let ((conf (read-conf* (local/config))))
-(ifn conf (clog :error "refuse to work until you specify 3-symbol contents name \"remote/files\" in %s" (local/config))
+(let ((conf (read-conf* (local/host/conf))))
+(ifn conf (clog :error "refuse to work until you specify 3-symbol contents name \"remote/files\" in %s" (local/host/conf))
 (dolist (CP (mapcar #'car conf))
 (clog :debug "read-conf(%s)" CP)
   (setcdr (assoc CP conf)
@@ -80,7 +83,7 @@ conf)))
 
 (defun format-file (DB-rec)
   (format "%S %s %s %s %d %S"
-	  (tilda (aref DB-rec plain))
+	  (tilde (aref DB-rec plain))
 	  (aref DB-rec cipher)
 	  (aref DB-rec size)
 	  (aref DB-rec gname)
@@ -117,7 +120,7 @@ conf)))
   (cons (cons  :string  (aref action i-Nargs)) i-args)
        `(:strings . ,i-hostnames)))
   (needs ((col-value (begins-with str (car column)) (bad-column "action" (cdr column))))
-     (aset action (cdr column) (car col-value)); was (mapcar #'untilda (car col-value))
+     (aset action (cdr column) (car col-value)); was (mapcar #'untilde (car col-value))
      (setf str (cdr col-value))))
 
 (let ((AID (format-time-string "%02m/%02d %H:%M:%S" (aref action i-time))))
@@ -267,26 +270,37 @@ t)))))
 (defmacro NL () '(push "
 " Makefile))
 (defmacro inl (&rest format-pars) `(progn (push ,(cons 'format format-pars) Makefile) (NL)))
-(define-vars (all Makefile uploaded))
+(define-vars (all Makefile uploaded stanze))
 
 (defun cancel-pending-upload(FN) (drop stanze FN))
 (defun pass-d () (concat (local-dir) (file-name-as-directory "pass.d")))
 (defun updated() (concat (pass-d) "updated"))
 
 (defun enc-make-stanza(file-record)
-  (when-let ((XYZ (aref file-record cipher)) (FN (tilda (aref file-record plain))))
+  (when-let ((XYZ (aref file-record cipher)) (FN (tilde (aref file-record plain))))
 
 (let ((file-ext (file-name-extension FN)))
 (concat (cond
 
-((string= "gz" file-ext)
+((member file-ext '("gz" "tgz"))
 (let ((gunzipped (make-temp-file "emacs-cloud.")))
 (format "
 %s: %s
 \tzcat $< > $@
 
 $(cloud)%s.gpg: %s
-\t$(enc) $@ $<
+\t@$(enc) $@ $<
+\trm $<
+" gunzipped FN XYZ gunzipped)))
+
+((member file-ext '("bz2" "tbz"))
+(let ((gunzipped (make-temp-file "emacs-cloud.")))
+(format "
+%s: %s
+\tbzcat $< > $@
+
+$(cloud)%s.gpg: %s
+\t@$(enc) $@ $<
 \trm $<
 " gunzipped FN XYZ gunzipped)))
 
@@ -306,15 +320,16 @@ XYZ FN (updated)
 
 (t (format "
 $(cloud)%s.gpg: %s
-\t$(enc) $@ $<
+\t@$(enc) $@ $<
 " XYZ FN)))
 
 "\t-@echo \"$$(date): uploaded $<\" >> $(localLog)
 "))))
 
 (defun dec-make-stanza(file-record)
-  (when-let ((XYZ (aref file-record cipher)) (FN (tilda (aref file-record plain))))
+  (when-let ((XYZ (aref file-record cipher)) (FN (tilde (aref file-record plain))))
     (let ((file-ext (file-name-extension FN)))
+(clog :debug "dec-make-stanza: FN=%s" FN)
 (concat
 (cond
 
@@ -332,11 +347,11 @@ $(cloud)%s.gpg: %s
 FN XYZ (updated)
 (pass-d) XYZ))
 
-((string= "gz" file-ext)
+((member file-ext '("gz" "tgz"))
 (let ((gunzipped (make-temp-file "emacs-cloud.")))
   (format "
 %s:$(cloud)%s.gpg
-\t$(dec) $@ $<
+\t@$(dec) $@ $<
 
 %s: %s
 \tcat $< | gzip > $@
@@ -345,16 +360,28 @@ FN XYZ (updated)
 gunzipped XYZ
 FN gunzipped)))
 
+((member file-ext '("bz2" "tbz"))
+(let ((gunzipped (make-temp-file "emacs-cloud.")))
+  (format "
+%s:$(cloud)%s.gpg
+\t@$(dec) $@ $<
+
+%s: %s
+\tcat $< | bzip2 > $@
+\trm $<
+" 
+gunzipped XYZ
+FN gunzipped)))
+
 (t (format "
 %s: $(cloud)%s.gpg
-\t$(dec) $@ $<
+\t@$(dec) $@ $<
 " FN XYZ)))
 
 (format "\t-chgrp %s $@
 \t-chmod %o $@
 \t-touch --date=%S $@
 \t-@echo \"$$(date): downloaded $@\" >> $(localLog)
-
 "
 (aref file-record gname) (aref file-record modes) (full-TS (aref file-record mtime)))))))
 
@@ -375,7 +402,7 @@ FN gunzipped)))
 (time-add local-mtime (- -60 (random 6000)))))))
 
 (defun upload (file-record)
-(needs ((FN (tilda (aref file-record plain)) (clog :error "upload: file lacks plain name"))
+(needs ((FN (tilde (aref file-record plain)) (clog :error "upload: file lacks plain name"))
 	(CN (aref file-record cipher) (clog :error "upload: file %s lacks cipher name" FN))
 	(stanza (enc-make-stanza file-record) (clog :error "upload: could not create stanza for %s" FN)))
 (clog :debug "started upload(%s)" FN)
@@ -406,7 +433,7 @@ stanze)
 \tawk '{print $$2 > %S$$1}' $<
 \techo $(date) > $@
 \t-chgrp -R tmp %s*
-" (updated) (image-passes) (untilda (pass-d)) (pass-d))))))
+" (updated) (image-passes) (untilde (pass-d)) (pass-d))))))
 
 (defun save-Makefile()
 "flushing make file"
@@ -497,11 +524,11 @@ nil (local/log) t)
 (full-TS (aref action i-time)); 1. Time stamp,
 (aref action i-ID); 2. (integer) action ID,
 (length (aref action i-args)); 3. (integer) number of arguments for this action (one column),
-(apply #'concat (mapcar #'(lambda(arg) (format "%S " (tilda arg))) (aref action i-args))); 4. [arguments+] (several columns),
+(apply #'concat (mapcar #'(lambda(arg) (format "%S " (tilde arg))) (aref action i-args))); 4. [arguments+] (several columns),
 (apply #'concat (mapcar #'(lambda(HN) (format "%S " HN)) (aref action i-hostnames))))); 5. hostnames, where the action has to be performed (several columns).
 
 (defun dired-delete-file (FN &optional dirP TRASH)
-  (let ((FN (tilda FN))); ~/programming/emacs/functions.el
+  (let ((FN (tilde FN))); ~/programming/emacs/functions.el
 (when (car    
        (condition-case err (cons t (funcall DDF FN dirP TRASH))
 	 (file-error (clog :error "in DDF: %s" (error-message-string err)))))
@@ -522,7 +549,7 @@ ok))
 ok))
 
 (defun contained-in(DN)
-  (let* ((dir-name (tilda DN)) res (dir-name (file-name-as-directory dir-name)))
+  (let* ((dir-name (tilde DN)) res (dir-name (file-name-as-directory dir-name)))
     (dolist (DB-rec file-DB)
       (when(and
 (< (length dir-name) (length (aref DB-rec plain)))
@@ -551,7 +578,7 @@ ok))
     (when (yes-or-no-p (format "Forget the host %s?" localhost))
       (new-action i-host-forget localhost)
       (if (cloud-sync)
-	  (safe-dired-delete (local/config))
+	  (safe-dired-delete (local/host/conf))
 	(clog :error "sync failed, so I will not erase local configuration"))))
 
 (defun cloud-add(&optional FN)
@@ -565,7 +592,7 @@ ok))
       (clog :error "could not cloud this file"))))))
 
 (defun blacklist(FN)
-(let ((FN (tilda FN)))
+(let ((FN (tilde FN)))
  (cloud-forget-file FN)
 (unless (member FN file-blacklist)
  (push FN file-blacklist))))
@@ -573,7 +600,7 @@ ok))
 (let ((result
 (or
  (member FN file-blacklist) (string-match "tmp" FN)
- (string-match (concat ~ "\\.") (untilda FN))
+ (string-match (concat ~ "\\.") (untilde FN))
  (member (file-name-extension FN) junk-extensions)
  (backup-file-name-p FN)
  (when ignored-dirs (string-match(substring(apply #'concat
@@ -591,7 +618,7 @@ ok))
 (cons (member (aref file-rec gname) '("important" "keepOneYear" "keepTwoYears" "keepThreeYears")) file-rec))
 
 (defun add-file(FN &optional file-rec)
-(let ((FN (tilda (file-chase-links FN))))
+(let ((FN (tilde (file-chase-links FN))))
 (unless (cloud-locate-FN FN)
 (ifn (file-directory-p FN)
   (needs ((GFP (or file-rec (get-file-properties* FN)) (clog :error "Aborting attempt to cloud inexisting file %s" FN))
@@ -715,12 +742,12 @@ ok))
 
 (defun cloud-start()
 (save-some-buffers)
-(clog :debug "cloud-start: local/config = %s" (local/config))
+(clog :debug "cloud-start: local/host/conf = %s" (local/host/conf))
 (ifn-let ((conf (read-conf)))
 (progn
   (clog :warning "could not read local configuration file, trying to (re)create configuration")
   (when (cloud-init)
-  (clog :info "check newly created configuraion %s and then M-x cloud-start" (local/config))))
+  (clog :info "check newly created configuraion %s and then M-x cloud-start" (local/host/conf))))
 
 (update-conf conf "remote-directory" "junk-extensions" "ignored-dirs" "remote/files" "number-of-CPU-cores" "password")
 
@@ -746,6 +773,6 @@ ok))
 (split-string (format
 "--batch --yes --pinentry-mode loopback --passphrase %s -o %s --decrypt %s"
 
-password (untilda (local/all)) (remote-files))))))
+password (untilde (local/all)) (remote-files))))))
 (read-all (local/all)))
 (clog :error "cloud-start header failed") nil))

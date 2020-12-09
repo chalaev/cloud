@@ -1,4 +1,4 @@
-;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;; -*- lexical-binding: t; -*-
 ;; generated from cloud.org
 (define-vars (password; to be read from config or generated
 (number-of-CPU-cores 1)
@@ -18,10 +18,10 @@ remote/files; "3-symbol DB name on the server, e.g., WzT"
 (defun remote-files() (concat (remote-directory) remote/files ".gpg"))
 (defun history() (concat (remote-directory) "history"))
 
-(defvar emacs-d "~/.emacs.d/")
+;; (defvar emacs-d "~/.emacs.d/") defined in shalaev.el
 (define-vars ((cloud-was-connected t))); normally t, nill when there was no connection
 
-(defun local/config() (concat (local-dir) (file-name-as-directory localhost) "config"))
+(defun local/host/conf() (concat (local/host/) "config"))
 
 (define-vars ((numerical-parameters '("number-of-CPU-cores"))
  (lists-of-strings '("junk-extensions" "ignored-dirs"))))
