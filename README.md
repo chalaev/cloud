@@ -1,20 +1,22 @@
 
 # Table of Contents
 
-1.  [Description](#org1301810)
-2.  [Prerequisites](#org837f265)
-3.  [Quick start](#org10e9bbc)
-4.  [Commands](#org6aec91d)
-5.  [Source code files](#org4aad27c)
-6.  [Motivation](#org757c1ca)
-7.  [Limitations](#orga6e0610)
-8.  [License](#orgd8c62cd)
-9.  [Support](#orgea142b7)
+1.  [Description](#orgadee157)
+2.  [Prerequisites](#org6389f62)
+3.  [Quick start](#orge0421f9)
+    1.  [Initial setup](#orgb9ace0b)
+    2.  [Uploading and downloading files](#org402e1ae)
+4.  [Commands](#org12e925a)
+5.  [Source code files](#orgbc9ce02)
+6.  [Motivation](#orgcf4df6f)
+7.  [Limitations](#orgb4d0596)
+8.  [License](#org8178671)
+9.  [Support](#org35a9014)
 
 Intended for linux users who have [emacs](https://www.gnu.org/software/emacs/) always open.
 
 
-<a id="org1301810"></a>
+<a id="orgadee157"></a>
 
 # Description
 
@@ -33,44 +35,57 @@ Synchronizing important files on two or more computers using
 Encrypted files saved in the cloud have **random names** to minimize the amount of information cloud owners can extract by monitoring our cloud directory.
 
 
-<a id="org837f265"></a>
+<a id="org6389f62"></a>
 
 # Prerequisites
 
-We need `emacs`, GNU `make`, `ImageMagick`, `gpg`, `sed`, and `gawk`; in Debian these can be installed as follows:
+We need
 
-    aptitude install emacs make imagemagick gpg sed gawk
+1.  `emacs`, GNU `make`, `ImageMagick`, `gpg`, `sed`, and `gawk`; in Debian these can be installed as follows:  
+    `aptitude install emacs make imagemagick gpg sed gawk`
+2.  [shalaev.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el)
 
 
-<a id="org10e9bbc"></a>
+<a id="orge0421f9"></a>
 
 # Quick start
 
-I am running `emacs` in daemon mode (in text console) using the following line in [~/.login](.login):
+I am running `emacs` in daemon mode (in text console) using the following line in [~/.login](https://github.com/chalaev/lisp-goodies/blob/master/.login):
 
     emacs --daemon
 
-and in `~/.logout`:
+Once `emacs` was started in the daemon mode, I can use `emacsclient -c` to open a new (gui) emacs window.
 
-    emacsclient -e "(kill-emacs)"
 
-Once [~/.login](.login) has started  `emacs` in the daemon mode,
-I can use `emacsclient -c` to open a new (gui) emacs window.
+<a id="orgb9ace0b"></a>
 
-1.  Mount remote directory. The mounting point may be arbitrary (specified as `cloud-directory` in [~/.emacs.d/cloud/\`hostname\`/config](config)), the default one is `/mnt/cloud/`.
-2.  You can create the file [~/.emacs.d/cloud/\`hostname\`/config](config) yourself, or it will be generated when you run the code for the very first time.
-3.  Evaluate `cloud.el` in `emacs` at start by placing the following lines
+## Initial setup
+
+1.  `mkdir ~/.emacs.d/local-packages/`
+2.  Place [shalaev.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el) and [cloud.el](packaged/cloud.el) to `~/.emacs.d/local-packages/`
+3.  Load [start.el](goodies/start.el) in your [~/.emacs](https://github.com/chalaev/lisp-goodies/blob/master/generated/dot.emacs)
+4.  Evaluate `cloud.el` in `emacs` at start by placing the following lines
     
-        (mapcar #'require '(cl dired-aux timezone diary-lib subr-x))
-        (load-file "/path-to/cloud.el")
+        (require 'cloud)
         (cloud-start)
     
     into your `~/.emacs` file. Update some files in emacs, then `M-x cloud-sync`.
-4.  Check log files described in [files.org](files.org): they should let you know that the encrypted copies of your clouded files have been copied to the remote directory.
-5.  Now you can move to another host (e.g. from your office desktop to your laptop).
-6.  Using some secure way, copy [~/.emacs.d/cloud/\`hostname\`/config](config) to another host; launch `cloud.el` there and check the log files.
+    During the very first `(cloud-start)` run, configuration file [~/.emacs.d/cloud/\`hostname\`/config](config) will be created.
+5.  Mount remote directory. The mounting point may be arbitrary (specified as `cloud-directory` in [~/.emacs.d/cloud/\`hostname\`/config](config)), the default one is `/mnt/cloud/`.
+
+
+<a id="org402e1ae"></a>
+
+## Uploading and downloading files
+
+There are several log files; the least informative one is ``~/.emacs.d/cloud/`hostname`/log`` described in [files.org](files.org).
+
+1.  Edit a text file in emacs. Unless it is blacklisted it will automatically be clouded when you save it. (Blacklisted files can be manually clouded using `M-x cloud-add`.)
+2.  Run `M-x cloud-sync` to upload the file and ``tail -f ~/.emacs.d/cloud/`hostname`/log`` to see the log.
+3.  Now you can move to another host (e.g. from your office desktop to your laptop).
+4.  Using some secure way, copy [~/.emacs.d/cloud/\`hostname\`/config](config) to another host; launch `cloud.el` there and check the log files.
     Ensure that updated on your previous host files were downloaded to your current host.
-7.  [Let me know](https://github.com/chalaev/cloud/issues/new/choose) if something is unclear or does not work.
+5.  [Let me know](https://github.com/chalaev/cloud/issues/new/choose) if something is unclear or does not work.
 
 Every time we `M-x cloud-sync`, local files get synchronized with the cloud.
 (The same happens when we start/quit emacs.)
@@ -78,24 +93,24 @@ For this purpose I have a line in my `crontab`:
 `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="org6aec91d"></a>
+<a id="org12e925a"></a>
 
 # Commands
 
 Except for `M-x cloud-sync`, commands are barely used:
 
--   **`M-x cloud-add`:** adds one or several files to the list of "clouded" files.
+-   `M-x cloud-add` adds one or several files to the list of "clouded" files.
     This means that `M-x cloud-sync` command will upload these "clouded" files to the remote server if they are updated. Supposed to be used in dired buffer for several
     (marked) files, or (when no files are marked) for a single file. **Files edited in emacs are clouded automatically,** but there are exceptions – see the
     [sample configuration file](config) and the [source code](cloud.org).
     Works both on files and directories.
--   **`M-x cloud-forget`:** is the opposite of `M-x cloud-add`. 
+-   `M-x cloud-forget` is the opposite of `M-x cloud-add`. 
     It is also called automatically when files are removed in dired buffer. Currently works on files only, not on directories.
--   **`M-x cloud-sync`:** syncronizes local files with the cloud. Could be regularly called with a `crontab` line, e.g.,  
+-   `M-x cloud-sync` syncronizes local files with the cloud. Could be regularly called with a `crontab` line, e.g.,  
     `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="org4aad27c"></a>
+<a id="orgbc9ce02"></a>
 
 # Source code files
 
@@ -104,16 +119,15 @@ Except for `M-x cloud-sync`, commands are barely used:
 1.  [README.org](README.org) generates `README.md` for [notabug](https://notabug.org/shalaev/emacs-cloud) and [github](https://github.com/chalaev/cloud).
 2.  [cloud.org](cloud.org) contains the code from [generated/main.el](generated/main.el) together with explanations.
 3.  [0.el](0.el), [1.el](1.el), and [2.org](2.org) are kind of "Appendix" containing some pieces of code which not interesting enough to be included in `cloud.org`.
-4.  goodies/{[macros](goodies/macros.el),[functions](goodies/functions.el),[file-functions](goodies/file-functions.el),[logging](goodies/logging.el)}.el are copied from the [elisp-goodies](https://notabug.org/shalaev/elisp-goodies) project.
-5.  [Makefile](Makefile) merges all the code into [generated/cloud.el](generated/cloud.el) which is the main file to be launched when `emacs` starts.
-6.  [shell/cloud-git](shell/cloud-git) synchronizes file operations in `git` with this code, for example:  
+4.  [Makefile](Makefile) merges all the code into [packaged/cloud.el](packaged/cloud.el) which is the main file to be launched when `emacs` starts.
+5.  [shell/cloud-git](shell/cloud-git) synchronizes file operations in `git` with this code, for example:  
     `cloud-git rm files.org` or `cloud-git mv log-files.org files.org`
-7.  [bugs.org](bugs.org) contains
+6.  [bugs.org](bugs.org) contains
     a. error and problem list, and
     b. ideas on further development.
 
 
-<a id="org757c1ca"></a>
+<a id="orgcf4df6f"></a>
 
 # Motivation
 
@@ -135,7 +149,7 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 4.  Dired-compatible: whatever I do with a file in dired (delete, rename), will be automatically done on other computers.
 
 
-<a id="orga6e0610"></a>
+<a id="orgb4d0596"></a>
 
 # Limitations
 
@@ -147,14 +161,14 @@ Since emacs is my only text editor, it is enough to write eLisp code that
     After encrypting an image file and then decrypting it back, we get the same, but not identical picture (file size is changed).
 
 
-<a id="orgd8c62cd"></a>
+<a id="org8178671"></a>
 
 # License
 
 This code is released under [MIT license](https://mit-license.org/).
 
 
-<a id="orgea142b7"></a>
+<a id="org35a9014"></a>
 
 # Support
 

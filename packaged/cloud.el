@@ -3,7 +3,7 @@
 ;; Copyright (C) 2020 Oleg Shalaev <oleg@chalaev.com>
 
 ;; Author:     Oleg Shalaev <oleg@chalaev.com>
-;; Version:    1.3.4
+;; Version:    1.3.5
 
 ;; Package-Requires: (cl epg dired-aux timezone diary-lib subr-x shalaev)
 ;; Keywords:   syncronization, cloud, gpg, encryption
@@ -244,7 +244,7 @@
 
 (defun youngest(&rest FNs)
   (car (sort FNs #'file-newer-than-file-p)))
-;; -*- lexical-binding: t; -*-
+;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 ;; generated from cloud.org
 (define-vars (password; to be read from config or generated
 (number-of-CPU-cores 1)
@@ -307,6 +307,7 @@ file-blacklist
 
 (unless (boundp 'DRF) (defvar DRF (indirect-function (symbol-function 'dired-rename-file)) "original dired-rename-file function"))
 (unless (boundp 'DDF) (defvar DDF (indirect-function (symbol-function 'dired-delete-file)) "original dired-delete-file function"))
+;; -*-  mode: Emacs-Lisp; lexical-binding: t; -*-
 (defun local-dir() (concat emacs-d (file-name-as-directory "cloud")))
 (unless (ensure-dir-exists (local-dir)) (clog :error "fatal: cannot create %s" (local-dir)))
 (defun local/host/() (concat (local-dir) (file-name-as-directory localhost)))
@@ -317,12 +318,10 @@ file-blacklist
 (defun local/() (concat (local-dir) (file-name-as-directory localhost)))
 (defun local/log() (concat (local/) "log"))
 
-(defun cloud-init() "initializes cloud directory and generates password -- runs only once"
-(clog :info "atempting to create new configuration for this host")
-;;(when (yes-or-no-p "Is cloud mounted?")
-;;(setf remote-directory (read-string "cloud directory=" remote-directory))
+(defun cloud-init(remote-directory) "initializes cloud directory and generates password -- runs only once"
+(clog :info "creating new configuration for this host in %s" remote-directory)
 (ifn (ensure-dir-exists remote-directory)
-  (clog :error "could not create/access directory %s" remote-directory)
+  (clog :error "cloud-init: could not create/access directory %s" remote-directory)
 
 (if (directory-files remote-directory nil "^.\+.gpg$" t)
     (clog :error "please clean the directory %s before asking me to initialize it" remote-directory)
@@ -335,7 +334,7 @@ file-blacklist
 (ifn (ensure-dir-exists (local-dir))
   (clog :error "could not create/acess directory %s" (local-dir))
 (write-conf)
-(clog :info "use M-x cloud-add in the dired to cloud important files and directories" ))))))
+(clog :info "Configuration created. Use M-x cloud-add in the dired to cloud important files and directories" ))))))
 
 (defun format-conf(CP)
 (cond
@@ -1055,12 +1054,12 @@ ok))
 (ifn-let ((conf (read-conf)))
 (progn
   (clog :warning "could not read local configuration file, trying to (re)create configuration")
-  (when (cloud-init)
+  (when (cloud-init remote-directory)
   (clog :info "check newly created configuraion %s and then M-x cloud-start" (local/host/conf))))
 
 (update-conf conf "remote-directory" "junk-extensions" "ignored-dirs" "remote/files" "number-of-CPU-cores" "password")
 
-(ifn remote-directory (clog :error "You have to set remote-directory for me before I can proceed")
+(ifn (remote-directory) (clog :error "You have to set remote-directory for me before I can proceed")
 (ifn password (clog :error "You have to set encryption password for me before I can proceed")
 
 (add-hook 'kill-emacs-hook 'before-exit)

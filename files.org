@@ -34,13 +34,13 @@ background (en/de)cryption on kalinin finished 18:14:53\\
 background (en/de)cryption on kalinin finished 18:38:24\\
 kalinin: 10/23 18:38:01 -- 18:38:24
 
-** ~/.emacs.d/cloud/kalinin.log
+** ~/.emacs.d/cloud/kalinin/log
 While emacs is frozen while syncronization is not done, this file allows to see (en/de)coding operations in real time:
 
-10/23 17:49:48: uploaded ~/cloud/cloud.org\\
-10/23 17:49:46: downloaded ~/tmp2.max\\
-10/23 17:49:28: downloaded ~/tmp.max\\
-10/23 17:49:28: downloaded ~/tmp5.max\\
+17:49:48: uploaded ~/cloud/cloud.org\\
+17:49:46: downloaded ~/tmp2.max\\
+17:49:28: downloaded ~/tmp.max\\
+17:49:28: downloaded ~/tmp5.max\\
 17:52:58: uploaded ~/cloud/cloud.org\\
 18:12:11: uploaded ~/cloud/cloud.org\\
 18:12:12: downloaded ~/tmp1.max\\

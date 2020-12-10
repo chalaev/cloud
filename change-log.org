@@ -5,6 +5,10 @@ No more fountainng with ideas; just making the code more realiable.
 Mostly fixing the errors; the ideas are either implemented or postponed for (probably remote) future.
 
 ** adding tests + packaging
+*** 2020-12-10
+1. corrected macro test
+2. updated README
+
 *** 2020-12-09
 1. removed obsolete files
 2. fixed problems with =cloud-init=

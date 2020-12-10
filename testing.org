@@ -1,0 +1,22 @@
+As of 2020-12-07 "multi-scale code testing" internet search does not return me anything similar to ideas described in this file.
+
+*Multi-scale code testing*
+
+For me testing code resembles testing an apple before deciding if I want to eat it.
+
+1. First, we should perform microscopic tests, that is, find out if the concentration of dangerous atomic kernels (such as heavy metals or radioactive isotopes) is elevated.
+   For software this means testing small independent blocks of software. For software (but not for apple) this is the seimplest testing type; this is why it comes first.
+
+2. The next ("mesoscopic") step would be to check if the apple is poisoned with dangerous chemical compounds.
+   For software this means testing larger-scale blocks of code that involve interaction of elementary "microsopic" blocks that we have tested on previous step.
+
+3. Finally, if our apple is not radioactive or toxic, we look on how it looks: does it actually look like a healthy aplle should?
+   For software this means testing behavior of the entire system and answering questions like "does it install flawlessly?"
+   Let me call this kind of test "macroscopic".
+
+All kinds of tests are important: sometimes an open-source program is reliable, but user-unfriendly;
+or proprietary software may have fancy design but contain back doors.
+
+The [[https://github.com/chalaev/cloud][cloud project]] is not that small, so theris no "mesoscopic" test file.
+Microscopic tests are written in [[file:generated/tests/micro.el][micro.el]], and
+macroscopic ones can be found in [[file:generated/tests/macro.el][macro.el]].

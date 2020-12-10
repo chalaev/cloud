@@ -29,7 +29,7 @@ The variables with the names starting with "cloud-" should probably be kept glob
 
 =cloud-file-hooks= is used for special files (e.g., diary or bookmarks);
 When those are copied from the cloud to the local hard drive, one should call, e.g., =diary-view-entries= or =bookmark-load=:
-#+BEGIN_SRC emacs-lisp :tangle generated/variables.el :shebang ";; -*- lexical-binding: t; -*-"
+#+BEGIN_SRC emacs-lisp :tangle generated/variables.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
 ;; generated from cloud.org
 (define-vars (password; to be read from config or generated
 (number-of-CPU-cores 1)
@@ -67,25 +67,28 @@ remote/files; "3-symbol DB name on the server, e.g., WzT"
 ← ~cloud-was-connected~ is set to ~nil~ when ~(cloud-sync)~ fails, and is set to ~t~ once =(read-fileDB)= succeeds.
 
 See [[file:testing.org][testing.org]] about multi-scale testing.
-#+BEGIN_SRC emacs-lisp :tangle generated/tests/macro.el :shebang ";; -*- lexical-binding: t; -*-"
+#+BEGIN_SRC emacs-lisp :tangle generated/tests/macro.el :shebang ";; -*-  mode: Emacs-Lisp; lexical-binding: t; -*-"
 (defmacro first-run(&rest body)
 "simulating first run on a new host -- in order to test config file creation"
+(let ((res (s-gensym "r")))
 `(let* ((emacs-d (file-name-as-directory (make-temp-file "cloud-test." t)))
         (remote-directory (file-name-as-directory (make-temp-file "cloud-mnt-remote." t))))
+(clog :debug "remote-directory=%s" remote-directory)
 (clog :debug "local-dir=%s" (local-dir))
 (unless (ensure-dir-exists (local-dir)) (clog :error "fatal: cannot create %s" (local-dir)))
 (clog :debug "ensure-dir-exists(%s)" (local/host/))
 (ifn (ensure-dir-exists (local/host/)) (clog :error "cannot create %s" (local/host/))
 (clog :debug "Starting new test environment in the directory %s" emacs-d)
-,@body)
+(let ((,res (progn ,@body)))
 (safe-delete-dir emacs-d)
-(safe-delete-dir remote-directory)))
+(safe-delete-dir remote-directory)
+,res)))))
 #+END_SRC
 ← do not forget to delete temporary directory.
 
 
 Similarly to how they do it in ~JavaScript~, let me call the following functions "dynamic variables":
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el :shebang ";; -*-  mode: Emacs-Lisp; lexical-binding: t; -*-"
 (defun local-dir() (concat emacs-d (file-name-as-directory "cloud")))
 (unless (ensure-dir-exists (local-dir)) (clog :error "fatal: cannot create %s" (local-dir)))
 (defun local/host/() (concat (local-dir) (file-name-as-directory localhost)))
@@ -109,12 +112,10 @@ This is because
 Before we start for the very first time, when cloud directory is inexistent or empty, 
 we create the password for encryption by =(cloud-init)=:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun cloud-init() "initializes cloud directory and generates password -- runs only once"
-(clog :info "atempting to create new configuration for this host")
-;;(when (yes-or-no-p "Is cloud mounted?")
-;;(setf remote-directory (read-string "cloud directory=" remote-directory))
+(defun cloud-init(remote-directory) "initializes cloud directory and generates password -- runs only once"
+(clog :info "creating new configuration for this host in %s" remote-directory)
 (ifn (ensure-dir-exists remote-directory)
-  (clog :error "could not create/access directory %s" remote-directory)
+  (clog :error "cloud-init: could not create/access directory %s" remote-directory)
 #+END_SRC
 For safety reasons refusing to initialize a directory already containing encrypted files:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
@@ -143,7 +144,7 @@ but if this happens, I will probably have to abandon symmetric encryption and de
 (ifn (ensure-dir-exists (local-dir))
   (clog :error "could not create/acess directory %s" (local-dir))
 (write-conf)
-(clog :info "use M-x cloud-add in the dired to cloud important files and directories" ))))))
+(clog :info "Configuration created. Use M-x cloud-add in the dired to cloud important files and directories" ))))))
 #+END_SRC
 
 *** reading and writing
@@ -162,7 +163,7 @@ By default we assume that our configuration parameters have a string value. Ther
   (t (format "%s=%s" CP (symbol-value(intern CP))))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/tests/micro.el :shebang ";; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-"
+#+BEGIN_SRC emacs-lisp :tangle generated/tests/micro.el :shebang ";; -*-  mode: Emacs-Lisp; lexical-binding: t; -*-"
 ;; These are "microscopic" tests, on microscopic scale: they test single functions in a stabdard environment
 ;; If a "microscopic" test fails, it generally makes no sence to run larger-scale (mesoscopic and macroscopic) tests.
 
@@ -410,11 +411,15 @@ Some files require special treatment after they are updated on the local disk fr
 where =diary-check-diary-file= will raise an error (exception) in case of inexisting diary-file.
 
 #+BEGIN_SRC emacs-lisp :tangle generated/tests/macro.el
-(first-run
  (ert-deftest cloud-init()
-   "just check that config file is created during the first run"
-  (cloud-init)
-  (should (get-file-properties (concat emacs-d "cloud/" localhost "/config")))))
+   "just check that non-empty config file is created during the first run"
+  (should 
+(first-run
+  (cloud-init remote-directory) 
+(when-let ((FR (get-file-properties (concat emacs-d "cloud/" localhost "/config")))
+           (FSize (aref (get-file-properties (concat emacs-d "cloud/" localhost "/config")) size)))
+    (clog :debug "deftest cloud-init: config file size = %d bytes" FSize)
+(< 100 FSize)))))
 #+END_SRC
 
 
@@ -1528,7 +1533,7 @@ I suggest running =(cloud-start)= from =~/.emacs= every time you restart ~emacs~
 (ifn-let ((conf (read-conf)))
 (progn
   (clog :warning "could not read local configuration file, trying to (re)create configuration")
-  (when (cloud-init)
+  (when (cloud-init remote-directory)
   (clog :info "check newly created configuraion %s and then M-x cloud-start" (local/host/conf))))
 #+END_SRC
 We have read configuration, and now let us check if it is correct:
@@ -1537,7 +1542,7 @@ We have read configuration, and now let us check if it is correct:
 #+END_SRC
 In case ~remote-directory~ configuration parameter is missing, let ask the user for the input:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(ifn remote-directory (clog :error "You have to set remote-directory for me before I can proceed")
+(ifn (remote-directory) (clog :error "You have to set remote-directory for me before I can proceed")
 (ifn password (clog :error "You have to set encryption password for me before I can proceed")
 #+END_SRC
 At this point the configuration is o.k., so we can save it when we quit eamcs:
@@ -1604,16 +1609,3 @@ Saving database to a file:
       collect FR))
 #+END_SRC
 
-* Packaging
-(Not finished.)
-#+BEGIN_SRC emacs-lisp :tangle generated/cloud-pkg.el
-(define-package "cloud" "0.1" "secure cloud file synchronization" '(cl epg dired-aux)
-:keywords '("cloud" "gpg" "synchronization")
-:url "https://cloud.leanws.com"
-:authors '(("Oleg Shalaev" . "oleg@chalaev.com"))
-:maintainer '("Oleg Shalaev" . "oleg@chalaev.com"))
-;; Local Variables:
-;; no-byte-compile: t
-;; End:
-;; cloud-pkg.el ends here
-#+END_SRC

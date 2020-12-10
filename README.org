@@ -15,36 +15,40 @@ Synchronizing important files on two or more computers using
 Encrypted files saved in the cloud have *random names* to minimize the amount of information cloud owners can extract by monitoring our cloud directory.
 
 * Prerequisites
-We need ~emacs~, GNU ~make~, ~ImageMagick~, ~gpg~, ~sed~, and ~gawk~; in Debian these can be installed as follows:
-#+BEGIN_SRC shell
-aptitude install emacs make imagemagick gpg sed gawk
-#+END_SRC
+We need
+1. ~emacs~, GNU ~make~, ~ImageMagick~, ~gpg~, ~sed~, and ~gawk~; in Debian these can be installed as follows:\\
+   =aptitude install emacs make imagemagick gpg sed gawk=
+2. [[https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el][shalaev.el]]
+
 * Quick start
-I am running ~emacs~ in daemon mode (in text console) using the following line in [[file:.login][~/.login]]:
+I am running ~emacs~ in daemon mode (in text console) using the following line in [[https://github.com/chalaev/lisp-goodies/blob/master/.login][~/.login]]:
 #+BEGIN_SRC shell
 emacs --daemon
 #+END_SRC
-and in =~/.logout=:
-#+BEGIN_SRC shell
-emacsclient -e "(kill-emacs)"
-#+END_SRC
-Once [[file:.login][~/.login]] has started  ~emacs~ in the daemon mode,
-I can use =emacsclient -c= to open a new (gui) emacs window.
+Once ~emacs~ was started in the daemon mode, I can use =emacsclient -c= to open a new (gui) emacs window.
 
-1. Mount remote directory. The mounting point may be arbitrary (specified as =cloud-directory= in [[file:config][~/.emacs.d/cloud/`hostname`/config]]), the default one is ~/mnt/cloud/~.
-2. You can create the file [[file:config][~/.emacs.d/cloud/`hostname`/config]] yourself, or it will be generated when you run the code for the very first time.
-3. Evaluate ~cloud.el~ in ~emacs~ at start by placing the following lines
+** Initial setup
+1. =mkdir ~/.emacs.d/local-packages/=
+2. Place [[https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el][shalaev.el]] and [[file:packaged/cloud.el][cloud.el]] to =~/.emacs.d/local-packages/=
+3. Load [[file:goodies/start.el][start.el]] in your [[https://github.com/chalaev/lisp-goodies/blob/master/generated/dot.emacs][~/.emacs]]
+4. Evaluate ~cloud.el~ in ~emacs~ at start by placing the following lines
    #+BEGIN_SRC emacs-lisp
-   (mapcar #'require '(cl dired-aux timezone diary-lib subr-x))
-   (load-file "/path-to/cloud.el")
+   (require 'cloud)
    (cloud-start)
    #+END_SRC
    into your =~/.emacs= file. Update some files in emacs, then =M-x cloud-sync=.
-4. Check log files described in [[file:files.org][files.org]]: they should let you know that the encrypted copies of your clouded files have been copied to the remote directory.
-5. Now you can move to another host (e.g. from your office desktop to your laptop).
-6. Using some secure way, copy [[file:config][~/.emacs.d/cloud/`hostname`/config]] to another host; launch ~cloud.el~ there and check the log files.
+   During the very first =(cloud-start)= run, configuration file [[file:config][~/.emacs.d/cloud/`hostname`/config]] will be created.
+5. Mount remote directory. The mounting point may be arbitrary (specified as =cloud-directory= in [[file:config][~/.emacs.d/cloud/`hostname`/config]]), the default one is ~/mnt/cloud/~.
+
+** Uploading and downloading files
+There are several log files; the least informative one is =~/.emacs.d/cloud/`hostname`/log= described in [[file:files.org][files.org]].
+
+1. Edit a text file in emacs. Unless it is blacklisted it will automatically be clouded when you save it. (Blacklisted files can be manually clouded using =M-x cloud-add=.)
+2. Run =M-x cloud-sync= to upload the file and =tail -f ~/.emacs.d/cloud/`hostname`/log= to see the log.
+3. Now you can move to another host (e.g. from your office desktop to your laptop).
+4. Using some secure way, copy [[file:config][~/.emacs.d/cloud/`hostname`/config]] to another host; launch ~cloud.el~ there and check the log files.
    Ensure that updated on your previous host files were downloaded to your current host.
-7. [[https://github.com/chalaev/cloud/issues/new/choose][Let me know]] if something is unclear or does not work.
+5. [[https://github.com/chalaev/cloud/issues/new/choose][Let me know]] if something is unclear or does not work.
 
 Every time we =M-x cloud-sync=, local files get synchronized with the cloud.
 (The same happens when we start/quit emacs.)
@@ -53,14 +57,14 @@ For this purpose I have a line in my ~crontab~:\\
 
 * Commands
 Except for =M-x cloud-sync=, commands are barely used:
-- =M-x cloud-add= :: adds one or several files to the list of "clouded" files.
+- =M-x cloud-add= adds one or several files to the list of "clouded" files.
      This means that =M-x cloud-sync= command will upload these "clouded" files to the remote server if they are updated. Supposed to be used in dired buffer for several
      (marked) files, or (when no files are marked) for a single file. *Files edited in emacs are clouded automatically,* but there are exceptions – see the
      [[file:config][sample configuration file]] and the [[file:cloud.org][source code]].
      Works both on files and directories.
-- =M-x cloud-forget= :: is the opposite of =M-x cloud-add=. 
+- =M-x cloud-forget= is the opposite of =M-x cloud-add=. 
      It is also called automatically when files are removed in dired buffer. Currently works on files only, not on directories.
-- =M-x cloud-sync= :: syncronizes local files with the cloud. Could be regularly called with a =crontab= line, e.g.,\\
+- =M-x cloud-sync= syncronizes local files with the cloud. Could be regularly called with a =crontab= line, e.g.,\\
      =43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null=
 
 * Source code files
@@ -68,11 +72,10 @@ Except for =M-x cloud-sync=, commands are barely used:
 1. [[file:README.org][README.org]] generates =README.md= for [[https://notabug.org/shalaev/emacs-cloud][notabug]] and [[https://github.com/chalaev/cloud][github]].
 2. [[file:cloud.org][cloud.org]] contains the code from [[file:generated/main.el][generated/main.el]] together with explanations.
 3. [[file:0.el][0.el]], [[file:1.el][1.el]], and [[file:2.org][2.org]] are kind of "Appendix" containing some pieces of code which not interesting enough to be included in ~cloud.org~.
-4. goodies/{[[file:goodies/macros.el][macros]],[[file:goodies/functions.el][functions]],[[file:goodies/file-functions.el][file-functions]],[[file:goodies/logging.el][logging]]}.el are copied from the [[https://notabug.org/shalaev/elisp-goodies][elisp-goodies]] project.
-5. [[file:Makefile][Makefile]] merges all the code into [[file:generated/cloud.el][generated/cloud.el]] which is the main file to be launched when ~emacs~ starts.
-6. [[file:shell/cloud-git][shell/cloud-git]] synchronizes file operations in ~git~ with this code, for example:\\
+4. [[file:Makefile][Makefile]] merges all the code into [[file:packaged/cloud.el][packaged/cloud.el]] which is the main file to be launched when ~emacs~ starts.
+5. [[file:shell/cloud-git][shell/cloud-git]] synchronizes file operations in ~git~ with this code, for example:\\
    =cloud-git rm files.org= or =cloud-git mv log-files.org files.org=
-7. [[file:bugs.org][bugs.org]] contains
+6. [[file:bugs.org][bugs.org]] contains
    a. error and problem list, and
    b. ideas on further development.
 
