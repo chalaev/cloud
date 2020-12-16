@@ -1,4 +1,4 @@
-;;; shalaev.el --- secure cloud storage and syncronization for text files    -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
+;;; cloud.el --- secure cloud storage and syncronization for text files  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2020 Oleg Shalaev <oleg@chalaev.com>
 
@@ -16,3 +16,5 @@
 ;; https://github.com/chalaev/cloud
   
 ;;; Code:
+
+;; (mapcar #'require '(cl epg dired-aux timezone diary-lib subr-x shalaev))

@@ -33,53 +33,51 @@ cleanig test environment in the directory %s
 (safe-delete-dir remote-directory)
 (safe-delete-dir emacs-d)
 (safe-delete-dir ~)))))
-(defmacro two-virgin-hosts(&rest body)
-"simulating first run on a new host -- in order to test config file creation"
-`(let (hostA hostB)
-(one-virgin-host (cloud-init)
-(setf hostA host-conf)
-(ifn password
- (clog :error "failed to generate password for hostA!")
-(clog :info "generated password %s for hostA" password)
-(dolist (CP (cons 'password host-par-names))
-    (setf (gethash CP hostA) (eval(intern(symbol-name CP)))))
-(one-virgin-host(cloud-init)
-(setf hostB host-conf)
-(ifn password
- (clog :error "failed to generate password for hostB!")
-(clog :info "generated password %s for hostB" password)
-(dolist (CP (cons 'password host-par-names))
-    (setf (gethash CP hostB) (eval(intern(symbol-name CP)))))
+(ert-deftest cloud-init()
+   "just check that non-empty config file is created during the first run"
+(one-virgin-host
+  (should (progn
+  (cloud-init remote-directory) 
+(when-let ((FR (get-file-properties (concat emacs-d "cloud/" localhost "/config")))
+           (FSize (aref (get-file-properties (concat emacs-d "cloud/" localhost "/config")) size)))
+    (clog :info "deftest cloud-init: config file size = %d bytes" FSize)
+(< 100 FSize))))))
 
-(let ((password "12345678"))
-,@body)))))))
+(ert-deftest read-write-conf()
+   "testing cloud-init, read-conf, and write-conf"
+(one-virgin-host (cloud-init) 
+(clog :info "read-write-conf: (local/host/conf) => %s" (local/host/conf))
+(clog :info "
+Here is the generated config file: ==>")
+(with-temp-buffer (safe-insert-file (local/host/conf))
+(while-let (str) (< 0 (length (setf str (read-line)))) (clog :info "%s" str)))
+(clog :info "<== end of config file
+")
+(should (listp junk-extensions))
+(should (< 0 (length junk-extensions)))
+(should (land (mapcar #'stringp junk-extensions)))
+(should (listp ignored-dirs))
+(should (< 0 (length ignored-dirs)))
+(should (land (mapcar #'stringp ignored-dirs)))
+(should (land (mapcar #'stringp (list remote/files remote-directory password))))
 
-(defmacro on-hostA(&rest body)
-`(let ,host-par-names
-(dolist (CP (quote (list ,@host-par-names)))
-    (set (intern(symbol-name CP)) (gethash CP hostA)))
-,@body))
-(defmacro on-hostB(&rest body)
-`(let ,host-par-names
-(dolist (CP (quote (list ,@host-par-names)))
-    (set (intern(symbol-name CP)) (gethash CP hostB)))
-,@body))
-
-(ert-deftest cloud-sync()
-"creating fresh configuration on 2 hosts and copying one file"
-(two-virgin-hosts
- (on-hostA
-  (clog :info "clouding %s..." file-1)
-  (cloud-add file-1)
-  (clog :info "after clouding %s, Makefile is
-%s" file-1 (apply #'concat (reverse Makefile)))
-  (clog :info "uploading %s..." file-1)
-(cloud-sync))
-(on-hostB
- (clog :info "downloading %s..." file-1)
- (cloud-sync)
-(should (file-exists-p file-1))
- (ifn (file-exists-p file-1) (clog :error "file %s was not downloaded!" file-1)
- (clog :info "file %s was downloaded" file-1)
-(with-temp-buffer (safe-insert-file file-1)
-(should (string= "file-1" (read-line))))))))
+(let ((junk-extensions '("abc" "def"))
+	(ignored-dirs '("/trash/"))
+	(remote/files "QWERTY")
+	(remote-directory "/mnt/remote/galaxy/")
+	(password "myDogsName"))
+(write-conf))
+(clog :info "
+Here is my artificial config file: ==>")
+(with-temp-buffer (safe-insert-file (local/host/conf))
+  (while-let (str) (< 0 (length (setf str (read-line)))) (clog :info "%s" str)))
+(clog :info "<== end of config file
+")
+(ifn-let ((conf (read-conf))) (clog :error "(read-conf) failed")
+(let (junk-extensions ignored-dirs remote/files remote-directory password)
+(update-conf conf "remote-directory" "junk-extensions" "ignored-dirs" "remote/files" "number-of-CPU-cores" "password")
+(should (equal junk-extensions '("abc" "def")))
+(should (equal ignored-dirs '("/trash/")))
+(should (string= remote/files "QWERTY"))
+(should (string= remote-directory "/mnt/remote/galaxy/"))
+(should (string= password "myDogsName"))))))

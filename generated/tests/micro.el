@@ -1,6 +1,6 @@
 ;; -*-  mode: Emacs-Lisp; lexical-binding: t; -*-
 ;; These are "microscopic" tests, on microscopic scale: they test single functions in a stabdard environment
-;; If a "microscopic" test fails, it generally makes no sence to run larger-scale (mesoscopic and macroscopic) tests.
+;; If a "microscopic" test fails, it generally makes no sence to run larger-scale (mesoscopic and mesoscopic) tests.
 
 (ert-deftest format-conf()
 (let ((remote-directory "/mnt/my-cloud/")
@@ -97,3 +97,35 @@ $(cloud)rd2.png: ~/photo.jpeg ~/.emacs.d/cloud/pass.d/updated
 \t-touch --date=\"2014-11-26 06:25:54 EST\" $@
 \t-@echo \"$$(date): downloaded $@\" >> $(localLog)
 "))))
+(ert-deftest if-let-key()
+  (should (eql :yes (if-let-key #'id ((a "a") (b (concat a "b")))
+		      :yes
+		      (when (boundp 'b) (setf b (concat b "a")))
+		      (setf a (concat a "a"))
+		      (if (boundp 'b) (concat a b) a))))
+  (should (eql :nil (if-let-key #'car ((a nil) (b (concat a "b")))
+		      :yes
+		      (when (boundp 'b) (setf b (concat b "a")))
+		      :nil)))
+  (should (= 3 (if-let-key #'car ((a '(1 . 2)) (b '(nil . 3)))
+		 :yes
+		 (cdr b)))))
+
+(ert-deftest if-let-key()
+  (should (= 1 (ifn-let-key #'car ((r1 '(nil . :bad))) 1 2))))
+
+(ert-deftest if-failed()
+(clog :info "IGNORE the following :error log message which is part of a test:")
+(let* ((ok t) (IFFA (if-failed '(nil . "it's too bad!") "tutto cazzo" 1)))
+  (should  (not ok))
+  (should (not (car IFFA)))
+  (should (string= "tutto cazzo
+because it's too bad!" (cdr IFFA))))
+(clog :info "IGNORE the following :error log message which is part of a test:")
+(let* ((ok t) (IFFA (if-failed '(nil . "there is a big problem") '("could not encrypt %s to %s" "aaa.txt" "bbb.gpg") 2)))
+  (should (not ok))
+  (should (not (car IFFA)))
+  (should (string= "could not encrypt aaa.txt to bbb.gpg
+because there is a big problem" (cdr IFFA))))
+(let* ((ok t))
+(should (and ok (= 3 (if-failed '(t . "there is a big problem") '("could not encrypt %s to %s" "aaa.txt" "bbb.gpg") 3))))))

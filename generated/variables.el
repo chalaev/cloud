@@ -13,6 +13,10 @@ remote/files; "3-symbol DB name on the server, e.g., WzT"
 (remote-directory  "/mnt/cloud/")
 
 (/tmp/cloud/ (file-name-as-directory (make-temp-file "cloud." t)))))
+(defun /tmp/cloud/()
+  (if (ensure-dir-exists /tmp/cloud/) 
+    /tmp/cloud/
+    (clog :error "could not create %s" /tmp/cloud/)))
 (defun remote/files() remote/files)
 (defun remote-directory() remote-directory)
 (defun remote-files() (concat (remote-directory) remote/files ".gpg"))

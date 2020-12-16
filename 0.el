@@ -1,7 +1,4 @@
-;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-
-(defun cadar (x) (car (cdar x)))
-
+(require 'timezone)
 ;; specifying Moscow time zone (do this for other important unspecified time zones)
 (unless (assoc "MSK" timezone-world-timezones)
   (push '("MSK". 300) timezone-world-timezones))

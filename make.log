@@ -1,0 +1,163 @@
+[ -d generated/from/ ] || mkdir -p generated/from/
+[ -d generated/headers/ ] || mkdir -p generated/headers/
+[ -d generated/tests/ ] || mkdir -p generated/tests/
+echo `emacsclient -e '(progn (load "/home/shalaev/Private/work/cloud/helpers/derive-version.el") (printangle "cloud.org"))'` | xargs echo > generated/from/cloud.org
+echo `emacsclient -e '(progn (load "/home/shalaev/Private/work/cloud/helpers/derive-version.el") (printangle "2.org"))'` | xargs echo > generated/from/2.org
+emacsclient -e '(progn (load "/home/shalaev/Private/work/cloud/helpers/derive-version.el") (format-version "change-log.org"))' | xargs echo > version.org
+echo "← generated `date '+%m/%d %H:%M'` from [[file:change-log.org][change-log.org]]" >> version.org
+echo "by [[file:helpers/derive-version.el][derive-version.el]]" >> version.org
+sed "s/the-version/`head -n1 version.org`/" header.el > packaged/cloud.el
+cat 0.el 1.el generated/2.el generated/variables.el generated/functions.el >> packaged/cloud.el
+echo "(provide 'cloud)" >> packaged/cloud.el
+echo ";;; cloud.el ends here" >> packaged/cloud.el
+emacsclient -e '(untilde (cdr (assoc "local-packages" package-archives)))' | xargs cp packaged/cloud.el
+echo `emacsclient -e '(progn (load "/home/shalaev/Private/work/cloud/helpers/derive-version.el") (printangle "testing.org"))'` | xargs echo > generated/from/testing.org
+cat generated/headers/meso.el generated/meso.el > generated/tests/meso.el
+cat generated/headers/meso.el generated/macro.el > generated/tests/macro.el
+cat generated/micro.el generated/micro-2.el > generated/tests/micro.el
+
+-= Testing on MICRO scale: =-
+
+emacs -q --no-site-file --batch -l ert  -l goodies/start.el  -l packaged/cloud.el -l generated/tests/micro.el -f ert-run-tests-batch-and-exit
+Running 5 tests (2020-12-15 19:02:33-0500)
+:debug 19:02:33 dec-make-stanza: FN=~/pam.d/xscreensaver
+:debug 19:02:33 dec-make-stanza: FN=~/shalaev.1.obsolete.gz
+:debug 19:02:33 dec-make-stanza: FN=~/big-secret.gpg
+:debug 19:02:33 dec-make-stanza: FN=~/photo.jpeg
+   passed  1/5  dec-make-stanza
+   passed  2/5  enc-make-stanza
+   passed  3/5  format-conf
+:info 19:02:33 IGNORE the following :error log message which is part of a test:
+:error 19:02:33 tutto cazzo
+because it’s too bad!
+:info 19:02:33 IGNORE the following :error log message which is part of a test:
+:error 19:02:33 could not encrypt aaa.txt to bbb.gpg
+because there is a big problem
+   passed  4/5  if-failed
+   passed  5/5  if-let-key
+
+Ran 5 tests, 5 results as expected (2020-12-15 19:02:33-0500)
+
+:debug 19:02:33 flushing comments before quiting emacs
+
+12/15 19:02 MICRO TESTS PASSED :)
+
+
+-= Testing on MESO scale: =-
+
+emacs -q --no-site-file --batch -l ert  -l goodies/start.el  -l packaged/cloud.el -l generated/tests/meso.el -f ert-run-tests-batch-and-exit
+Running 2 tests (2020-12-15 19:02:34-0500)
+:info 19:02:34 home directory = ~ = /tmp/cloud-test.home.KWqL9t/
+:info 19:02:34 remote-directory= /tmp/cloud-test-mnt.remote.4a6X0Q/
+:info 19:02:34 local-dir= /tmp/cloud-test.home.KWqL9t/.emacs.d.6A9jAF/cloud/
+:info 19:02:34 Starting new test environment in the directory /tmp/cloud-test.home.KWqL9t/.emacs.d.6A9jAF/
+=======
+:info 19:02:34 creating new host configuration in /tmp/cloud-test-mnt.remote.4a6X0Q/
+:info 19:02:34 creating (main) remote file DB in unused directory /tmp/cloud-test-mnt.remote.4a6X0Q/
+:info 19:02:34 Configuration created. Use M-x cloud-add in the dired to cloud important files and directories
+:info 19:02:34 deftest cloud-init: config file size = 467 bytes
+:info 19:02:34 ======
+cleanig test environment in the directory /tmp/cloud-test.home.KWqL9t/.emacs.d.6A9jAF/
+
+   passed  1/2  cloud-init
+:info 19:02:34 home directory = ~ = /tmp/cloud-test.home.Un6HMG/
+:info 19:02:34 remote-directory= /tmp/cloud-test-mnt.remote.YPq0a3/
+:info 19:02:34 local-dir= /tmp/cloud-test.home.Un6HMG/.emacs.d.Wl0MYR/cloud/
+:info 19:02:34 Starting new test environment in the directory /tmp/cloud-test.home.Un6HMG/.emacs.d.Wl0MYR/
+=======
+:info 19:02:34 creating new host configuration in /tmp/cloud-test-mnt.remote.YPq0a3/
+:info 19:02:34 creating (main) remote file DB in unused directory /tmp/cloud-test-mnt.remote.YPq0a3/
+:info 19:02:34 Configuration created. Use M-x cloud-add in the dired to cloud important files and directories
+:info 19:02:34 read-write-conf: (local/host/conf) => /tmp/cloud-test.home.Un6HMG/.emacs.d.Wl0MYR/cloud/kalinin/config
+:info 19:02:34 
+Here is the generated config file: ==>
+:info 19:02:34 remote-directory=/tmp/cloud-test-mnt.remote.YPq0a3/
+:info 19:02:34 junk-extensions=ac3 afm aux avi bak bbl blg brf bst bz2 cache chm cp cps dat deb dv dvi eps fb2 fls fn gif gpx gz idx ilg img ind iso jpeg jpg ky log m m2v md mjpeg mkv mov mp3 mp4 mpg ogg ogm out part pbm pdf pfb pg pgm png pnm pod ps rar raw segments sfd tbz tga tgz tif tiff toc tp vob vr wav woff xcf xml xz zip 
+:info 19:02:34 ignored-dirs=/tmp/ 
+:info 19:02:34 remote/files=EdQ
+:info 19:02:34 number-of-CPU-cores=1
+:info 19:02:34 password=T046NJw9u
+:info 19:02:34 <== end of config file
+
+:info 19:02:34 
+Here is my artificial config file: ==>
+:info 19:02:34 remote-directory=/mnt/remote/galaxy/
+:info 19:02:34 junk-extensions=abc def 
+:info 19:02:34 ignored-dirs=/trash/ 
+:info 19:02:34 remote/files=QWERTY
+:info 19:02:34 number-of-CPU-cores=1
+:info 19:02:34 password=myDogsName
+:info 19:02:34 <== end of config file
+
+:info 19:02:34 ======
+cleanig test environment in the directory /tmp/cloud-test.home.Un6HMG/.emacs.d.Wl0MYR/
+
+   passed  2/2  read-write-conf
+
+Ran 2 tests, 2 results as expected (2020-12-15 19:02:34-0500)
+
+:debug 19:02:34 flushing comments before quiting emacs
+
+12/15 19:02 MESO TESTS PASSED :)
+
+
+-= Testing on MACRO scale: =-
+
+emacs -q --no-site-file --batch -l ert  -l goodies/start.el  -l packaged/cloud.el -l generated/tests/macro.el -f ert-run-tests-batch-and-exit
+Running 1 tests (2020-12-15 19:02:34-0500)
+:info 19:02:34 home directory = ~ = /tmp/cloud-test.home.asQnC9/
+:info 19:02:34 remote-directory= /tmp/cloud-test-mnt.remote.mmTI2a/
+:info 19:02:34 local-dir= /tmp/cloud-test.home.asQnC9/.emacs.d.YYpEkF/cloud/
+:info 19:02:34 Starting new test environment in the directory /tmp/cloud-test.home.asQnC9/.emacs.d.YYpEkF/
+=======
+:info 19:02:34 creating new host configuration in /tmp/cloud-test-mnt.remote.mmTI2a/
+:info 19:02:34 creating (main) remote file DB in unused directory /tmp/cloud-test-mnt.remote.mmTI2a/
+:info 19:02:34 Configuration created. Use M-x cloud-add in the dired to cloud important files and directories
+:info 19:02:34 generated password HryBEk5sg for hostA
+:info 19:02:34 home directory = ~ = /tmp/cloud-test.home.i6OeTi/
+:info 19:02:34 remote-directory= /tmp/cloud-test-mnt.remote.qoh2im/
+:info 19:02:34 local-dir= /tmp/cloud-test.home.i6OeTi/.emacs.d.WD1lBP/cloud/
+:info 19:02:34 Starting new test environment in the directory /tmp/cloud-test.home.i6OeTi/.emacs.d.WD1lBP/
+=======
+:info 19:02:34 creating new host configuration in /tmp/cloud-test-mnt.remote.qoh2im/
+:info 19:02:34 creating (main) remote file DB in unused directory /tmp/cloud-test-mnt.remote.qoh2im/
+:info 19:02:34 Configuration created. Use M-x cloud-add in the dired to cloud important files and directories
+:info 19:02:34 generated password y8AFTPnLu for hostB
+:info 19:02:34 clouding /tmp/cloud-test.home.asQnC9/file-1.E72WPd...
+:debug 19:02:34 add-file/upload: /tmp/cloud-test.home.asQnC9/file-1.E72WPd(12/15 19:02:34)
+:debug 19:02:34 started upload(~/file-1.E72WPd)
+:debug 19:02:34 will add upload(~/file-1.E72WPd) stanza to Makefile
+:info 19:02:34 after clouding /tmp/cloud-test.home.asQnC9/file-1.E72WPd, Makefile is
+
+$(cloud)0Mt.gpg: ~/file-1.E72WPd
+	@$(enc) $@ $<
+	-@echo "$$(date): uploaded $<" >> $(localLog)
+
+
+:info 19:02:34 uploading /tmp/cloud-test.home.asQnC9/file-1.E72WPd...
+:debug 19:02:35 starting make -j1 -f /tmp/cloud-test.home.asQnC9/.emacs.d.YYpEkF/cloud/cloud.mk all &> /tmp/cloud-test.home.asQnC9/.emacs.d.YYpEkF/cloud/cloud.mk.log
+(Shell command failed with code 2 and no output)
+:info 19:02:35 done syncing
+:info 19:02:35 downloading /tmp/cloud-test.home.i6OeTi/file-1.AVfb5s...
+:debug 19:02:35 starting make -j1 -f /tmp/cloud-test.home.i6OeTi/.emacs.d.WD1lBP/cloud/cloud.mk all &> /tmp/cloud-test.home.i6OeTi/.emacs.d.WD1lBP/cloud/cloud.mk.log
+(Shell command succeeded with no output)
+:info 19:02:35 done syncing
+:info 19:02:35 file /tmp/cloud-test.home.i6OeTi/file-1.AVfb5s was downloaded
+:info 19:02:35 ======
+cleanig test environment in the directory /tmp/cloud-test.home.i6OeTi/.emacs.d.WD1lBP/
+
+:info 19:02:35 ======
+cleanig test environment in the directory /tmp/cloud-test.home.asQnC9/.emacs.d.YYpEkF/
+
+   passed  1/1  cloud-sync
+
+Ran 1 tests, 1 results as expected (2020-12-15 19:02:35-0500)
+
+:debug 19:02:35 flushing comments before quiting emacs
+
+12/15 19:02 MACRO TESTS PASSED :)
+
+rm generated/headers/make: unlink: generated/headers/: Is a directory
+ generated/from/make: unlink: generated/from/: Is a directory
+ generated/tests/make: unlink: generated/tests/: Is a directory
+

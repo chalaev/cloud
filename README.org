@@ -18,7 +18,7 @@ Encrypted files saved in the cloud have *random names* to minimize the amount of
 We need
 1. ~emacs~, GNU ~make~, ~ImageMagick~, ~gpg~, ~sed~, and ~gawk~; in Debian these can be installed as follows:\\
    =aptitude install emacs make imagemagick gpg sed gawk=
-2. [[https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el][shalaev.el]]
+2. [[https://github.com/chalaev/lisp-goodies][lisp-goodies]]: [[https://github.com/chalaev/lisp-goodies/blob/master/packaged/start.el][start.el]] (used by [[file:Makefile][Makefile]]), and [[https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el][shalaev.el]]
 
 * Quick start
 I am running ~emacs~ in daemon mode (in text console) using the following line in [[https://github.com/chalaev/lisp-goodies/blob/master/.login][~/.login]]:
@@ -30,7 +30,7 @@ Once ~emacs~ was started in the daemon mode, I can use =emacsclient -c= to open 
 ** Initial setup
 1. =mkdir ~/.emacs.d/local-packages/=
 2. Place [[https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el][shalaev.el]] and [[file:packaged/cloud.el][cloud.el]] to =~/.emacs.d/local-packages/=
-3. Load [[file:goodies/start.el][start.el]] in your [[https://github.com/chalaev/lisp-goodies/blob/master/generated/dot.emacs][~/.emacs]]
+3. Load [[file:goodies/start.el][start.el]] in your [[file:.emacs][~/.emacs]]
 4. Evaluate ~cloud.el~ in ~emacs~ at start by placing the following lines
    #+BEGIN_SRC emacs-lisp
    (require 'cloud)
@@ -72,10 +72,12 @@ Except for =M-x cloud-sync=, commands are barely used:
 1. [[file:README.org][README.org]] generates =README.md= for [[https://notabug.org/shalaev/emacs-cloud][notabug]] and [[https://github.com/chalaev/cloud][github]].
 2. [[file:cloud.org][cloud.org]] contains the code from [[file:generated/main.el][generated/main.el]] together with explanations.
 3. [[file:0.el][0.el]], [[file:1.el][1.el]], and [[file:2.org][2.org]] are kind of "Appendix" containing some pieces of code which not interesting enough to be included in ~cloud.org~.
-4. [[file:Makefile][Makefile]] merges all the code into [[file:packaged/cloud.el][packaged/cloud.el]] which is the main file to be launched when ~emacs~ starts.
+4. [[file:Makefile][Makefile]] merges all the code into [[file:packaged/cloud.el][packaged/cloud.el]] which is the main file to be launched when ~emacs~ starts;
+   typical output of successful =make= is saved in [[file:make.log][make.log]].
 5. [[file:shell/cloud-git][shell/cloud-git]] synchronizes file operations in ~git~ with this code, for example:\\
    =cloud-git rm files.org= or =cloud-git mv log-files.org files.org=
-6. [[file:bugs.org][bugs.org]] contains
+6. [[file:testing.org][testing.org]] describes multi-scale testing procedure.
+7. [[file:bugs.org][bugs.org]] contains
    a. error and problem list, and
    b. ideas on further development.
 

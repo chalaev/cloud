@@ -86,12 +86,12 @@
 ;; (defun old-cloud-locate-FN (FN)
 ;;   "find file by (true) name"
 ;;   (find FN file-DB :key #'plain-name
-;; 	:test #'(lambda(x y)(string= (tilda x) (tilda y)))))
+;; 	:test #'(lambda(x y)(string= (tilde x) (tilde y)))))
 
 (defun cloud-locate-FN (FN)
   "find file by (true) name"
   (find (file-chase-links FN) file-DB :key #'plain-name
-	:test #'(lambda(x y)(string= (tilda x) (tilda y)))))
+	:test #'(lambda(x y)(string= (tilde x) (tilde y)))))
 
 (defun cloud-locate-CN (name)
   "find file by (ciper) name"
@@ -118,3 +118,7 @@
 ;; (defun grab-parameter (str parname); (grab-parameter "contentsName=z12"  "contentsName") => "z12"
 ;;   (when (string-match (concat parname "=\\(\\ca+\\)$") str)
 ;;       (match-string 1 str)))
+
+
+
+

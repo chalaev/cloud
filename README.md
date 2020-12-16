@@ -1,22 +1,22 @@
 
 # Table of Contents
 
-1.  [Description](#orgadee157)
-2.  [Prerequisites](#org6389f62)
-3.  [Quick start](#orge0421f9)
-    1.  [Initial setup](#orgb9ace0b)
-    2.  [Uploading and downloading files](#org402e1ae)
-4.  [Commands](#org12e925a)
-5.  [Source code files](#orgbc9ce02)
-6.  [Motivation](#orgcf4df6f)
-7.  [Limitations](#orgb4d0596)
-8.  [License](#org8178671)
-9.  [Support](#org35a9014)
+1.  [Description](#orgb8c7c80)
+2.  [Prerequisites](#org4a20113)
+3.  [Quick start](#orgc80bae0)
+    1.  [Initial setup](#orgb600950)
+    2.  [Uploading and downloading files](#org2c4455b)
+4.  [Commands](#org1c56e92)
+5.  [Source code files](#org76d20f0)
+6.  [Motivation](#org2074561)
+7.  [Limitations](#orgf2db935)
+8.  [License](#orgbb08996)
+9.  [Support](#org5bce799)
 
 Intended for linux users who have [emacs](https://www.gnu.org/software/emacs/) always open.
 
 
-<a id="orgadee157"></a>
+<a id="orgb8c7c80"></a>
 
 # Description
 
@@ -35,7 +35,7 @@ Synchronizing important files on two or more computers using
 Encrypted files saved in the cloud have **random names** to minimize the amount of information cloud owners can extract by monitoring our cloud directory.
 
 
-<a id="org6389f62"></a>
+<a id="org4a20113"></a>
 
 # Prerequisites
 
@@ -43,10 +43,10 @@ We need
 
 1.  `emacs`, GNU `make`, `ImageMagick`, `gpg`, `sed`, and `gawk`; in Debian these can be installed as follows:  
     `aptitude install emacs make imagemagick gpg sed gawk`
-2.  [shalaev.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el)
+2.  [lisp-goodies](https://github.com/chalaev/lisp-goodies): [start.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/start.el) (used by [Makefile](Makefile)), and [shalaev.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el)
 
 
-<a id="orge0421f9"></a>
+<a id="orgc80bae0"></a>
 
 # Quick start
 
@@ -57,13 +57,13 @@ I am running `emacs` in daemon mode (in text console) using the following line i
 Once `emacs` was started in the daemon mode, I can use `emacsclient -c` to open a new (gui) emacs window.
 
 
-<a id="orgb9ace0b"></a>
+<a id="orgb600950"></a>
 
 ## Initial setup
 
 1.  `mkdir ~/.emacs.d/local-packages/`
 2.  Place [shalaev.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el) and [cloud.el](packaged/cloud.el) to `~/.emacs.d/local-packages/`
-3.  Load [start.el](goodies/start.el) in your [~/.emacs](https://github.com/chalaev/lisp-goodies/blob/master/generated/dot.emacs)
+3.  Load [start.el](goodies/start.el) in your [~/.emacs](.emacs)
 4.  Evaluate `cloud.el` in `emacs` at start by placing the following lines
     
         (require 'cloud)
@@ -74,7 +74,7 @@ Once `emacs` was started in the daemon mode, I can use `emacsclient -c` to open 
 5.  Mount remote directory. The mounting point may be arbitrary (specified as `cloud-directory` in [~/.emacs.d/cloud/\`hostname\`/config](config)), the default one is `/mnt/cloud/`.
 
 
-<a id="org402e1ae"></a>
+<a id="org2c4455b"></a>
 
 ## Uploading and downloading files
 
@@ -93,7 +93,7 @@ For this purpose I have a line in my `crontab`:
 `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="org12e925a"></a>
+<a id="org1c56e92"></a>
 
 # Commands
 
@@ -110,7 +110,7 @@ Except for `M-x cloud-sync`, commands are barely used:
     `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="orgbc9ce02"></a>
+<a id="org76d20f0"></a>
 
 # Source code files
 
@@ -119,15 +119,17 @@ Except for `M-x cloud-sync`, commands are barely used:
 1.  [README.org](README.org) generates `README.md` for [notabug](https://notabug.org/shalaev/emacs-cloud) and [github](https://github.com/chalaev/cloud).
 2.  [cloud.org](cloud.org) contains the code from [generated/main.el](generated/main.el) together with explanations.
 3.  [0.el](0.el), [1.el](1.el), and [2.org](2.org) are kind of "Appendix" containing some pieces of code which not interesting enough to be included in `cloud.org`.
-4.  [Makefile](Makefile) merges all the code into [packaged/cloud.el](packaged/cloud.el) which is the main file to be launched when `emacs` starts.
+4.  [Makefile](Makefile) merges all the code into [packaged/cloud.el](packaged/cloud.el) which is the main file to be launched when `emacs` starts;
+    typical output of successful `make` is saved in [make.log](make.log).
 5.  [shell/cloud-git](shell/cloud-git) synchronizes file operations in `git` with this code, for example:  
     `cloud-git rm files.org` or `cloud-git mv log-files.org files.org`
-6.  [bugs.org](bugs.org) contains
+6.  [testing.org](testing.org) describes multi-scale testing procedure.
+7.  [bugs.org](bugs.org) contains
     a. error and problem list, and
     b. ideas on further development.
 
 
-<a id="orgcf4df6f"></a>
+<a id="org2074561"></a>
 
 # Motivation
 
@@ -149,7 +151,7 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 4.  Dired-compatible: whatever I do with a file in dired (delete, rename), will be automatically done on other computers.
 
 
-<a id="orgb4d0596"></a>
+<a id="orgf2db935"></a>
 
 # Limitations
 
@@ -161,14 +163,14 @@ Since emacs is my only text editor, it is enough to write eLisp code that
     After encrypting an image file and then decrypting it back, we get the same, but not identical picture (file size is changed).
 
 
-<a id="org8178671"></a>
+<a id="orgbb08996"></a>
 
 # License
 
 This code is released under [MIT license](https://mit-license.org/).
 
 
-<a id="org35a9014"></a>
+<a id="org5bce799"></a>
 
 # Support
 
