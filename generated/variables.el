@@ -1,6 +1,7 @@
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
 ;; generated from cloud.org
 (define-vars (password; to be read from config or generated
+(HOME (getenv "HOME")); must not have trailing "/"
 (number-of-CPU-cores 1)
 cloud-file-hooks; "for special files treatment"
 
@@ -9,14 +10,11 @@ added-files; "newly clouded files"
 
 remote/files; "3-symbol DB name on the server, e.g., WzT"
 (localhost (system-name))
-(~ (file-name-as-directory(expand-file-name "~")))
+(~ (to-dir(expand-file-name "~")))
 (remote-directory  "/mnt/cloud/")
 
-(/tmp/cloud/ (file-name-as-directory (make-temp-file "cloud." t)))))
-(defun /tmp/cloud/()
-  (if (ensure-dir-exists /tmp/cloud/) 
-    /tmp/cloud/
-    (clog :error "could not create %s" /tmp/cloud/)))
+(/tmp/cloud/ (need-dir (make-temp-file "cloud." t)))))
+(defun /tmp/cloud/() (need-dir /tmp/cloud/))
 (defun remote/files() remote/files)
 (defun remote-directory() remote-directory)
 (defun remote-files() (concat (remote-directory) remote/files ".gpg"))

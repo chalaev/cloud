@@ -1,6 +1,7 @@
 ;; -*-  mode: Emacs-Lisp; lexical-binding: t; -*-
 ;; These are "microscopic" tests, on microscopic scale: they test single functions in a stabdard environment
 ;; If a "microscopic" test fails, it generally makes no sence to run larger-scale (mesoscopic and mesoscopic) tests.
+(require 'ert)
 
 (ert-deftest format-conf()
 (let ((remote-directory "/mnt/my-cloud/")
@@ -97,8 +98,8 @@ $(cloud)rd2.png: ~/photo.jpeg ~/.emacs.d/cloud/pass.d/updated
 \t-touch --date=\"2014-11-26 06:25:54 EST\" $@
 \t-@echo \"$$(date): downloaded $@\" >> $(localLog)
 "))))
-(ert-deftest if-let-key()
-  (should (eql :yes (if-let-key #'id ((a "a") (b (concat a "b")))
+(ert-deftest if-let-key.1()
+  (should (eql :yes (if-let-key #'identity ((a "a") (b (concat a "b")))
 		      :yes
 		      (when (boundp 'b) (setf b (concat b "a")))
 		      (setf a (concat a "a"))
@@ -111,7 +112,7 @@ $(cloud)rd2.png: ~/photo.jpeg ~/.emacs.d/cloud/pass.d/updated
 		 :yes
 		 (cdr b)))))
 
-(ert-deftest if-let-key()
+(ert-deftest if-let-key.2()
   (should (= 1 (ifn-let-key #'car ((r1 '(nil . :bad))) 1 2))))
 
 (ert-deftest if-failed()

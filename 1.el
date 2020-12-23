@@ -4,20 +4,18 @@
 
 ;;(setf coding-system-for-read 'utf-8)
 (defun safe-insert-file(FN)
-  (let (failed)
-  (condition-case err (insert-file-contents FN)
+  (condition-case err (cons t (insert-file-contents FN))
     (file-missing
      (clog :error "missing file %s: %s" FN (error-message-string err))
-     (setf failed t))
+     (cons nil :missing))
     (file-error
      (clog :info "cannot read file %s; %s" FN (error-message-string err))
-     (setf failed t)))
-  (not failed)))
+     (cons nil :permission))))
 
 (defmacro temp-open(FN &rest body)
   `(with-temp-buffer
-     (safe-insert-file ,FN)
-     ,@body))
+     (when(car(safe-insert-file ,FN))
+     ,@body)))
 
 (defun backspace()
   (if (< (point-min) (point))
@@ -119,6 +117,30 @@
 ;;   (when (string-match (concat parname "=\\(\\ca+\\)$") str)
 ;;       (match-string 1 str)))
 
+(defun to-dir(root &rest dirs)
+(if (car dirs)
+    (apply #'to-dir
+(cons 
+  (file-name-as-directory (concat (file-name-as-directory root) (car dirs)))
+  (cdr dirs)))
+  (file-name-as-directory root)))
 
+(defun need-dir(&rest DNs)
+  (ensure-dir-exists (apply #'to-dir DNs)))
 
+(defun cat-file(FN)
+"converts file to string"
+(with-temp-buffer
+    (insert-file-contents FN)
+    (buffer-string)))
 
+(defmacro report-TF(var-name)
+  "useful for debugging"
+  `(clog :debug (concat ,(symbol-name var-name) "= %s") (if ,var-name "t" "nil")))
+;; example: (report-TF file-DB)
+
+;; (defmacro report-TF(var-name)
+;;   "useful for debugging"
+;;   (let ((v (s-gensym)))
+;;   `(let ((,v ,var-name))
+;;      (clog :debug (concat ,(symbol-name v) "= %s") (if ,v "t" "nil")))))

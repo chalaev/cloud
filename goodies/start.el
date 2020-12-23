@@ -20,7 +20,9 @@
 (add-function :around (symbol-function 'make-temp-file) #'upgrade-make-temp-file))
 
 ;; -*-  lexical-binding: t; -*-
-(defvar ~ (file-name-as-directory (getenv "HOME")))
+(defvar HOME (getenv "HOME"))
+(defvar ~ (file-name-as-directory HOME))
+(defun ~() (file-name-as-directory HOME))
 (defun   tilde(x) (replace-regexp-in-string (concat "^" ~) "~/" x))
 (defun untilde(x) (replace-regexp-in-string "^~/" ~ x))
 (defvar emacs-d (concat "~/" (file-name-as-directory ".emacs.d")))

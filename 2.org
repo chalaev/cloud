@@ -45,8 +45,8 @@ Formatted output:
 (It's gonna be triplicated if there are 3 variables, and so on.)
 
 #+BEGIN_SRC emacs-lisp :tangle generated/micro-2.el
-(ert-deftest if-let-key()
-  (should (eql :yes (if-let-key #'id ((a "a") (b (concat a "b")))
+(ert-deftest if-let-key.1()
+  (should (eql :yes (if-let-key #'identity ((a "a") (b (concat a "b")))
 		      :yes
 		      (when (boundp 'b) (setf b (concat b "a")))
 		      (setf a (concat a "a"))
@@ -62,7 +62,7 @@ Formatted output:
 
 =if-let-key= seems to be useful only for (simplest) one-variable let-declarations:
 #+BEGIN_SRC emacs-lisp :tangle generated/micro-2.el
-(ert-deftest if-let-key()
+(ert-deftest if-let-key.2()
   (should (= 1 (ifn-let-key #'car ((r1 '(nil . :bad))) 1 2))))
 #+END_SRC
 
@@ -70,16 +70,30 @@ Formatted output:
 (defmacro if-failed(expr err-msg &rest body)
 (let ((expr-result (s-gensym "ER")))
   `(ifn-let-key #'car ((,expr-result ,expr))
-(let ((emsg (cons :error (cond
-((stringp ,err-msg) (list (concat ,err-msg "
-because " (cdr ,expr-result))))
-((listp ,err-msg) (cons(concat(car ,err-msg) "
-because " (cdr ,expr-result)) (cdr ,err-msg)))
-(t (list (cdr ,expr-result)))))))
+#+END_SRC
+=because= contains text error description to be logged:
+#+BEGIN_SRC emacs-lisp :tangle generated/2.el
+(let* ((because (concat "
+because " 
+#+END_SRC
+=(cdr ,expr-result)= describes the error. (My error descriptions are rather chaotic for now.)
+This description might be either a /key word/ (e.g., =:permission=), or a text message.
+(I prefer /key words/ to text messages but I understand that there are always unexpected/unknown error types, which will be described by strings.)
+#+BEGIN_SRC emacs-lisp :tangle generated/2.el
+(cond
+((keywordp (cdr ,expr-result)) (symbol-name (cdr ,expr-result)))
+((stringp (cdr ,expr-result))  (cdr ,expr-result))
+(t ""))))
+#+END_SRC
+=emsg= is the final log string:
+#+BEGIN_SRC emacs-lisp :tangle generated/2.el
+(emsg (cons :error (cond
+((stringp ,err-msg) (list (concat ,err-msg because)))
+((listp ,err-msg) (cons(concat(car ,err-msg) because) (cdr ,err-msg)))
+(t (list (concat "<invalid description>" because)))))))
 (setf ok nil)
 #+END_SRC
-Now we've got =err-msg= which is a list of arguments ready for =clog=.
-
+where =ok= is non-local variable.
 #+BEGIN_SRC emacs-lisp :tangle generated/2.el
 (cons (apply #'clog emsg) (apply #'format (cdr emsg))))
 ,@body)))
@@ -135,7 +149,7 @@ BTW, =(file-exists-p FN)= produces ~nil~ if the file resides in directory with (
 	(aset DB-rec gname gid)
 	(aset DB-rec mtime mod-time); list of 4 integers
 	(aset DB-rec modes (perms-from-str ms))
-	(aset DB-rec plain FN); (aset DB-rec write-me to-cloud); might be later adjusted in read-fileDB
+	(aset DB-rec plain (tilde FN)); (aset DB-rec write-me to-cloud); might be later adjusted in read-fileDB
 	DB-rec)))
 #+END_SRC
 
@@ -173,41 +187,22 @@ BTW, =(file-exists-p FN)= produces ~nil~ if the file resides in directory with (
 `(clog :error "invalid %dth column in %s line" ,N ,cType)))
 #+END_SRC
 
-2020-11-02 I observed a strange ~gpg~ error: when I encrypted directly to the cloud directory,
-sometimes I could not unencrypt it as if there were some write errors!
-So I decided that I will first encrypt the file locally and then move it to the folder.
-
 #+BEGIN_SRC emacs-lisp :tangle generated/2.el
 (defun gpg-encrypt(FN XYZ)
-(let ((tmp-gpg-file (concat (/tmp/cloud/) XYZ ".gpg")))
-(ifn (= 0 (apply #'call-process
-     (append (list "gpg" nil nil nil)
-(split-string (format "--batch --yes --pinentry-mode loopback --passphrase %S -o %s --symmetric %s"
-    password tmp-gpg-file (untilde FN))))))
-(let ((msg (format "failed to encrypt %s to %s!" (local/all) remote/files)))
-(cons (clog :error msg) msg))
-#+END_SRC
-← foreground encryption. Probably I should have merged it with the =Makefile= and make background.
+(let* ((gpg-str (format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --symmetric %s" password (concat (remote-directory) XYZ ".gpg") (untilde FN)))
+       (result (shell-command gpg-str)))
+(clog :debug gpg-str); for debugging, dangerous – shows passwords, to be erased!!!
+(cons (= 0 result) result)))
 
-#+BEGIN_SRC emacs-lisp :tangle generated/2.el
-(mv tmp-gpg-file (concat (remote-directory) XYZ ".gpg")))))
-#+END_SRC
-← returns usual (standard for me) structure =(successP . more-details)=
-
-#+BEGIN_SRC emacs-lisp :tangle generated/2.el
 (defun gpg-decrypt(FN XYZ)
-(clog :debug "decrypting %s to %s" XYZ FN)
-(let ((tmp-gpg (concat (/tmp/cloud/) XYZ ".gpg"))
-      (RD-XYZ (concat (remote-directory) XYZ ".gpg")))
-  (ifn-let-key #'car ((cpr (cp RD-XYZ tmp-gpg)))
-     (cons (clog :error "failed: cp %s %s because %s" RD-XYZ tmp-gpg (cdr cpr)) (cdr cpr))
-  (ifn (= 0 (apply #'call-process
-(append (list "gpg" nil nil nil)
-(split-string (format "--batch --yes --pinentry-mode loopback --passphrase %S -o %s --decrypt %s"
-		      password (untilde FN) tmp-gpg)))))
-       (cons (clog :error "failed to encrypt %s to %s!" (local/all) remote/files) "make failed")
-(rm tmp-gpg)))))
+(let* ((gpg-str (format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --decrypt %s" password (untilde FN) (concat (remote-directory) XYZ ".gpg")))
+       (result (shell-command gpg-str)))
+(clog :debug gpg-str); for debugging, dangerous – shows passwords, to be erased!!!
+(cons (= 0 result) result)))
 #+END_SRC
+← foreground (en/de)cryption. Probably I should have merged it with the =Makefile= and make background.
+← returns usual (standard for me) structure =(successP . more-details)=
+← should I replace everywhere =shell-command= → =start-process= or =call-process= (see [[file:learn.org][learn.org]])?
 
 The problem: =(safe-dired-delete)= asks for permission to recursively delete directory,
 even in (non-interactive) text mode, when I launch =emacs --daemon=!

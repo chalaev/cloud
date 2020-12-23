@@ -18,12 +18,19 @@
 (defmacro if-failed(expr err-msg &rest body)
 (let ((expr-result (s-gensym "ER")))
   `(ifn-let-key #'car ((,expr-result ,expr))
-(let ((emsg (cons :error (cond
-((stringp ,err-msg) (list (concat ,err-msg "
-because " (cdr ,expr-result))))
-((listp ,err-msg) (cons(concat(car ,err-msg) "
-because " (cdr ,expr-result)) (cdr ,err-msg)))
-(t (list (cdr ,expr-result)))))))
+
+(let* ((because (concat "
+because "
+
+(cond
+((keywordp (cdr ,expr-result)) (symbol-name (cdr ,expr-result)))
+((stringp (cdr ,expr-result))  (cdr ,expr-result))
+(t ""))))
+
+(emsg (cons :error (cond
+((stringp ,err-msg) (list (concat ,err-msg because)))
+((listp ,err-msg) (cons(concat(car ,err-msg) because) (cdr ,err-msg)))
+(t (list (concat "<invalid description>" because)))))))
 (setf ok nil)
 
 (cons (apply #'clog emsg) (apply #'format (cdr emsg))))
@@ -39,7 +46,7 @@ because " (cdr ,expr-result)) (cdr ,err-msg)))
 	(aset DB-rec gname gid)
 	(aset DB-rec mtime mod-time); list of 4 integers
 	(aset DB-rec modes (perms-from-str ms))
-	(aset DB-rec plain FN); (aset DB-rec write-me to-cloud); might be later adjusted in read-fileDB
+	(aset DB-rec plain (tilde FN)); (aset DB-rec write-me to-cloud); might be later adjusted in read-fileDB
 	DB-rec)))
 
 (defun get-file-properties (FN)
@@ -69,28 +76,16 @@ because " (cdr ,expr-result)) (cdr ,err-msg)))
 `(clog :error "invalid %dth column in %s line" ,N ,cType)))
 
 (defun gpg-encrypt(FN XYZ)
-(let ((tmp-gpg-file (concat (/tmp/cloud/) XYZ ".gpg")))
-(ifn (= 0 (apply #'call-process
-     (append (list "gpg" nil nil nil)
-(split-string (format "--batch --yes --pinentry-mode loopback --passphrase %S -o %s --symmetric %s"
-    password tmp-gpg-file (untilde FN))))))
-(let ((msg (format "failed to encrypt %s to %s!" (local/all) remote/files)))
-(cons (clog :error msg) msg))
-
-(mv tmp-gpg-file (concat (remote-directory) XYZ ".gpg")))))
+(let* ((gpg-str (format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --symmetric %s" password (concat (remote-directory) XYZ ".gpg") (untilde FN)))
+       (result (shell-command gpg-str)))
+(clog :debug gpg-str); for debugging, dangerous – shows passwords, to be erased!!!
+(cons (= 0 result) result)))
 
 (defun gpg-decrypt(FN XYZ)
-(clog :debug "decrypting %s to %s" XYZ FN)
-(let ((tmp-gpg (concat (/tmp/cloud/) XYZ ".gpg"))
-      (RD-XYZ (concat (remote-directory) XYZ ".gpg")))
-  (ifn-let-key #'car ((cpr (cp RD-XYZ tmp-gpg)))
-     (cons (clog :error "failed: cp %s %s because %s" RD-XYZ tmp-gpg (cdr cpr)) (cdr cpr))
-  (ifn (= 0 (apply #'call-process
-(append (list "gpg" nil nil nil)
-(split-string (format "--batch --yes --pinentry-mode loopback --passphrase %S -o %s --decrypt %s"
-		      password (untilde FN) tmp-gpg)))))
-       (cons (clog :error "failed to encrypt %s to %s!" (local/all) remote/files) "make failed")
-(rm tmp-gpg)))))
+(let* ((gpg-str (format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --decrypt %s" password (untilde FN) (concat (remote-directory) XYZ ".gpg")))
+       (result (shell-command gpg-str)))
+(clog :debug gpg-str); for debugging, dangerous – shows passwords, to be erased!!!
+(cons (= 0 result) result)))
 
 (defun safe-dired-delete (FN)
   (condition-case err (cons t (funcall DDF FN "always"))

@@ -1,19 +1,25 @@
 OFNs = cloud 2
 ORGs = $(addsuffix .org, $(OFNs))
-# ← I should try removing "cl" from this list
+EMACS = emacs -q --no-site-file --batch
 
 all: README.md $(addprefix generated/from/, $(ORGs)) test
 
-test: packaged/cloud.el generated/from/cloud.org generated/tests/meso.el generated/tests/macro.el generated/tests/micro.el
+test: micro meso macro
+
+micro: packaged/cloud.el generated/from/cloud.org generated/tests/micro.el
 	@echo "\n-= Testing on MICRO scale: =-\n"
-	emacs -q --no-site-file --batch -l ert  -l goodies/start.el  -l $< -l generated/tests/micro.el -f ert-run-tests-batch-and-exit
+	$(EMACS) -l goodies/start.el -l $< -l generated/tests/micro.el -f ert-run-tests-batch-and-exit
 	@echo "\n`date '+%m/%d %H:%M'` MICRO TESTS PASSED :)\n"
-	@echo "\n-= Testing on MESO scale: =-\n"
-	emacs -q --no-site-file --batch -l ert  -l goodies/start.el  -l $< -l generated/tests/meso.el -f ert-run-tests-batch-and-exit
-	@echo "\n`date '+%m/%d %H:%M'` MESO TESTS PASSED :)\n"
+
+macro: packaged/cloud.el generated/from/cloud.org generated/tests/meso.el generated/tests/macro.el
 	@echo "\n-= Testing on MACRO scale: =-\n"
-	emacs -q --no-site-file --batch -l ert  -l goodies/start.el  -l $< -l generated/tests/macro.el -f ert-run-tests-batch-and-exit
+	$(EMACS) -l goodies/start.el -l $< -l generated/tests/macro.el -f ert-run-tests-batch-and-exit
 	@echo "\n`date '+%m/%d %H:%M'` MACRO TESTS PASSED :)\n"
+
+meso: packaged/cloud.el generated/from/cloud.org generated/tests/meso.el
+	@echo "\n-= Testing on MESO scale: =-\n"
+	$(EMACS) -l goodies/start.el -l $< -l generated/tests/meso.el  -f ert-run-tests-batch-and-exit
+	@echo "\n`date '+%m/%d %H:%M'` MESO TESTS PASSED :)\n"
 
 generated/tests/micro.el: generated/from/cloud.org generated/from/2.org
 	cat generated/micro.el generated/micro-2.el > $@
@@ -21,12 +27,12 @@ generated/tests/micro.el: generated/from/cloud.org generated/from/2.org
 	-@chmod a-x $@
 
 generated/tests/meso.el: generated/from/testing.org
-	cat generated/headers/meso.el generated/meso.el > $@
+	cat generated/headers/tests.el generated/headers/meso.el generated/meso-0.el generated/meso.el > $@
 	-@chgrp tmp $@
 	-@chmod a-x $@
 
 generated/tests/macro.el: generated/from/testing.org
-	cat generated/headers/meso.el generated/macro.el > $@
+	cat generated/headers/tests.el generated/headers/meso.el generated/macro.el > $@
 	-@chgrp tmp $@
 	-@chmod a-x $@
 
@@ -45,7 +51,7 @@ version.org: change-log.org helpers/derive-version.el
 	-@chgrp tmp $@
 
 generated/from/%.org: %.org generated/from/ generated/headers/ generated/tests/
-	echo `emacsclient -e '(progn (load "$(CURDIR)/helpers/derive-version.el") (printangle "$<"))'` | xargs echo > $@
+	emacsclient -e '(progn (load "$(CURDIR)/helpers/derive-version.el") (printangle "$<"))' | xargs echo > $@
 	-@chgrp tmp $@ `cat $@`
 	-@chmod a-x `cat $@`
 
@@ -57,7 +63,7 @@ README.md: README.org
 clean:
 	-rm -r generated version.org
 
-.PHONY: clean quicklisp all git test
+.PHONY: clean quicklisp all git test meso micro macro
 
 %/:
 	[ -d $@ ] || mkdir -p $@

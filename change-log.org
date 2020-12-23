@@ -4,6 +4,9 @@ Change log for the [[https://github.com/chalaev/cloud][cloud synchronizer]].
 No more fountainng with ideas; just making the existing code more reliable.
 Mostly fixing the errors; the ideas are either implemented or postponed for (probably remote) future.
 
+** fixed macroscopic tests
+See [[file:testing.org][testing.org]] for the definition of "macroscopic".
+
 ** adding tests + packaging
 *** 2020-12-15
 1. in [[file:2.org][2.org]]: =if-let-key= and =if-failed=

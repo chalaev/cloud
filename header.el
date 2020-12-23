@@ -18,3 +18,5 @@
 ;;; Code:
 
 ;; (mapcar #'require '(cl epg dired-aux timezone diary-lib subr-x shalaev))
+
+(mapcar #'require '(shalaev))
