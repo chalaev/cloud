@@ -81,6 +81,34 @@ root-dir is (optional, might be nil) root directory for this host"
 (let((remote-files-3(directory-files remote-directory nil "...\...." t)))
 (clog :info "after syncying there are %d files in the remote diredtory: %s" (length remote-files-3) (together remote-files-3))
 (should (< (length remote-files-2) (length remote-files-3))))))))
+
+(defun file-mtime(FN &optional t0)
+(when(file-exists-p FN)
+(round(float-time(time-subtract(aref(get-file-properties* FN) mtime) (or t0 '(0 0)))))))
+
+(ert-deftest save-then-upload()
+"uploading previously updated file that was clouded before"
+(one-virgin-host nil
+(should(file-exists-p(untilde file-1a)))
+(cloud-add file-1a)
+(let((FR(cloud-locate-FN file-1a))
+     (t0 (aref (get-file-properties* file-1a) mtime)))
+(should FR)
+(let((CN(aref FR cipher)))
+(should CN)
+(let((gpg-FN (concat (remote-directory) CN ".gpg")))
+(should(not(file-exists-p gpg-FN)))
+(cloud-sync)
+(should(file-exists-p gpg-FN))
+(let((t1 (file-mtime gpg-FN t0))); all times are relative to t0
+(should(< 0 t1))
+(clog :info "touch 'now + 1 sec' %s" file-1a) (set-file-times (untilde file-1a) (time-add (current-time) 5))
+(touch (untilde file-1a)); as if we saved the changes to file-1a in emacs
+(let((t2 (file-mtime file-1a t0)))
+(should(< t1 t2))
+(cloud-sync)
+(let((t3 (file-mtime gpg-FN t0)))
+(should(< t1 t3))))))))))
 (ert-deftest cloud-init()
    "just check that non-empty config file is created during the first run"
 (one-virgin-host nil

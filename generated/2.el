@@ -50,7 +50,8 @@ because "
 	DB-rec)))
 
 (defun get-file-properties (FN)
-  (or (cloud-locate-FN FN) (get-file-properties* (file-chase-links FN))))
+(when FN
+  (or (cloud-locate-FN FN) (get-file-properties* (file-chase-links FN)))))
 
 (defun cip-ext (FN)
 "extension of encrypted file based on the original name"

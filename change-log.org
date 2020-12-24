@@ -6,6 +6,9 @@ Mostly fixing the errors; the ideas are either implemented or postponed for (pro
 
 ** fixed macroscopic tests
 See [[file:testing.org][testing.org]] for the definition of "macroscopic".
+*** 2020-12-24
+1. fixed =cloud-forget-file=
+2. added generated/tests/{[[file:generated/tests/micro.log][micro]],[[file:generated/tests/meso.log][meso]],[[file:generated/tests/macro.log][macro]]}.log
 
 ** adding tests + packaging
 *** 2020-12-15

@@ -3,7 +3,7 @@
 ;; Copyright (C) 2020 Oleg Shalaev <oleg@chalaev.com>
 
 ;; Author:     Oleg Shalaev <oleg@chalaev.com>
-;; Version:    1.4.0
+;; Version:    1.4.1
 
 ;; Package-Requires: (cl epg dired-aux timezone diary-lib subr-x shalaev)
 ;; Keywords:   syncronization, cloud, gpg, encryption
@@ -134,8 +134,9 @@
 
 (defun cloud-locate-FN (FN)
   "find file by (true) name"
+(when FN  
   (find (file-chase-links FN) file-DB :key #'plain-name
-	:test #'(lambda(x y)(string= (tilde x) (tilde y)))))
+	:test #'(lambda(x y)(string= (tilde x) (tilde y))))))
 
 (defun cloud-locate-CN (name)
   "find file by (ciper) name"
@@ -242,7 +243,8 @@ because "
 	DB-rec)))
 
 (defun get-file-properties (FN)
-  (or (cloud-locate-FN FN) (get-file-properties* (file-chase-links FN))))
+(when FN
+  (or (cloud-locate-FN FN) (get-file-properties* (file-chase-links FN)))))
 
 (defun cip-ext (FN)
 "extension of encrypted file based on the original name"
@@ -357,9 +359,6 @@ file-blacklist
 
 (defvar action-IDs '(i-forget i-delete i-rename i-host-add i-host-forget i-share))
 (let ((i 0)) (dolist (AI action-IDs) (setf i (1+ (set AI i)))))
-
-(unless (boundp 'DRF) (defvar DRF (indirect-function (symbol-function 'dired-rename-file)) "original dired-rename-file function"))
-(unless (boundp 'DDF) (defvar DDF (indirect-function (symbol-function 'dired-delete-file)) "original dired-delete-file function"))
 ;; -*-  mode: Emacs-Lisp; lexical-binding: t; -*-
 (defun local-dir() (need-dir emacs-d "cloud"))
 (defun local/host/() (need-dir (local-dir) localhost))
@@ -407,7 +406,7 @@ file-blacklist
 
 (defun read-conf* (FN)
   "reads configuration file"
-(with-temp-buffer(if-failed (safe-insert-file FN) "read-conf* failed"
+(with-temp-buffer(if-failed(safe-insert-file FN) "read-conf* failed"
 (let (res)
 (while-let(str) (< 0 (length (setf str (read-line))))
      (if (string-match "^\\(\\ca+\\)=\\(\\ca+\\)$" str)
@@ -612,7 +611,7 @@ CF)))))
 (upload CF)))))))
 t)))))
 
-(defun touch (FN)
+(defun touch(FN)
 "called when the file named FN is changed"
 (when (and FN (stringp FN))
   (when-let ((file-data (cloud-locate-FN FN)))
@@ -803,7 +802,7 @@ password (cloud-mk) (cloud-mk))
 
 (defun cloud-sync()
 (interactive)
-(let ((ok t))
+(let((ok t))
 
 (defun do-make()
 (set-file-times (local/all) (current-time))
@@ -815,7 +814,6 @@ password (cloud-mk) (cloud-mk))
 FAILED with error(s): %s" (cat-file(untilde(cloud-mk))) (cat-file(concat(untilde(cloud-mk))".log")))
 (rm (untilde(cloud-mk)))
   (reset-Makefile))))
-
 (ifn (cloud-connected-p) (cons (clog :warning "refuse to sync because remote directory not mounted") :network)
 
 (if-failed (directory-lock (lock-dir) (format "%s
@@ -886,13 +884,10 @@ nil (local/log) t)
 (apply #'concat (mapcar #'(lambda(arg) (format "%S " (tilde arg))) (aref action i-args))); 4. [arguments+] (several columns),
 (apply #'concat (mapcar #'(lambda(HN) (format "%S " HN)) (aref action i-hostnames))))); 5. hostnames, where the action has to be performed (several columns).
 
-(defun dired-delete-file (FN &optional dirP TRASH)
-  (let ((FN (tilde FN)))
-(when (car    
-       (condition-case err (cons t (funcall DDF FN dirP TRASH))
-	 (file-error (clog :error "in DDF: %s" (error-message-string err)))))
-  (cons t (and (cloud-forget-recursive FN)
-	       (new-action i-delete FN))))))
+(require 'nadvice)
+;; (advice-remove #'dired-delete-file 'dired-delete-file@uncloud)
+(define-advice dired-delete-file (:after (FN) uncloud)
+  (and (cloud-forget FN) (new-action i-delete FN)))
 
 (defun cloud-rm (args)
 (let ((ok (cloud-forget-many args)))
@@ -959,7 +954,7 @@ ok))
 (let ((result
 (or
  (member FN file-blacklist) 
- (string-match (rx (or "tmp" "/old/")) FN)
+ (string-match (rx (or "tmp" "/old/" "/.git/")) FN)
  (string-match (concat ~ "\\.") (untilde FN))
  (member (file-name-extension FN) junk-extensions)
  (backup-file-name-p FN)
@@ -970,7 +965,7 @@ ok))
    (when file-rec
      (or
       (member (aref file-rec gname) '("tmp"))
-      (< 1000000 (aref file-rec size))))))))
+      (< 1048000 (aref file-rec size))))))))
   (cons result file-rec)))
 
 (defun white-p(FN &optional file-rec)
@@ -978,6 +973,7 @@ ok))
 (cons (member (aref file-rec gname) '("important" "keepOneYear" "keepTwoYears" "keepThreeYears")) file-rec))
 
 (defun add-file(FN &optional file-rec)
+(when FN
 (let ((FN (untilde (file-chase-links FN))))
 (unless (cloud-locate-FN FN)
 (ifn (file-directory-p FN)
@@ -1004,33 +1000,29 @@ ok))
 (not
 (let ((r (black-p FN FR))) (setf FR (cdr r)) (car r))))
 (add-file FN FR)
-(clog :debug "not auto-clouding %s" FN))))))))))
+(clog :debug "not auto-clouding %s" FN)))))))))))
 
 (defun auto-add-file(FN &optional file-rec)
 "when the file is clouded automatically"
  (unless (car(black-p FN file-rec)) (add-file FN file-rec)) t)
 
-(defun cloud-forget-file (FN)
-(clog :debug "cloud-forget-file (%s)" FN)
-  (needs ((DB-rec (cloud-locate-FN FN); or (old-cloud-locate-FN FN))
+(defun cloud-forget-file(FN)
+  (needs ((DB-rec (cloud-locate-FN FN)
  (clog :warning "forget: doing nothing since %s is not clouded" FN))
           (CEXT (cip-ext FN))
-	  (cloud-FN (concat (remote-directory) (aref DB-rec cipher) CEXT) (clog :error "in DB entry for %s" FN)))
+	  (cloud-FN (concat(remote-directory) (aref DB-rec cipher) CEXT)))
 (cancel-pending-upload FN)
 
 (when (string= CEXT ".png")
-(clog :debug "forgetting password for %s" FN)
   (forget-password (aref DB-rec cipher)))
 
 (drop file-DB DB-rec)
 (push FN removed-files)
-(if (car (safe-dired-delete cloud-FN))
-  (clog :info "erased %s" cloud-FN)
-  (clog :warning "could not erase %s" cloud-FN))
- t))
+(let((ok t))
+(if-failed(safe-dired-delete cloud-FN) '("could not erase %s" cloud-FN)
+(list ok)))))
 
 (defun cloud-forget-recursive(FN)
-(clog :debug "cloud-forget-recursive(%s)" FN)
 (new-action i-forget FN)
 (dolist (sub-FN (mapcar #'plain-name (contained-in FN)))
   (cloud-forget-file sub-FN))

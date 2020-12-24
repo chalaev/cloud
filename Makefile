@@ -4,22 +4,22 @@ EMACS = emacs -q --no-site-file --batch
 
 all: README.md $(addprefix generated/from/, $(ORGs)) test
 
-test: micro meso macro
+test: generated/tests/micro.log generated/tests/meso.log generated/tests/macro.log
 
-micro: packaged/cloud.el generated/from/cloud.org generated/tests/micro.el
+generated/tests/micro.log: packaged/cloud.el generated/from/cloud.org generated/tests/micro.el
 	@echo "\n-= Testing on MICRO scale: =-\n"
-	$(EMACS) -l goodies/start.el -l $< -l generated/tests/micro.el -f ert-run-tests-batch-and-exit
-	@echo "\n`date '+%m/%d %H:%M'` MICRO TESTS PASSED :)\n"
+	$(EMACS) -l goodies/start.el -l $< -l generated/tests/micro.el -f ert-run-tests-batch-and-exit 2> $@
+	@echo "\n`date '+%m/%d %H:%M'` MICRO TESTS PASSED :) -- see $@\n"
 
-macro: packaged/cloud.el generated/from/cloud.org generated/tests/meso.el generated/tests/macro.el
+generated/tests/macro.log: packaged/cloud.el generated/from/cloud.org generated/tests/meso.el generated/tests/macro.el
 	@echo "\n-= Testing on MACRO scale: =-\n"
-	$(EMACS) -l goodies/start.el -l $< -l generated/tests/macro.el -f ert-run-tests-batch-and-exit
-	@echo "\n`date '+%m/%d %H:%M'` MACRO TESTS PASSED :)\n"
+	$(EMACS) -l goodies/start.el -l $< -l generated/tests/macro.el -f ert-run-tests-batch-and-exit 2> $@
+	@echo "\n`date '+%m/%d %H:%M'` MACRO TESTS PASSED :) -- see $@\n"
 
-meso: packaged/cloud.el generated/from/cloud.org generated/tests/meso.el
+generated/tests/meso.log: packaged/cloud.el generated/from/cloud.org generated/tests/meso.el
 	@echo "\n-= Testing on MESO scale: =-\n"
-	$(EMACS) -l goodies/start.el -l $< -l generated/tests/meso.el  -f ert-run-tests-batch-and-exit
-	@echo "\n`date '+%m/%d %H:%M'` MESO TESTS PASSED :)\n"
+	$(EMACS) -l goodies/start.el -l $< -l generated/tests/meso.el  -f ert-run-tests-batch-and-exit 2> $@
+	@echo "\n`date '+%m/%d %H:%M'` MESO TESTS PASSED :) -- see $@\n"
 
 generated/tests/micro.el: generated/from/cloud.org generated/from/2.org
 	cat generated/micro.el generated/micro-2.el > $@
@@ -46,8 +46,8 @@ packaged/cloud.el: version.org generated/from/cloud.org generated/from/2.org pac
 
 version.org: change-log.org helpers/derive-version.el
 	emacsclient -e '(progn (load "$(CURDIR)/helpers/derive-version.el") (format-version "$<"))' | xargs echo > $@
-	echo "← generated `date '+%m/%d %H:%M'` from [[file:$<][$<]]" >> $@
-	echo "by [[file:helpers/derive-version.el][derive-version.el]]" >> $@
+	@echo "← generated `date '+%m/%d %H:%M'` from [[file:$<][$<]]" >> $@
+	@echo "by [[file:helpers/derive-version.el][derive-version.el]]" >> $@
 	-@chgrp tmp $@
 
 generated/from/%.org: %.org generated/from/ generated/headers/ generated/tests/

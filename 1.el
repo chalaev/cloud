@@ -88,8 +88,9 @@
 
 (defun cloud-locate-FN (FN)
   "find file by (true) name"
+(when FN  
   (find (file-chase-links FN) file-DB :key #'plain-name
-	:test #'(lambda(x y)(string= (tilde x) (tilde y)))))
+	:test #'(lambda(x y)(string= (tilde x) (tilde y))))))
 
 (defun cloud-locate-CN (name)
   "find file by (ciper) name"

@@ -1,0 +1,17 @@
+Running 6 tests (2020-12-24 13:07:45-0500)
+   passed  1/6  dec-make-stanza
+   passed  2/6  enc-make-stanza
+   passed  3/6  format-conf
+:info 13:07:45 IGNORE the following :error log message which is part of a test:
+:error 13:07:45 tutto cazzo
+because it’s too bad!
+:info 13:07:45 IGNORE the following :error log message which is part of a test:
+:error 13:07:45 could not encrypt aaa.txt to bbb.gpg
+because there is a big problem
+   passed  4/6  if-failed
+   passed  5/6  if-let-key\.1
+   passed  6/6  if-let-key\.2
+
+Ran 6 tests, 6 results as expected (2020-12-24 13:07:45-0500)
+
+:debug 13:07:45 flushing comments before quiting emacs

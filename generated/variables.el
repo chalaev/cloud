@@ -60,6 +60,3 @@ file-blacklist
 
 (defvar action-IDs '(i-forget i-delete i-rename i-host-add i-host-forget i-share))
 (let ((i 0)) (dolist (AI action-IDs) (setf i (1+ (set AI i)))))
-
-(unless (boundp 'DRF) (defvar DRF (indirect-function (symbol-function 'dired-rename-file)) "original dired-rename-file function"))
-(unless (boundp 'DDF) (defvar DDF (indirect-function (symbol-function 'dired-delete-file)) "original dired-delete-file function"))

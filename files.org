@@ -64,6 +64,12 @@ To see more messages, set =*log-level*=  to =:debug= (zero) level:
 (setf *log-level* 0)
 #+END_SRC
 
+** [[file:generated/make.log][make.log]]
+[[file:generated/make.log][make.log]] contains typical output of successful =make=.
+
+** Test logs
+Three files generated/tests/{[[file:generated/tests/micro.log][micro]],[[file:generated/tests/meso.log][meso]],[[file:generated/tests/macro.log][macro]]}.log contain output from [[file:testing.org][multi-scaled testing]].
+
 * Other files
 1. [[file:config][~/.emacs.d/cloud/`hostname`/config]] (contains gpg password – don't cloud it!) Created by the user or by the code at the very first code run.
 2. [[file:make-files/1.mk][~/.emacs.d/cloud/cloud.mk]] is the last GNU make file created during the previous =(cloud-sync)=

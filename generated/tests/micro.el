@@ -1,4 +1,4 @@
-;; -*-  mode: Emacs-Lisp; lexical-binding: t; -*-
+;; -*-  lexical-binding: t; -*-
 ;; These are "microscopic" tests, on microscopic scale: they test single functions in a stabdard environment
 ;; If a "microscopic" test fails, it generally makes no sence to run larger-scale (mesoscopic and mesoscopic) tests.
 (require 'ert)

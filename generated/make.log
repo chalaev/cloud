@@ -2,11 +2,9 @@ cloud> make
 [ -d generated/from/ ] || mkdir -p generated/from/
 [ -d generated/headers/ ] || mkdir -p generated/headers/
 [ -d generated/tests/ ] || mkdir -p generated/tests/
-emacsclient -e '(progn (load "/home/shalaev/projects/cloud/helpers/derive-version.el") (printangle "cloud.org"))' | xargs echo > generated/from/cloud.org
-emacsclient -e '(progn (load "/home/shalaev/projects/cloud/helpers/derive-version.el") (printangle "2.org"))' | xargs echo > generated/from/2.org
-emacsclient -e '(progn (load "/home/shalaev/projects/cloud/helpers/derive-version.el") (format-version "change-log.org"))' | xargs echo > version.org
-echo "← generated `date '+%m/%d %H:%M'` from [[file:change-log.org][change-log.org]]" >> version.org
-echo "by [[file:helpers/derive-version.el][derive-version.el]]" >> version.org
+emacsclient -e '(progn (load "/home/shalaev/Private/work/cloud/helpers/derive-version.el") (printangle "cloud.org"))' | xargs echo > generated/from/cloud.org
+emacsclient -e '(progn (load "/home/shalaev/Private/work/cloud/helpers/derive-version.el") (printangle "2.org"))' | xargs echo > generated/from/2.org
+emacsclient -e '(progn (load "/home/shalaev/Private/work/cloud/helpers/derive-version.el") (format-version "change-log.org"))' | xargs echo > version.org
 sed "s/the-version/`head -n1 version.org`/" header.el > packaged/cloud.el
 cat 0.el 1.el generated/2.el generated/variables.el generated/functions.el >> packaged/cloud.el
 echo "(provide 'cloud)" >> packaged/cloud.el
@@ -16,167 +14,27 @@ cat generated/micro.el generated/micro-2.el > generated/tests/micro.el
 
 -= Testing on MICRO scale: =-
 
-emacs -q --no-site-file --batch -l goodies/start.el -l packaged/cloud.el -l generated/tests/micro.el -f ert-run-tests-batch-and-exit
-Running 6 tests (2020-12-22 18:50:55-0500)
-   passed  1/6  dec-make-stanza
-   passed  2/6  enc-make-stanza
-   passed  3/6  format-conf
-:info 18:50:55 IGNORE the following :error log message which is part of a test:
-:error 18:50:55 tutto cazzo
-because it’s too bad!
-:info 18:50:55 IGNORE the following :error log message which is part of a test:
-:error 18:50:55 could not encrypt aaa.txt to bbb.gpg
-because there is a big problem
-   passed  4/6  if-failed
-   passed  5/6  if-let-key\.1
-   passed  6/6  if-let-key\.2
+emacs -q --no-site-file --batch -l goodies/start.el -l packaged/cloud.el -l generated/tests/micro.el -f ert-run-tests-batch-and-exit 2> generated/tests/micro.log
 
-Ran 6 tests, 6 results as expected (2020-12-22 18:50:55-0500)
+12/24 10:05 MICRO TESTS PASSED :)
 
-:debug 18:50:55 flushing comments before quiting emacs
-
-12/22 18:50 MICRO TESTS PASSED :)
-
-emacsclient -e '(progn (load "/home/shalaev/projects/cloud/helpers/derive-version.el") (printangle "testing.org"))' | xargs echo > generated/from/testing.org
+emacsclient -e '(progn (load "/home/shalaev/Private/work/cloud/helpers/derive-version.el") (printangle "testing.org"))' | xargs echo > generated/from/testing.org
 cat generated/headers/tests.el generated/headers/meso.el generated/meso-0.el generated/meso.el > generated/tests/meso.el
 
 -= Testing on MESO scale: =-
 
-emacs -q --no-site-file --batch -l goodies/start.el -l packaged/cloud.el -l generated/tests/meso.el  -f ert-run-tests-batch-and-exit
-Running 3 tests (2020-12-22 18:50:56-0500)
-:info 18:50:56 home directory(~)= /tmp/cloud-test.root.IV1miE/user/, remote-directory= /tmp/cloud-test.root.IV1miE/remote/, local-dir= /tmp/cloud-test.root.IV1miE/user/.emacs.d/cloud/
-:info 18:50:56 will use (remote) unused directory /tmp/cloud-test.root.IV1miE/remote/ as a cloud
-:info 18:50:56 saved local configuration in /tmp/cloud-test.root.IV1miE/user/.emacs.d/cloud/
-:info 18:50:56 before syncying there are 0 files in the remote diredtory: 
-(Shell command succeeded with no output)
-:debug 18:50:56 gpg --batch --yes --pinentry-mode loopback --passphrase "12345" -o /tmp/cloud-test.root.IV1miE/remote/Nbe.gpg --symmetric /tmp/cloud-test.root.IV1miE/user/.emacs.d/cloud/kalinin/all
-(Shell command succeeded with no output)
-:info 18:50:57 done syncing
-:info 18:50:57 after syncying there are 3 files in the remote diredtory: Nbe.gpg history 3Gs.gpg
-:info 18:50:57 will now cloud /tmp/cloud-test.root.IV1miE/user/dir-1.e01UKh/tmp-2.w9aUDy and sync
-(Shell command succeeded with no output)
-:debug 18:50:58 gpg --batch --yes --pinentry-mode loopback --passphrase "12345" -o /tmp/cloud-test.root.IV1miE/remote/Nbe.gpg --symmetric /tmp/cloud-test.root.IV1miE/user/.emacs.d/cloud/kalinin/all
-(Shell command succeeded with no output)
-:info 18:50:59 done syncing
-:info 18:50:59 after syncying there are 4 files in the remote diredtory: Nbe.gpg history jPL.gpg 3Gs.gpg
-:info 18:50:59 cleaning up /tmp/cloud-test.root.IV1miE/
-:info 18:50:59 erasing /tmp/cloud-test.root.IV1miE/
-   passed  1/3  cloud-and-upload
-:info 18:50:59 home directory(~)= /tmp/cloud-test.root.psjOyt/user/, remote-directory= /tmp/cloud-test.root.psjOyt/remote/, local-dir= /tmp/cloud-test.root.psjOyt/user/.emacs.d/cloud/
-:info 18:50:59 will use (remote) unused directory /tmp/cloud-test.root.psjOyt/remote/ as a cloud
-:info 18:50:59 saved local configuration in /tmp/cloud-test.root.psjOyt/user/.emacs.d/cloud/
-:info 18:50:59 will use (remote) unused directory /tmp/cloud-test.root.psjOyt/remote/ as a cloud
-:info 18:50:59 saved local configuration in /tmp/cloud-test.root.psjOyt/user/.emacs.d/cloud/
-:info 18:50:59 deftest cloud-init: config file size = 444 bytes
-:info 18:50:59 cleaning up /tmp/cloud-test.root.psjOyt/
-:info 18:50:59 erasing /tmp/cloud-test.root.psjOyt/
-   passed  2/3  cloud-init
-:info 18:50:59 home directory(~)= /tmp/cloud-test.root.4ciS5A/user/, remote-directory= /tmp/cloud-test.root.4ciS5A/remote/, local-dir= /tmp/cloud-test.root.4ciS5A/user/.emacs.d/cloud/
-:info 18:50:59 will use (remote) unused directory /tmp/cloud-test.root.4ciS5A/remote/ as a cloud
-:info 18:50:59 saved local configuration in /tmp/cloud-test.root.4ciS5A/user/.emacs.d/cloud/
-:info 18:50:59 will use (remote) unused directory /tmp/cloud-test.root.4ciS5A/remote/ as a cloud
-:info 18:50:59 saved local configuration in /tmp/cloud-test.root.4ciS5A/user/.emacs.d/cloud/
-:info 18:50:59 read-write-conf: (local/host/conf) => /tmp/cloud-test.root.4ciS5A/user/.emacs.d/cloud/kalinin/config
-:info 18:50:59 
-Here is the generated config file: ==>
-:info 18:50:59 remote-directory=/tmp/cloud-test.root.4ciS5A/remote/
-:info 18:50:59 junk-extensions=ac3 afm aux avi bak bbl blg brf bst bz2 cache chm cp cps dat deb dv dvi eps fb2 fls fn gif gpx gz idx ilg img ind iso jpeg jpg ky log m m2v md mjpeg mkv mov mp3 mp4 mpg ogg ogm out part pbm pdf pfb pg pgm png pnm pod ps rar raw segments sfd tbz tga tgz tif tiff toc tp vob vr wav woff xcf xml xz zip 
-:info 18:50:59 ignored-dirs=/tmp/ 
-:info 18:50:59 remote/files=JlJ
-:info 18:50:59 number-of-CPU-cores=1
-:info 18:50:59 password=12345
-:info 18:50:59 <== end of config file
+emacs -q --no-site-file --batch -l goodies/start.el -l packaged/cloud.el -l generated/tests/meso.el  -f ert-run-tests-batch-and-exit 2> generated/tests/meso.log
 
-:info 18:50:59 
-Here is my artificial config file: ==>
-:info 18:50:59 remote-directory=/mnt/remote/galaxy/
-:info 18:50:59 junk-extensions=abc def 
-:info 18:50:59 ignored-dirs=/trash/ 
-:info 18:50:59 remote/files=QWERTY
-:info 18:50:59 number-of-CPU-cores=1
-:info 18:50:59 password=myDogsName
-:info 18:50:59 <== end of config file
-
-:info 18:50:59 cleaning up /tmp/cloud-test.root.4ciS5A/
-:info 18:50:59 erasing /tmp/cloud-test.root.4ciS5A/
-   passed  3/3  read-write-conf
-
-Ran 3 tests, 3 results as expected (2020-12-22 18:50:59-0500)
-
-:debug 18:50:59 flushing comments before quiting emacs
-
-12/22 18:50 MESO TESTS PASSED :)
+12/24 10:05 MESO TESTS PASSED :)
 
 cat generated/headers/tests.el generated/headers/meso.el generated/macro.el > generated/tests/macro.el
 
 -= Testing on MACRO scale: =-
 
-emacs -q --no-site-file --batch -l goodies/start.el -l packaged/cloud.el -l generated/tests/macro.el -f ert-run-tests-batch-and-exit
-Running 2 tests (2020-12-22 18:50:59-0500)
-:info 18:50:59 home directory(~)= /tmp/cloud-test.PAIR-root.iHGHPW/A/user/, remote-directory= /tmp/cloud-test.PAIR-remote.pRHHan/, local-dir= /tmp/cloud-test.PAIR-root.iHGHPW/A/user/.emacs.d/cloud/
-:info 18:50:59 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.pRHHan/ as a cloud
-:info 18:50:59 saved local configuration in /tmp/cloud-test.PAIR-root.iHGHPW/A/user/.emacs.d/cloud/
-:info 18:50:59 home directory(~)= /tmp/cloud-test.PAIR-root.iHGHPW/B/user/, remote-directory= /tmp/cloud-test.PAIR-remote.pRHHan/, local-dir= /tmp/cloud-test.PAIR-root.iHGHPW/B/user/.emacs.d/cloud/
-:info 18:50:59 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.pRHHan/ as a cloud
-:info 18:50:59 saved local configuration in /tmp/cloud-test.PAIR-root.iHGHPW/B/user/.emacs.d/cloud/
-:info 18:50:59 host A> remote/files= hZV, password= 12345, HOME= /tmp/cloud-test.PAIR-root.iHGHPW/A/user
+emacs -q --no-site-file --batch -l goodies/start.el -l packaged/cloud.el -l generated/tests/macro.el -f ert-run-tests-batch-and-exit 2> generated/tests/macro.log
 
-(Shell command succeeded with no output)
-:debug 18:51:00 gpg --batch --yes --pinentry-mode loopback --passphrase "12345" -o /tmp/cloud-test.PAIR-remote.pRHHan/hZV.gpg --symmetric /tmp/cloud-test.PAIR-root.iHGHPW/A/user/.emacs.d/cloud/kalinin/all
-(Shell command succeeded with no output)
-:info 18:51:00 done syncing
-(Shell command succeeded with no output)
-:debug 18:51:00 gpg --batch --yes --pinentry-mode loopback --passphrase "12345" -o /tmp/cloud-test.PAIR-remote.pRHHan/hZV.gpg --symmetric /tmp/cloud-test.PAIR-root.iHGHPW/A/user/.emacs.d/cloud/kalinin/all
-(Shell command succeeded with no output)
-:info 18:51:01 done syncing
-:info 18:51:01 host B> remote/files= hZV, password= 12345, HOME= /tmp/cloud-test.PAIR-root.iHGHPW/B/user
-
-:debug 18:51:01 updating /tmp/cloud-test.PAIR-root.iHGHPW/B/user/.emacs.d/cloud/kalinin/all obsoleted by /tmp/cloud-test.PAIR-remote.pRHHan/hZV.gpg
-:debug 18:51:02 gpg --batch --yes --pinentry-mode loopback --passphrase "12345" -o /tmp/cloud-test.PAIR-root.iHGHPW/B/user/.emacs.d/cloud/kalinin/all --decrypt /tmp/cloud-test.PAIR-remote.pRHHan/hZV.gpg
-(Shell command succeeded with no output)
-:debug 18:51:02 gpg --batch --yes --pinentry-mode loopback --passphrase "12345" -o /tmp/cloud-test.PAIR-remote.pRHHan/hZV.gpg --symmetric /tmp/cloud-test.PAIR-root.iHGHPW/B/user/.emacs.d/cloud/kalinin/all
-(Shell command succeeded with no output)
-:info 18:51:03 done syncing
-:info 18:51:03 cleaning up /tmp/cloud-test.PAIR-root.iHGHPW/B/
-:info 18:51:03 erasing /tmp/cloud-test.PAIR-root.iHGHPW/B/
-   passed  1/2  cloud-sync-1
-:info 18:51:03 home directory(~)= /tmp/cloud-test.PAIR-root.CSwZgw/A/user/, remote-directory= /tmp/cloud-test.PAIR-remote.Bcg9Ie/, local-dir= /tmp/cloud-test.PAIR-root.CSwZgw/A/user/.emacs.d/cloud/
-:info 18:51:03 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.Bcg9Ie/ as a cloud
-:info 18:51:03 saved local configuration in /tmp/cloud-test.PAIR-root.CSwZgw/A/user/.emacs.d/cloud/
-:info 18:51:03 home directory(~)= /tmp/cloud-test.PAIR-root.CSwZgw/B/user/, remote-directory= /tmp/cloud-test.PAIR-remote.Bcg9Ie/, local-dir= /tmp/cloud-test.PAIR-root.CSwZgw/B/user/.emacs.d/cloud/
-:info 18:51:03 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.Bcg9Ie/ as a cloud
-:info 18:51:03 saved local configuration in /tmp/cloud-test.PAIR-root.CSwZgw/B/user/.emacs.d/cloud/
-:info 18:51:03 host A> remote/files= TOU, password= 12345, HOME= /tmp/cloud-test.PAIR-root.CSwZgw/A/user
-
-(Shell command succeeded with no output)
-:debug 18:51:04 gpg --batch --yes --pinentry-mode loopback --passphrase "12345" -o /tmp/cloud-test.PAIR-remote.Bcg9Ie/TOU.gpg --symmetric /tmp/cloud-test.PAIR-root.CSwZgw/A/user/.emacs.d/cloud/kalinin/all
-(Shell command succeeded with no output)
-:info 18:51:04 done syncing
-:info 18:51:04 touch ’now + 5 sec’ /tmp/cloud-test.PAIR-root.CSwZgw/A/user/file-1a.dat
-(Shell command succeeded with no output)
-:debug 18:51:05 gpg --batch --yes --pinentry-mode loopback --passphrase "12345" -o /tmp/cloud-test.PAIR-remote.Bcg9Ie/TOU.gpg --symmetric /tmp/cloud-test.PAIR-root.CSwZgw/A/user/.emacs.d/cloud/kalinin/all
-(Shell command succeeded with no output)
-:info 18:51:05 done syncing
-:info 18:51:05 host B> remote/files= TOU, password= 12345, HOME= /tmp/cloud-test.PAIR-root.CSwZgw/B/user
-
-:debug 18:51:05 updating /tmp/cloud-test.PAIR-root.CSwZgw/B/user/.emacs.d/cloud/kalinin/all obsoleted by /tmp/cloud-test.PAIR-remote.Bcg9Ie/TOU.gpg
-:debug 18:51:06 gpg --batch --yes --pinentry-mode loopback --passphrase "12345" -o /tmp/cloud-test.PAIR-root.CSwZgw/B/user/.emacs.d/cloud/kalinin/all --decrypt /tmp/cloud-test.PAIR-remote.Bcg9Ie/TOU.gpg
-(Shell command succeeded with no output)
-:debug 18:51:07 gpg --batch --yes --pinentry-mode loopback --passphrase "12345" -o /tmp/cloud-test.PAIR-remote.Bcg9Ie/TOU.gpg --symmetric /tmp/cloud-test.PAIR-root.CSwZgw/B/user/.emacs.d/cloud/kalinin/all
-(Shell command succeeded with no output)
-:info 18:51:07 done syncing
-:info 18:51:07 cleaning up /tmp/cloud-test.PAIR-root.CSwZgw/B/
-:info 18:51:07 erasing /tmp/cloud-test.PAIR-root.CSwZgw/B/
-   passed  2/2  cloud-sync-2
-
-Ran 2 tests, 2 results as expected (2020-12-22 18:51:07-0500)
-
-:warning 18:51:07 refuse to sync because remote directory not mounted
-:debug 18:51:07 flushing comments before quiting emacs
-
-12/22 18:51 MACRO TESTS PASSED :)
+12/24 10:06 MACRO TESTS PASSED :)
 
 rm generated/headers/make: unlink: generated/headers/: Is a directory
  generated/from/make: unlink: generated/from/: Is a directory
  generated/tests/make: unlink: generated/tests/: Is a directory
-

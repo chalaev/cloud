@@ -155,7 +155,8 @@ BTW, =(file-exists-p FN)= produces ~nil~ if the file resides in directory with (
 
 #+BEGIN_SRC emacs-lisp :tangle generated/2.el
 (defun get-file-properties (FN)
-  (or (cloud-locate-FN FN) (get-file-properties* (file-chase-links FN))))
+(when FN
+  (or (cloud-locate-FN FN) (get-file-properties* (file-chase-links FN)))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/2.el

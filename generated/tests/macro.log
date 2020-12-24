@@ -1,0 +1,61 @@
+Running 2 tests (2020-12-24 13:07:52-0500)
+:info 13:07:52 home directory(~)= /tmp/cloud-test.PAIR-root.ymBkgt/A/user/, remote-directory= /tmp/cloud-test.PAIR-remote.Uw6Kma/, local-dir= /tmp/cloud-test.PAIR-root.ymBkgt/A/user/.emacs.d/cloud/
+:info 13:07:52 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.Uw6Kma/ as a cloud
+:info 13:07:52 saved local configuration in /tmp/cloud-test.PAIR-root.ymBkgt/A/user/.emacs.d/cloud/
+:info 13:07:52 home directory(~)= /tmp/cloud-test.PAIR-root.ymBkgt/B/user/, remote-directory= /tmp/cloud-test.PAIR-remote.Uw6Kma/, local-dir= /tmp/cloud-test.PAIR-root.ymBkgt/B/user/.emacs.d/cloud/
+:info 13:07:52 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.Uw6Kma/ as a cloud
+:info 13:07:52 saved local configuration in /tmp/cloud-test.PAIR-root.ymBkgt/B/user/.emacs.d/cloud/
+:info 13:07:52 host A> remote/files= VfM, password= 12345, HOME= /tmp/cloud-test.PAIR-root.ymBkgt/A/user
+
+(Shell command succeeded with no output)
+:debug 13:07:53 gpg --batch --yes --pinentry-mode loopback --passphrase "12345" -o /tmp/cloud-test.PAIR-remote.Uw6Kma/VfM.gpg --symmetric /tmp/cloud-test.PAIR-root.ymBkgt/A/user/.emacs.d/cloud/kalinin/all
+(Shell command succeeded with no output)
+:info 13:07:53 done syncing
+(Shell command succeeded with no output)
+:debug 13:07:54 gpg --batch --yes --pinentry-mode loopback --passphrase "12345" -o /tmp/cloud-test.PAIR-remote.Uw6Kma/VfM.gpg --symmetric /tmp/cloud-test.PAIR-root.ymBkgt/A/user/.emacs.d/cloud/kalinin/all
+(Shell command succeeded with no output)
+:info 13:07:54 done syncing
+:info 13:07:54 host B> remote/files= VfM, password= 12345, HOME= /tmp/cloud-test.PAIR-root.ymBkgt/B/user
+
+:debug 13:07:54 updating /tmp/cloud-test.PAIR-root.ymBkgt/B/user/.emacs.d/cloud/kalinin/all obsoleted by /tmp/cloud-test.PAIR-remote.Uw6Kma/VfM.gpg
+:debug 13:07:55 gpg --batch --yes --pinentry-mode loopback --passphrase "12345" -o /tmp/cloud-test.PAIR-root.ymBkgt/B/user/.emacs.d/cloud/kalinin/all --decrypt /tmp/cloud-test.PAIR-remote.Uw6Kma/VfM.gpg
+(Shell command succeeded with no output)
+:debug 13:07:56 gpg --batch --yes --pinentry-mode loopback --passphrase "12345" -o /tmp/cloud-test.PAIR-remote.Uw6Kma/VfM.gpg --symmetric /tmp/cloud-test.PAIR-root.ymBkgt/B/user/.emacs.d/cloud/kalinin/all
+(Shell command succeeded with no output)
+:info 13:07:56 done syncing
+:info 13:07:56 cleaning up /tmp/cloud-test.PAIR-root.ymBkgt/B/
+:info 13:07:56 erasing /tmp/cloud-test.PAIR-root.ymBkgt/B/
+   passed  1/2  cloud-sync-1
+:info 13:07:56 home directory(~)= /tmp/cloud-test.PAIR-root.OKpUoC/A/user/, remote-directory= /tmp/cloud-test.PAIR-remote.ga6tiF/, local-dir= /tmp/cloud-test.PAIR-root.OKpUoC/A/user/.emacs.d/cloud/
+:info 13:07:56 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.ga6tiF/ as a cloud
+:info 13:07:56 saved local configuration in /tmp/cloud-test.PAIR-root.OKpUoC/A/user/.emacs.d/cloud/
+:info 13:07:56 home directory(~)= /tmp/cloud-test.PAIR-root.OKpUoC/B/user/, remote-directory= /tmp/cloud-test.PAIR-remote.ga6tiF/, local-dir= /tmp/cloud-test.PAIR-root.OKpUoC/B/user/.emacs.d/cloud/
+:info 13:07:56 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.ga6tiF/ as a cloud
+:info 13:07:56 saved local configuration in /tmp/cloud-test.PAIR-root.OKpUoC/B/user/.emacs.d/cloud/
+:info 13:07:56 host A> remote/files= 50K, password= 12345, HOME= /tmp/cloud-test.PAIR-root.OKpUoC/A/user
+
+(Shell command succeeded with no output)
+:debug 13:07:57 gpg --batch --yes --pinentry-mode loopback --passphrase "12345" -o /tmp/cloud-test.PAIR-remote.ga6tiF/50K.gpg --symmetric /tmp/cloud-test.PAIR-root.OKpUoC/A/user/.emacs.d/cloud/kalinin/all
+(Shell command succeeded with no output)
+:info 13:07:57 done syncing
+:info 13:07:57 touch ’now + 5 sec’ /tmp/cloud-test.PAIR-root.OKpUoC/A/user/file-1a.dat
+(Shell command succeeded with no output)
+:debug 13:07:58 gpg --batch --yes --pinentry-mode loopback --passphrase "12345" -o /tmp/cloud-test.PAIR-remote.ga6tiF/50K.gpg --symmetric /tmp/cloud-test.PAIR-root.OKpUoC/A/user/.emacs.d/cloud/kalinin/all
+(Shell command succeeded with no output)
+:info 13:07:59 done syncing
+:info 13:07:59 host B> remote/files= 50K, password= 12345, HOME= /tmp/cloud-test.PAIR-root.OKpUoC/B/user
+
+:debug 13:07:59 updating /tmp/cloud-test.PAIR-root.OKpUoC/B/user/.emacs.d/cloud/kalinin/all obsoleted by /tmp/cloud-test.PAIR-remote.ga6tiF/50K.gpg
+:debug 13:07:59 gpg --batch --yes --pinentry-mode loopback --passphrase "12345" -o /tmp/cloud-test.PAIR-root.OKpUoC/B/user/.emacs.d/cloud/kalinin/all --decrypt /tmp/cloud-test.PAIR-remote.ga6tiF/50K.gpg
+(Shell command succeeded with no output)
+:debug 13:08:00 gpg --batch --yes --pinentry-mode loopback --passphrase "12345" -o /tmp/cloud-test.PAIR-remote.ga6tiF/50K.gpg --symmetric /tmp/cloud-test.PAIR-root.OKpUoC/B/user/.emacs.d/cloud/kalinin/all
+(Shell command succeeded with no output)
+:info 13:08:01 done syncing
+:info 13:08:01 cleaning up /tmp/cloud-test.PAIR-root.OKpUoC/B/
+:info 13:08:01 erasing /tmp/cloud-test.PAIR-root.OKpUoC/B/
+   passed  2/2  cloud-sync-2
+
+Ran 2 tests, 2 results as expected (2020-12-24 13:08:01-0500)
+
+:warning 13:08:01 refuse to sync because remote directory not mounted
+:debug 13:08:01 flushing comments before quiting emacs

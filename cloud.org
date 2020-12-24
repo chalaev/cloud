@@ -153,7 +153,7 @@ By default we assume that our configuration parameters have a string value. Ther
   (t (format "%s=%s" CP (symbol-value(intern CP))))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/micro.el :shebang ";; -*-  mode: Emacs-Lisp; lexical-binding: t; -*-"
+#+BEGIN_SRC emacs-lisp :tangle generated/micro.el :shebang ";; -*-  lexical-binding: t; -*-"
 ;; These are "microscopic" tests, on microscopic scale: they test single functions in a stabdard environment
 ;; If a "microscopic" test fails, it generally makes no sence to run larger-scale (mesoscopic and mesoscopic) tests.
 (require 'ert)
@@ -188,7 +188,7 @@ It is possible that this new macro will be later moved into [[https://github.com
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun read-conf* (FN)
   "reads configuration file"
-(with-temp-buffer(if-failed (safe-insert-file FN) "read-conf* failed"
+(with-temp-buffer(if-failed(safe-insert-file FN) "read-conf* failed"
 (let (res)
 (while-let(str) (< 0 (length (setf str (read-line))))
      (if (string-match "^\\(\\ca+\\)=\\(\\ca+\\)$" str)
@@ -685,7 +685,7 @@ At this point we ended up parsing the list of files.
 When the file is saved in emacs (=C-x s=), we mark it so that it is going
 to be uploaded to the cloud when the user calls =cloud-sync= next time:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun touch (FN)
+(defun touch(FN)
 "called when the file named FN is changed"
 (when (and FN (stringp FN))
   (when-let ((file-data (cloud-locate-FN FN)))
@@ -1071,7 +1071,7 @@ We assume that files are changed only within emacs (either edited/saved or remov
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun cloud-sync()
 (interactive)
-(let ((ok t))
+(let((ok t))
 #+END_SRC
 
 Common =do-make= block is used
@@ -1090,13 +1090,6 @@ Common =do-make= block is used
 FAILED with error(s): %s" (cat-file(untilde(cloud-mk))) (cat-file(concat(untilde(cloud-mk))".log")))
 (rm (untilde(cloud-mk)))
   (reset-Makefile))))
-#+END_SRC
-← Probably I should use =start-process= in the future; it is more versatile for elisp than (interactive) =shell-command= or =async-shell-command=.
-(See [[file:learn.org][learn.org]] for =call-process=.)
-
-Even if the cloud was changed by some other hosts, information from the file named =(local/all)= is still valuable (for resolving collissions)
-and must be loaded at start (when =file-DB= is empty):
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (ifn (cloud-connected-p) (cons (clog :warning "refuse to sync because remote directory not mounted") :network)
 #+END_SRC
 Before we start doing whatever with the remote directory (shared among several hosts) let us lock it:
@@ -1104,6 +1097,8 @@ Before we start doing whatever with the remote directory (shared among several h
 (if-failed (directory-lock (lock-dir) (format "%s
 %s" localhost (TS (current-time)))
 #+END_SRC
+Even if the cloud directory was updated by other hosts, information from the file named =(local/all)= is still valuable (for resolving collissions)
+and must be loaded at start (when =file-DB= is empty).
 
 A very special case during the first run: neither =(remote-files)=, nor =(local/all)= exist:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
@@ -1240,15 +1235,6 @@ In this block, every line is has the following fields (columns):
 4. [arguments+] (several columns),
 5. hostnames, where the action has to be performed (several columns).
 
-Since there is no hook on renaming or deleting files, we overwrite dired functions for renaming and deleting;
-their new versions will now contain standard code plus mine.
-
-Storing standard definitions of =dired-rename-file= and =dired-delete-file= in variables ~DRF~ and ~DDF~:
-#+BEGIN_SRC emacs-lisp :tangle generated/variables.el
-(unless (boundp 'DRF) (defvar DRF (indirect-function (symbol-function 'dired-rename-file)) "original dired-rename-file function"))
-(unless (boundp 'DDF) (defvar DDF (indirect-function (symbol-function 'dired-delete-file)) "original dired-delete-file function"))
-#+END_SRC
-
 I had to add the following block in order to avoid automatic clouding of ~.md~ files by the =org-md-export-to-markdown= function:
 #+BEGIN_SRC emacs-lisp
 (unless (boundp 'OEMD) (defvar OEMD (indirect-function (symbol-function 'org-md-export-to-markdown)) "original org-md-export-to-markdown function"))
@@ -1268,15 +1254,12 @@ Now let us write code for each of the following actions:
 4. =cloud-rename= (called when the file/directory is renamed in ~dired~).
 
 ** Delete
-We ovewrite standard emacs =dired-delete-file= function:
+Since there is no hook on renaming or deleting files, we update standard emacs =dired-delete-file= function by [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Advising-Functions.html][adding an advice]]:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun dired-delete-file (FN &optional dirP TRASH)
-  (let ((FN (tilde FN)))
-(when (car    
-       (condition-case err (cons t (funcall DDF FN dirP TRASH))
-	 (file-error (clog :error "in DDF: %s" (error-message-string err)))))
-  (cons t (and (cloud-forget-recursive FN)
-	       (new-action i-delete FN))))))
+(require 'nadvice)
+;; (advice-remove #'dired-delete-file 'dired-delete-file@uncloud)
+(define-advice dired-delete-file (:after (FN) uncloud)
+  (and (cloud-forget FN) (new-action i-delete FN)))
 #+END_SRC
 where ~FN~ might be a directory.
 
@@ -1368,7 +1351,7 @@ Pending upgrades for =cloud-add=:
 (let ((result
 (or
  (member FN file-blacklist) 
- (string-match (rx (or "tmp" "/old/")) FN)
+ (string-match (rx (or "tmp" "/old/" "/.git/")) FN)
  (string-match (concat ~ "\\.") (untilde FN))
  (member (file-name-extension FN) junk-extensions)
  (backup-file-name-p FN)
@@ -1379,7 +1362,7 @@ Pending upgrades for =cloud-add=:
    (when file-rec
      (or
       (member (aref file-rec gname) '("tmp"))
-      (< 1000000 (aref file-rec size))))))))
+      (< 1048000 (aref file-rec size))))))))
   (cons result file-rec)))
 #+END_SRC
 
@@ -1392,6 +1375,7 @@ Pending upgrades for =cloud-add=:
 In =add-file= if ~FN~ is a directory, it must end with a slash symbol:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun add-file(FN &optional file-rec)
+(when FN
 (let ((FN (untilde (file-chase-links FN))))
 (unless (cloud-locate-FN FN)
 (ifn (file-directory-p FN)
@@ -1430,7 +1414,7 @@ where =FR= is the file record (an array containing file info)
 (not
 (let ((r (black-p FN FR))) (setf FR (cdr r)) (car r))))
 (add-file FN FR)
-(clog :debug "not auto-clouding %s" FN))))))))))
+(clog :debug "not auto-clouding %s" FN)))))))))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
@@ -1445,35 +1429,31 @@ where =FR= is the file record (an array containing file info)
 If the file is supposed to be deleted as well, =cloud-forget-file= should be
 called *after* the file has already been sucessfully deleted:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun cloud-forget-file (FN)
-(clog :debug "cloud-forget-file (%s)" FN)
-  (needs ((DB-rec (cloud-locate-FN FN); or (old-cloud-locate-FN FN))
+(defun cloud-forget-file(FN)
+  (needs ((DB-rec (cloud-locate-FN FN)
  (clog :warning "forget: doing nothing since %s is not clouded" FN))
           (CEXT (cip-ext FN))
-	  (cloud-FN (concat (remote-directory) (aref DB-rec cipher) CEXT) (clog :error "in DB entry for %s" FN)))
+	  (cloud-FN (concat(remote-directory) (aref DB-rec cipher) CEXT)))
 (cancel-pending-upload FN)
 #+END_SRC
 Remove image's individual password:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (when (string= CEXT ".png")
-(clog :debug "forgetting password for %s" FN)
   (forget-password (aref DB-rec cipher)))
 #+END_SRC
 Remove file from the database and erase its encrypted copy in the cloud:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (drop file-DB DB-rec)
 (push FN removed-files)
-(if (car (safe-dired-delete cloud-FN))
-  (clog :info "erased %s" cloud-FN)
-  (clog :warning "could not erase %s" cloud-FN))
- t))
+(let((ok t))
+(if-failed(safe-dired-delete cloud-FN) '("could not erase %s" cloud-FN)
+(list ok)))))
 #+END_SRC
 ← returns t if the file was clouded; otherwise does nothing and returns nil.
 
 =cloud-forget-recursive= should be called *after* the file has already been sucessfully deleted:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun cloud-forget-recursive(FN)
-(clog :debug "cloud-forget-recursive(%s)" FN)
 (new-action i-forget FN)
 (dolist (sub-FN (mapcar #'plain-name (contained-in FN)))
   (cloud-forget-file sub-FN))

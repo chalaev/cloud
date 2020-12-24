@@ -72,8 +72,7 @@ Except for =M-x cloud-sync=, commands are barely used:
 1. [[file:README.org][README.org]] generates =README.md= for [[https://notabug.org/shalaev/emacs-cloud][notabug]] and [[https://github.com/chalaev/cloud][github]].
 2. [[file:cloud.org][cloud.org]] contains the code from [[file:generated/main.el][generated/main.el]] together with explanations.
 3. [[file:0.el][0.el]], [[file:1.el][1.el]], and [[file:2.org][2.org]] are kind of "Appendix" containing some pieces of code which not interesting enough to be included in [[file:cloud.org][cloud.org]].
-4. [[file:Makefile][Makefile]] merges all the code into [[file:packaged/cloud.el][packaged/cloud.el]] which is the main file to be launched when ~emacs~ starts;
-   typical output of successful =make= is saved in [[file:generated/make.log][make.log]].
+4. [[file:Makefile][Makefile]] merges all the code into [[file:packaged/cloud.el][packaged/cloud.el]] which is the main file to be launched when ~emacs~ starts.
 5. [[file:shell/cloud-git][shell/cloud-git]] synchronizes file operations in ~git~ with this code, for example:\\
    =cloud-git rm files.org= or =cloud-git mv log-files.org files.org=
 6. [[file:testing.org][testing.org]] describes multi-scale testing procedure.
