@@ -1,162 +1,7 @@
-* if-let-key, ifn-let-key, and if-failed
-I am not sure if I am going to use macros =if-let-key= and =ifn-let-key= a lot,
-so let me define them here instead of [[https://github.com/chalaev/lisp-goodies][lisp-goodies]] project.
-
-=if-let-key= has an extra parameter – =key= function:
 #+BEGIN_SRC emacs-lisp :tangle generated/2.el :shebang ";; -*-  lexical-binding: t; -*-"
-(defmacro if-let-key (key vars if-yes &rest if-no)
-  `(let ((,(caar vars) ,(cadar vars)))
-     (if (funcall ,key ,(caar vars))
-	 ,(if(cdr vars)
-	      (macroexpand-1 `(if-let-key ,key ,(cdr vars) ,if-yes ,@if-no))
-	    if-yes)
-       ,@if-no)))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp :tangle generated/2.el
-(defmacro ifn-let-key (key vars if-yes &rest if-no)
-  `(let ((,(caar vars) ,(cadar vars)))
-     (ifn (funcall ,key ,(caar vars))
-	 ,(if(cdr vars)
-	      (macroexpand-1 `(if-let-key ,key ,(cdr vars) ,if-yes ,@if-no))
-	    if-yes)
-       ,@if-no)))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp :results drawer
-(macroexpand-1 `(if-let-key #'car ((r1 '(nil . :bad)) (r2 '(1 . :good))) 1 2 3 4))
-#+END_SRC
-
-#+RESULTS:
-:RESULTS:
-(let ((r1 (quote (nil . :bad)))) (if (funcall (function car) r1) (let ((r2 (quote (1 . :good)))) (if (funcall (function car) r2) 1 2 3 4)) 2 3 4))
-:END:
-
-Formatted output:
-#+BEGIN_SRC emacs-lisp
-(let ((r1 (quote (nil . :bad))))
-  (if (funcall (function car) r1)
-      (let ((r2 (quote (1 . :good))))
-	(if (funcall (function car) r2)
-	    1 2 3 4))
-    2 3 4))
-#+END_SRC
-←  we see that =ifno= (which could be a big block of code) is duplicated, and I do not like this.
-(It's gonna be triplicated if there are 3 variables, and so on.)
-
-#+BEGIN_SRC emacs-lisp :tangle generated/micro-2.el
-(ert-deftest if-let-key.1()
-  (should (eql :yes (if-let-key #'identity ((a "a") (b (concat a "b")))
-		      :yes
-		      (when (boundp 'b) (setf b (concat b "a")))
-		      (setf a (concat a "a"))
-		      (if (boundp 'b) (concat a b) a))))
-  (should (eql :nil (if-let-key #'car ((a nil) (b (concat a "b")))
-		      :yes
-		      (when (boundp 'b) (setf b (concat b "a")))
-		      :nil)))
-  (should (= 3 (if-let-key #'car ((a '(1 . 2)) (b '(nil . 3)))
-		 :yes
-		 (cdr b)))))
-#+END_SRC
-
-=if-let-key= seems to be useful only for (simplest) one-variable let-declarations:
-#+BEGIN_SRC emacs-lisp :tangle generated/micro-2.el
-(ert-deftest if-let-key.2()
-  (should (= 1 (ifn-let-key #'car ((r1 '(nil . :bad))) 1 2))))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp :tangle generated/2.el
-(defmacro if-failed(expr err-msg &rest body)
-(let ((expr-result (s-gensym "ER")))
-  `(ifn-let-key #'car ((,expr-result ,expr))
-#+END_SRC
-=because= contains text error description to be logged:
-#+BEGIN_SRC emacs-lisp :tangle generated/2.el
-(let* ((because (concat "
-because " 
-#+END_SRC
-=(cdr ,expr-result)= describes the error. (My error descriptions are rather chaotic for now.)
-This description might be either a /key word/ (e.g., =:permission=), or a text message.
-(I prefer /key words/ to text messages but I understand that there are always unexpected/unknown error types, which will be described by strings.)
-#+BEGIN_SRC emacs-lisp :tangle generated/2.el
-(cond
-((keywordp (cdr ,expr-result)) (symbol-name (cdr ,expr-result)))
-((stringp (cdr ,expr-result))  (cdr ,expr-result))
-(t ""))))
-#+END_SRC
-=emsg= is the final log string:
-#+BEGIN_SRC emacs-lisp :tangle generated/2.el
-(emsg (cons :error (cond
-((stringp ,err-msg) (list (concat ,err-msg because)))
-((listp ,err-msg) (cons(concat(car ,err-msg) because) (cdr ,err-msg)))
-(t (list (concat "<invalid description>" because)))))))
-(setf ok nil)
-#+END_SRC
-where =ok= is non-local variable.
-#+BEGIN_SRC emacs-lisp :tangle generated/2.el
-(cons (apply #'clog emsg) (apply #'format (cdr emsg))))
-,@body)))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp :tangle generated/micro-2.el
-(ert-deftest if-failed()
-(clog :info "IGNORE the following :error log message which is part of a test:")
-(let* ((ok t) (IFFA (if-failed '(nil . "it's too bad!") "tutto cazzo" 1)))
-  (should  (not ok))
-  (should (not (car IFFA)))
-  (should (string= "tutto cazzo
-because it's too bad!" (cdr IFFA))))
-(clog :info "IGNORE the following :error log message which is part of a test:")
-(let* ((ok t) (IFFA (if-failed '(nil . "there is a big problem") '("could not encrypt %s to %s" "aaa.txt" "bbb.gpg") 2)))
-  (should (not ok))
-  (should (not (car IFFA)))
-  (should (string= "could not encrypt aaa.txt to bbb.gpg
-because there is a big problem" (cdr IFFA))))
-(let* ((ok t))
-(should (and ok (= 3 (if-failed '(t . "there is a big problem") '("could not encrypt %s to %s" "aaa.txt" "bbb.gpg") 3))))))
-#+END_SRC
-where one can use =(ert-run-test (ert-get-test 'if-failed))= for interactive testing.
-
-I am not sure if the following code is really useful:
-#+BEGIN_SRC emacs-lisp
-(defmacro when-failed (expr err-msg &rest body)
-(let ((expr-result (s-gensym "ER")))
-  `(unless-let #'car ((,expr-result ,expr))
-(let ((emsg (cons :error (cond
-((stringp ,err-msg) (list (concat ,err-msg " because " (cdr ,expr-result))))
-((listp ,err-msg) (cons(concat(car ,err-msg) " because " (cdr ,expr-result)) (cdr ,err-msg)))
-(t (list (cdr ,expr-result)))))))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-(defmacro failed(&rest msg)
-`(progn
-   (apply #'clog (cons :error ,msg))
-   (setf ok nil)))
-#+END_SRC
-
-* Other code
-BTW, =(file-exists-p FN)= produces ~nil~ if the file resides in directory with (rx) permissions →
-#+BEGIN_SRC emacs-lisp :tangle generated/2.el
 (defun get-file-properties* (FN)
-  (when-let ((FA (and (file-exists-p FN) (file-attributes FN 'string)))
-	     (DB-rec (make-vector (length file-fields) nil)))
-      (destructuring-bind
-	  (uid gid acess-time mod-time status-time fsize ms void inode fsNum)
-	  (cddr FA)
-	(aset DB-rec size fsize)
-	(aset DB-rec gname gid)
-	(aset DB-rec mtime mod-time); list of 4 integers
-	(aset DB-rec modes (perms-from-str ms))
-	(aset DB-rec plain (tilde FN)); (aset DB-rec write-me to-cloud); might be later adjusted in read-fileDB
-	DB-rec)))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp :tangle generated/2.el
-(defun get-file-properties (FN)
 (when FN
-  (or (cloud-locate-FN FN) (get-file-properties* (file-chase-links FN)))))
+  (or (cloud-locate-FN FN) (cloud-get-file-properties(file-chase-links FN)))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/2.el
@@ -190,29 +35,16 @@ BTW, =(file-exists-p FN)= produces ~nil~ if the file resides in directory with (
 
 #+BEGIN_SRC emacs-lisp :tangle generated/2.el
 (defun gpg-encrypt(FN XYZ)
-(let* ((gpg-str (format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --symmetric %s" password (concat (remote-directory) XYZ ".gpg") (untilde FN)))
-       (result (shell-command gpg-str)))
-(clog :debug gpg-str); for debugging, dangerous – shows passwords, to be erased!!!
-(cons (= 0 result) result)))
+(= 0 (shell-command
+  (format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --symmetric %s" password (concat (remote-directory) XYZ ".gpg") (untilde FN)))))
 
 (defun gpg-decrypt(FN XYZ)
-(let* ((gpg-str (format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --decrypt %s" password (untilde FN) (concat (remote-directory) XYZ ".gpg")))
-       (result (shell-command gpg-str)))
-(clog :debug gpg-str); for debugging, dangerous – shows passwords, to be erased!!!
-(cons (= 0 result) result)))
+(= 0 (shell-command 
+(format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --decrypt %s" password (untilde FN) (concat (remote-directory) XYZ ".gpg")))))
 #+END_SRC
 ← foreground (en/de)cryption. Probably I should have merged it with the =Makefile= and make background.
 ← returns usual (standard for me) structure =(successP . more-details)=
 ← should I replace everywhere =shell-command= → =start-process= or =call-process= (see [[file:learn.org][learn.org]])?
-
-The problem: =(safe-dired-delete)= asks for permission to recursively delete directory,
-even in (non-interactive) text mode, when I launch =emacs --daemon=!
-#+BEGIN_SRC emacs-lisp :tangle generated/2.el
-(defun safe-dired-delete (FN)
-  (condition-case err (cons t (funcall DDF FN "always"))
-    (file-error
-      (cons nil (clog :error "in DDF: %s" (error-message-string err))))))
-#+END_SRC
 
 In =time<= I have to add 3 seconds of time to avoid chatter effects:
 if at some moment the files are synchronized between the host and the cloud,

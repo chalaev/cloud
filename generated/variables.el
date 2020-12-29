@@ -1,5 +1,17 @@
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-;; generated from cloud.org
+(defvar file-fields; indices numerating array fields
+(list
+
+'plain; original (local) file name
+'uname; (not used in this project) user name
+'gname; group name
+'mtime; modification time
+'size; file size (should not be saved)
+'modes; permissions
+'cipher)); (a non-standard field) pseudonim used in remote (cloud) directory
+(let((i 0))
+ (dolist (field-name file-fields) (setf i (1+ (set field-name i)))))
+
 (define-vars (password; to be read from config or generated
 (HOME (getenv "HOME")); must not have trailing "/"
 (number-of-CPU-cores 1)
@@ -37,16 +49,7 @@ file-blacklist
 
 (junk-extensions '("ac3" "afm" "aux" "idx" "ilg" "ind" "avi" "bak" "bbl" "blg" "brf" "bst" "bz2" "cache" "chm" "cp" "cps" "dat" "deb" "dvi" "dv" "eps" "fb2"
 "fn" "fls" "img" "iso" "gpx" "segments" "ky" "mjpeg" "m" "md" "mov" "mpg" "mkv" "jpg" "gif" "jpeg" "png" "log" "mp3" "mp4" "m2v" "ogg" "ogm" "out" "part" "pbm" "pdf"
-"pfb" "pg" "pod" "pgm" "pnm" "ps" "rar" "raw" "gz" "sfd" "woff" "tbz" "tgz" "tga" "tif" "tiff" "toc" "tp" "vob" "vr" "wav" "xcf" "xml" "xz" "Z" "zip"))
-
-(file-fields; indices numerating array fields
-(list 'plain; original (local) file name
-'cipher; encrypted file name (base name)
-'mtime; modification time
-'modes; permissions
-'size; file size (should not be saved)
-'gname)))); group name
-(let ((i 0)) (dolist (field-name file-fields) (setf i (1+ (set field-name i)))))
+"pfb" "pg" "pod" "pgm" "pnm" "ps" "rar" "raw" "gz" "sfd" "woff" "tbz" "tgz" "tga" "tif" "tiff" "toc" "tp" "vob" "vr" "wav" "xcf" "xml" "xz" "Z" "zip"))))
 
 (defun local/all() (concat (local/) "all"))
 

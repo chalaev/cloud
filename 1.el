@@ -3,20 +3,6 @@
 ;; I try to get rid of loop and other common-lisp stuff here
 
 ;;(setf coding-system-for-read 'utf-8)
-(defun safe-insert-file(FN)
-  (condition-case err (cons t (insert-file-contents FN))
-    (file-missing
-     (clog :error "missing file %s: %s" FN (error-message-string err))
-     (cons nil :missing))
-    (file-error
-     (clog :info "cannot read file %s; %s" FN (error-message-string err))
-     (cons nil :permission))))
-
-(defmacro temp-open(FN &rest body)
-  `(with-temp-buffer
-     (when(car(safe-insert-file ,FN))
-     ,@body)))
-
 (defun backspace()
   (if (< (point-min) (point))
       (delete-char -1)
@@ -96,22 +82,13 @@
   "find file by (ciper) name"
   (find name file-DB :key #'cipher-name :test #'string=))
 
+(defun cloud-get-file-properties(FN)
+  (when-let((FP(get-file-properties FN)))
+    (vconcat FP [nil])))
+
  ;; Note sure if the following 2 functions are necessary, or, may be, they should be declared as macro or "inline":
 (defun plain-name  (df)(aref df plain))
 (defun cipher-name (df)(aref df cipher))
-
-(defun DBrec-from-file(file-name)
-  (when-let ((FA (file-attributes file-name 'string)))
-    (let ((DBrec (make-vector (length file-fields) nil)))
-      (destructuring-bind
-	  (uid gid acess-time mod-time status-time fsize ms void inode fsNum)
-	  (cddr FA)
-	(aset DBrec-from-file size fsize)
-	(aset DBrec-from-file gname gid)
-	(aset DBrec-from-file mtime mod-time); list of 4 integers
-	(aset DBrec-from-file modes (perms-from-str ms))
-	(aset DBrec-from-file plain file-name))
-      DBrec)))
 
 ;; grab-parameter is no more used as of 2020-09-18
 ;; (defun grab-parameter (str parname); (grab-parameter "contentsName=z12"  "contentsName") => "z12"
@@ -134,6 +111,11 @@
 (with-temp-buffer
     (insert-file-contents FN)
     (buffer-string)))
+
+(defun together(strings)
+(if strings
+  (mapconcat 'identity strings " ")
+  ""))
 
 (defmacro report-TF(var-name)
   "useful for debugging"

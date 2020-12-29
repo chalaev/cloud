@@ -1,7 +1,7 @@
 *Multi-scale code testing*
 
-* Idea
-For me testing code resembles testing an apple before deciding if I want to eat it.
+* Testing concept
+For me code testing resembles testing an apple before deciding if I want to eat it.
 
 1. First, we should perform microscopic tests, that is, find out if the concentration of dangerous atomic kernels (such as heavy metals or radioactive isotopes) is elevated.
    For software this means testing small independent blocks of software. For software (but not for apple) this is the simplest testing type; this is why it comes first.
@@ -24,10 +24,6 @@ macroscopic ones can be found in [[file:generated/tests/macro.el][macro.el]].
 * Testing on different scales
 ** Preamble
 #+BEGIN_SRC emacs-lisp :tangle generated/headers/tests.el :shebang ";; -*- lexical-binding: t; -*-"=
-(defun together(strings)
-(if strings
-  (mapconcat 'identity strings " ")
-  ""))
 (require 'ert)
 (defun ert/when-passed()
   (when(functionp 'ert/on-success) (funcall #'ert/on-success)))
@@ -46,6 +42,9 @@ The main part of the meso-testing code also resides in [[file:cloud.org][cloud.o
 
 In case the test passed we clean up after the test:
 #+BEGIN_SRC emacs-lisp :tangle generated/headers/meso.el
+(defun delete-dirs (&rest dirs)
+ (mapcar #'(lambda(DN) (delete-directory DN t)) dirs))
+
 (let (tmp-dirs)
 (defun ert/home(&rest dirs)
 "setting list of temporary directories"
@@ -140,28 +139,28 @@ The usual files (supposed to be automatically clouded) are
 #+BEGIN_SRC emacs-lisp :tangle generated/meso-0.el
 (defun file-mtime(FN &optional t0)
 (when(file-exists-p FN)
-(round(float-time(time-subtract(aref(get-file-properties* FN) mtime) (or t0 '(0 0)))))))
+  (round(float-time(time-subtract(aref(get-file-properties* FN) mtime) (or t0 '(0 0)))))))
 
 (ert-deftest save-then-upload()
 "uploading previously updated file that was clouded before"
 (one-virgin-host nil
 (should(file-exists-p(untilde file-1a)))
 (cloud-add file-1a)
-(let((FR(cloud-locate-FN file-1a))
-     (t0 (aref (get-file-properties* file-1a) mtime)))
+(let((FR(cloud-locate-FN file-1a)))
 (should FR)
-(let((CN(aref FR cipher)))
+(let((t0(aref FR mtime)) (CN(aref FR cipher)))
 (should CN)
-(let((gpg-FN (concat (remote-directory) CN ".gpg")))
+(let((gpg-FN (concat(remote-directory) CN ".gpg")))
 (should(not(file-exists-p gpg-FN)))
-(cloud-sync)
+(sleep-for 1) (cloud-sync)
 (should(file-exists-p gpg-FN))
 (let((t1 (file-mtime gpg-FN t0))); all times are relative to t0
 (should(< 0 t1))
-(clog :info "touch 'now + 1 sec' %s" file-1a) (set-file-times (untilde file-1a) (time-add (current-time) 5))
+(clog :info "touch 'now + 5 sec' %s" file-1a) (set-file-times (untilde file-1a) (time-add (current-time) 5))
+(sleep-for 1)
 (touch (untilde file-1a)); as if we saved the changes to file-1a in emacs
 (let((t2 (file-mtime file-1a t0)))
-(should(< t1 t2))
+(should(< t1 t2)); 12/28 fails
 (cloud-sync)
 (let((t3 (file-mtime gpg-FN t0)))
 (should(< t1 t3))))))))))

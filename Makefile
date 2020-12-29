@@ -6,7 +6,7 @@ all: README.md $(addprefix generated/from/, $(ORGs)) test
 
 test: generated/tests/micro.log generated/tests/meso.log generated/tests/macro.log
 
-generated/tests/micro.log: packaged/cloud.el generated/from/cloud.org generated/tests/micro.el
+generated/tests/micro.log: packaged/cloud.el generated/from/cloud.org generated/from/2.org
 	@echo "\n-= Testing on MICRO scale: =-\n"
 	$(EMACS) -l goodies/start.el -l $< -l generated/tests/micro.el -f ert-run-tests-batch-and-exit 2> $@
 	@echo "\n`date '+%m/%d %H:%M'` MICRO TESTS PASSED :) -- see $@\n"
@@ -20,11 +20,6 @@ generated/tests/meso.log: packaged/cloud.el generated/from/cloud.org generated/t
 	@echo "\n-= Testing on MESO scale: =-\n"
 	$(EMACS) -l goodies/start.el -l $< -l generated/tests/meso.el  -f ert-run-tests-batch-and-exit 2> $@
 	@echo "\n`date '+%m/%d %H:%M'` MESO TESTS PASSED :) -- see $@\n"
-
-generated/tests/micro.el: generated/from/cloud.org generated/from/2.org
-	cat generated/micro.el generated/micro-2.el > $@
-	-@chgrp tmp $@
-	-@chmod a-x $@
 
 generated/tests/meso.el: generated/from/testing.org
 	cat generated/headers/tests.el generated/headers/meso.el generated/meso-0.el generated/meso.el > $@
@@ -63,7 +58,7 @@ README.md: README.org
 clean:
 	-rm -r generated version.org
 
-.PHONY: clean quicklisp all git test meso micro macro
+.PHONY: clean all
 
 %/:
 	[ -d $@ ] || mkdir -p $@

@@ -3,7 +3,7 @@
 ;; Copyright (C) 2020 Oleg Shalaev <oleg@chalaev.com>
 
 ;; Author:     Oleg Shalaev <oleg@chalaev.com>
-;; Version:    1.4.1
+;; Version:    1.5.1
 
 ;; Package-Requires: (cl epg dired-aux timezone diary-lib subr-x shalaev)
 ;; Keywords:   syncronization, cloud, gpg, encryption
@@ -49,20 +49,6 @@
 ;; I try to get rid of loop and other common-lisp stuff here
 
 ;;(setf coding-system-for-read 'utf-8)
-(defun safe-insert-file(FN)
-  (condition-case err (cons t (insert-file-contents FN))
-    (file-missing
-     (clog :error "missing file %s: %s" FN (error-message-string err))
-     (cons nil :missing))
-    (file-error
-     (clog :info "cannot read file %s; %s" FN (error-message-string err))
-     (cons nil :permission))))
-
-(defmacro temp-open(FN &rest body)
-  `(with-temp-buffer
-     (when(car(safe-insert-file ,FN))
-     ,@body)))
-
 (defun backspace()
   (if (< (point-min) (point))
       (delete-char -1)
@@ -142,22 +128,13 @@
   "find file by (ciper) name"
   (find name file-DB :key #'cipher-name :test #'string=))
 
+(defun cloud-get-file-properties(FN)
+  (when-let((FP(get-file-properties FN)))
+    (vconcat FP [nil])))
+
  ;; Note sure if the following 2 functions are necessary, or, may be, they should be declared as macro or "inline":
 (defun plain-name  (df)(aref df plain))
 (defun cipher-name (df)(aref df cipher))
-
-(defun DBrec-from-file(file-name)
-  (when-let ((FA (file-attributes file-name 'string)))
-    (let ((DBrec (make-vector (length file-fields) nil)))
-      (destructuring-bind
-	  (uid gid acess-time mod-time status-time fsize ms void inode fsNum)
-	  (cddr FA)
-	(aset DBrec-from-file size fsize)
-	(aset DBrec-from-file gname gid)
-	(aset DBrec-from-file mtime mod-time); list of 4 integers
-	(aset DBrec-from-file modes (perms-from-str ms))
-	(aset DBrec-from-file plain file-name))
-      DBrec)))
 
 ;; grab-parameter is no more used as of 2020-09-18
 ;; (defun grab-parameter (str parname); (grab-parameter "contentsName=z12"  "contentsName") => "z12"
@@ -181,6 +158,11 @@
     (insert-file-contents FN)
     (buffer-string)))
 
+(defun together(strings)
+(if strings
+  (mapconcat 'identity strings " ")
+  ""))
+
 (defmacro report-TF(var-name)
   "useful for debugging"
   `(clog :debug (concat ,(symbol-name var-name) "= %s") (if ,var-name "t" "nil")))
@@ -192,59 +174,9 @@
 ;;   `(let ((,v ,var-name))
 ;;      (clog :debug (concat ,(symbol-name v) "= %s") (if ,v "t" "nil")))))
 ;; -*-  lexical-binding: t; -*-
-(defmacro if-let-key (key vars if-yes &rest if-no)
-  `(let ((,(caar vars) ,(cadar vars)))
-     (if (funcall ,key ,(caar vars))
-	 ,(if(cdr vars)
-	      (macroexpand-1 `(if-let-key ,key ,(cdr vars) ,if-yes ,@if-no))
-	    if-yes)
-       ,@if-no)))
-
-(defmacro ifn-let-key (key vars if-yes &rest if-no)
-  `(let ((,(caar vars) ,(cadar vars)))
-     (ifn (funcall ,key ,(caar vars))
-	 ,(if(cdr vars)
-	      (macroexpand-1 `(if-let-key ,key ,(cdr vars) ,if-yes ,@if-no))
-	    if-yes)
-       ,@if-no)))
-
-(defmacro if-failed(expr err-msg &rest body)
-(let ((expr-result (s-gensym "ER")))
-  `(ifn-let-key #'car ((,expr-result ,expr))
-
-(let* ((because (concat "
-because "
-
-(cond
-((keywordp (cdr ,expr-result)) (symbol-name (cdr ,expr-result)))
-((stringp (cdr ,expr-result))  (cdr ,expr-result))
-(t ""))))
-
-(emsg (cons :error (cond
-((stringp ,err-msg) (list (concat ,err-msg because)))
-((listp ,err-msg) (cons(concat(car ,err-msg) because) (cdr ,err-msg)))
-(t (list (concat "<invalid description>" because)))))))
-(setf ok nil)
-
-(cons (apply #'clog emsg) (apply #'format (cdr emsg))))
-,@body)))
-
 (defun get-file-properties* (FN)
-  (when-let ((FA (and (file-exists-p FN) (file-attributes FN 'string)))
-	     (DB-rec (make-vector (length file-fields) nil)))
-      (destructuring-bind
-	  (uid gid acess-time mod-time status-time fsize ms void inode fsNum)
-	  (cddr FA)
-	(aset DB-rec size fsize)
-	(aset DB-rec gname gid)
-	(aset DB-rec mtime mod-time); list of 4 integers
-	(aset DB-rec modes (perms-from-str ms))
-	(aset DB-rec plain (tilde FN)); (aset DB-rec write-me to-cloud); might be later adjusted in read-fileDB
-	DB-rec)))
-
-(defun get-file-properties (FN)
 (when FN
-  (or (cloud-locate-FN FN) (get-file-properties* (file-chase-links FN)))))
+  (or (cloud-locate-FN FN) (cloud-get-file-properties(file-chase-links FN)))))
 
 (defun cip-ext (FN)
 "extension of encrypted file based on the original name"
@@ -270,21 +202,12 @@ because "
 `(clog :error "invalid %dth column in %s line" ,N ,cType)))
 
 (defun gpg-encrypt(FN XYZ)
-(let* ((gpg-str (format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --symmetric %s" password (concat (remote-directory) XYZ ".gpg") (untilde FN)))
-       (result (shell-command gpg-str)))
-(clog :debug gpg-str); for debugging, dangerous – shows passwords, to be erased!!!
-(cons (= 0 result) result)))
+(= 0 (shell-command
+  (format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --symmetric %s" password (concat (remote-directory) XYZ ".gpg") (untilde FN)))))
 
 (defun gpg-decrypt(FN XYZ)
-(let* ((gpg-str (format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --decrypt %s" password (untilde FN) (concat (remote-directory) XYZ ".gpg")))
-       (result (shell-command gpg-str)))
-(clog :debug gpg-str); for debugging, dangerous – shows passwords, to be erased!!!
-(cons (= 0 result) result)))
-
-(defun safe-dired-delete (FN)
-  (condition-case err (cons t (funcall DDF FN "always"))
-    (file-error
-      (cons nil (clog :error "in DDF: %s" (error-message-string err))))))
+(= 0 (shell-command 
+(format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --decrypt %s" password (untilde FN) (concat (remote-directory) XYZ ".gpg")))))
 
 (defun time< (t1 t2)
   (and
@@ -298,7 +221,19 @@ because "
 (defun youngest(&rest FNs)
   (car (sort FNs #'file-newer-than-file-p)))
 ;; -*- mode: Emacs-Lisp;  lexical-binding: t; -*-
-;; generated from cloud.org
+(defvar file-fields; indices numerating array fields
+(list
+
+'plain; original (local) file name
+'uname; (not used in this project) user name
+'gname; group name
+'mtime; modification time
+'size; file size (should not be saved)
+'modes; permissions
+'cipher)); (a non-standard field) pseudonim used in remote (cloud) directory
+(let((i 0))
+ (dolist (field-name file-fields) (setf i (1+ (set field-name i)))))
+
 (define-vars (password; to be read from config or generated
 (HOME (getenv "HOME")); must not have trailing "/"
 (number-of-CPU-cores 1)
@@ -336,16 +271,7 @@ file-blacklist
 
 (junk-extensions '("ac3" "afm" "aux" "idx" "ilg" "ind" "avi" "bak" "bbl" "blg" "brf" "bst" "bz2" "cache" "chm" "cp" "cps" "dat" "deb" "dvi" "dv" "eps" "fb2"
 "fn" "fls" "img" "iso" "gpx" "segments" "ky" "mjpeg" "m" "md" "mov" "mpg" "mkv" "jpg" "gif" "jpeg" "png" "log" "mp3" "mp4" "m2v" "ogg" "ogm" "out" "part" "pbm" "pdf"
-"pfb" "pg" "pod" "pgm" "pnm" "ps" "rar" "raw" "gz" "sfd" "woff" "tbz" "tgz" "tga" "tif" "tiff" "toc" "tp" "vob" "vr" "wav" "xcf" "xml" "xz" "Z" "zip"))
-
-(file-fields; indices numerating array fields
-(list 'plain; original (local) file name
-'cipher; encrypted file name (base name)
-'mtime; modification time
-'modes; permissions
-'size; file size (should not be saved)
-'gname)))); group name
-(let ((i 0)) (dolist (field-name file-fields) (setf i (1+ (set field-name i)))))
+"pfb" "pg" "pod" "pgm" "pnm" "ps" "rar" "raw" "gz" "sfd" "woff" "tbz" "tgz" "tga" "tif" "tiff" "toc" "tp" "vob" "vr" "wav" "xcf" "xml" "xz" "Z" "zip"))))
 
 (defun local/all() (concat (local/) "all"))
 
@@ -404,19 +330,9 @@ file-blacklist
      (while ,while-cond
        ,@body)))
 
-(defun read-conf* (FN)
-  "reads configuration file"
-(with-temp-buffer(if-failed(safe-insert-file FN) "read-conf* failed"
-(let (res)
-(while-let(str) (< 0 (length (setf str (read-line))))
-     (if (string-match "^\\(\\ca+\\)=\\(\\ca+\\)$" str)
-	 (push (cons (match-string 1 str) (match-string 2 str)) res)
-       (clog :error "garbage string in configuration file: %s" str)))
-    (reverse res)))))
-
 (defun read-conf()
   "reads configuration file"
-(let ((conf (read-conf* (local/host/conf))))
+(let ((conf (read-conf-file (local/host/conf))))
 (ifn conf (clog :error "refuse to work until you specify 3-symbol contents name \"remote/files\" in %s" (local/host/conf))
 (dolist (CP (mapcar #'car conf))
 ;;(clog :debug "read-conf(%s)" CP)
@@ -450,18 +366,10 @@ conf)))
 	  (aref DB-rec modes); integer
 	  (format-time-string "%F %H:%M:%S %Z" (aref DB-rec mtime))))
 
-(defun safe-FL()
-  (if (< (line-end-position) (point-max))
-     (forward-line)
-     (move-end-of-line 1)))
-(defun read-line()
-(let ((str (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
- (safe-FL)
- str))
 (defun cut-line() 
-(let ((str (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
-  (delete-region (line-beginning-position) (progn (safe-FL) (point)))
-   str))
+(prog1
+(buffer-substring-no-properties (line-beginning-position) (line-end-position))
+  (delete-region (line-beginning-position) (progn (safe-FL) (point)))))
 
 (defun parse-action(str)
 (clog :debug "parse-action(%s) ..." str)
@@ -549,7 +457,7 @@ CF)))))
 
 (defun read-all(DBname)
   "reads content (text) file into the database file-DB"
-  (temp-open DBname
+(with-temp-buffer (insert-file-contents DBname)
   (let (str)
 (needs-set
  ((cloud-hosts
@@ -583,7 +491,7 @@ CF)))))
        (local-file-rec (or 
 (cloud-locate-FN FN); either this file is already clouded
 (and (not (member FN removed-files))
-     (when-let ((LF (get-file-properties* FN)))
+     (when-let ((LF (cloud-get-file-properties FN)))
         (aset LF cipher (aref CF cipher)); or it exists
         (push LF file-DB); but unclouded
         LF)))))
@@ -613,17 +521,17 @@ t)))))
 
 (defun touch(FN)
 "called when the file named FN is changed"
-(when (and FN (stringp FN))
-  (when-let ((file-data (cloud-locate-FN FN)))
-    (aset file-data mtime (current-time))
-    (clog :debug "touch/upload: %s(%s)" FN (TS(aref file-data mtime)))
-    (upload file-data) t)))
+  (when-let ((FR (cloud-locate-FN FN)))
+    (aset FR mtime (current-time))
+    (clog :debug "touch/upload: %s(%s)" FN (TS(aref FR mtime)))
+    (upload FR)))
 (defun on-current-buffer-save()
   (when-let ((FN (buffer-file-name)))
-    (and (auto-add-file FN) (touch FN))))
+    (auto-add-file FN)
+    (touch FN)))
 (add-hook 'after-save-hook 'on-current-buffer-save)
 
-(defmacro NL () '(push "
+(defmacro NL() '(push "
 " Makefile))
 (defmacro inl (&rest format-pars) `(progn (push ,(cons 'format format-pars) Makefile) (NL)))
 (define-vars (all Makefile uploaded stanze))
@@ -684,7 +592,7 @@ $(cloud)%s.gpg: %s
 "))))
 
 (defun dec-make-stanza(file-record)
-  (when-let ((XYZ (aref file-record cipher)) (FN (tilde (aref file-record plain))))
+  (when-let ((XYZ(aref file-record cipher)) (FN(tilde (aref file-record plain))))
     (let ((file-ext (file-name-extension FN)))
 (concat
 (cond
@@ -741,37 +649,38 @@ FN gunzipped)))
 "
 (aref file-record gname) (aref file-record modes) (full-TS (aref file-record mtime)))))))
 
-(defun download(file-record)
-(needs ((FN (aref file-record plain) (clog :error "download: file lacks plain name"))
-        (stanza (dec-make-stanza file-record) (clog :error "download: could not create stanza for %s" FN)))
+(defun download(FR)
+(needs ((FN (aref FR plain) (clog :error "download: file lacks plain name"))
+        (stanza (dec-make-stanza FR) (clog :error "download: could not create stanza for %s" FN)))
 (ensure-dir-exists(file-name-directory FN))
-(push (format " %s" FN) stanze)
+(push FN stanze)
 (push stanza Makefile) (NL)))
 
-(defun make-cloud-older(file-record)
-(when-let ((clouded (get-file-properties (aref file-record cipher)))
-           (local-mtime (aref file-record mtime)))
+(defun make-cloud-older(FR)
+(when-let ((FN (aref FR plain))
+           (RN (concat (remote-directory) (aref FR cipher) (cip-ext FN)))
+           (clouded (cloud-get-file-properties RN))
+           (local-mtime (aref FR mtime)))
 (when (time< local-mtime (aref clouded mtime))
 (clog :debug "changing time stamp to %s" (FS (time-add local-mtime -60)))
   (set-file-times
-(concat (remote-directory) (plain-name clouded) (cip-ext (plain-name file-record)))
+(concat (remote-directory) (plain-name clouded) (cip-ext (plain-name FR)))
 (time-add local-mtime (- -60 (random 6000)))))))
 
-(defun upload (file-record)
-(needs ((FN (tilde (aref file-record plain)) (clog :error "upload: file lacks plain name"))
-	(CN (aref file-record cipher) (clog :error "upload: file %s lacks cipher name" FN))
-	(stanza (enc-make-stanza file-record) (clog :error "upload: could not create stanza for %s" FN)))
-;;(clog :debug "started upload(%s)" FN)
-(unless (or (member FN uploaded) (member FN file-blacklist))
-(push FN upload-queue)
-(make-cloud-older file-record)
-(push FN uploaded)
-(push (format " %s" (concat (remote-directory) CN (cip-ext FN))) stanze)
-(push stanza Makefile) (NL))))
+(defun upload(FR)
+(needs ((FN (tilde(aref FR plain)) (clog :error "upload: file lacks plain name"))
+	(CN (aref FR cipher) (clog :error "upload: file %s lacks cipher name" FN))
+	(stanza (enc-make-stanza FR) (clog :error "upload: could not create stanza for %s" FN)))
+  (unless (or (member FN uploaded) (member FN file-blacklist))
+    (push FN upload-queue)
+    (make-cloud-older FR)
+    (push FN uploaded)
+    (push (format " %s" (concat (remote-directory) CN (cip-ext FN))) stanze)
+    (push stanza Makefile) (NL))))
 
 (defun reset-Makefile()
 "reseting make file"
-(when (or (and (file-exists-p (pass-d)) (file-directory-p (pass-d))) (safe-mkdir (pass-d)))
+(when (or (and (file-exists-p(pass-d)) (file-directory-p(pass-d))) (ensure-dir-exists (pass-d)))
 (setf stanze nil Makefile nil uploaded nil)
 (inl "cloud=%s" remote-directory)
 (inl "password=%S" password)
@@ -794,7 +703,7 @@ FN gunzipped)))
 \techo \"background (en/de)cryption on %s finished $(date)\" >> %s
 \t@sed 's/%s/******/g' %s > %s.bak
 "
-(apply #'concat stanze)
+(together stanze)
 localhost
 (history)
 password (cloud-mk) (cloud-mk))
@@ -802,48 +711,45 @@ password (cloud-mk) (cloud-mk))
 
 (defun cloud-sync()
 (interactive)
-(let((ok t))
+(error-in "cloud-sync"
 
 (defun do-make()
-(set-file-times (local/all) (current-time))
-(save-Makefile)
+  (set-file-times (local/all) (current-time))
+  (save-Makefile)
+  (setf added-files nil upload-queue nil removed-files nil)
 (let ((make (format "HOME=%s make -j%d -f %s all &> %s.log" HOME number-of-CPU-cores (untilde(cloud-mk)) (untilde(cloud-mk)))))
 
-(ifn (= 0 (shell-command make)) (clog :error "make file containing
+(ifn(= 0 (shell-command make)) (clog :error "make file containing
 %s
 FAILED with error(s): %s" (cat-file(untilde(cloud-mk))) (cat-file(concat(untilde(cloud-mk))".log")))
-(rm (untilde(cloud-mk)))
-  (reset-Makefile))))
-(ifn (cloud-connected-p) (cons (clog :warning "refuse to sync because remote directory not mounted") :network)
+(delete-file(untilde(cloud-mk)))
+(reset-Makefile))))
 
-(if-failed (directory-lock (lock-dir) (format "%s
-%s" localhost (TS (current-time)))
+(ifn(cloud-connected-p) (clog :warning "refuse to sync because remote directory not mounted")
+(directory-lock(lock-dir) (format "%s
+%s" localhost (TS(current-time)))
 
-(ifn (or (file-exists-p (remote-files)) (file-exists-p (local/all)))
-  (ifn (write-all (local/all)) (clog :error "could not save data to %s" (local/all))
-(if-failed (gpg-encrypt (local/all) (remote/files)) ("could not encrypt %s to %s" (local/all) (remote/files))
-(do-make)))
+(ifn (or (file-exists-p(remote-files)) (file-exists-p(local/all)))
+(ifn (write-all(local/all)) (clog :error "could not save data to %s" (local/all))
+(ifn(gpg-encrypt (local/all) (remote/files)) (error "could not encrypt %s to %s" (local/all) (remote/files))
+(do-make))))
 
-(when ok
-(when (file-newer-than-file-p (remote-files) (local/all))
+(when(file-newer-than-file-p (remote-files) (local/all))
 (clog :debug "updating %s obsoleted by %s" (local/all) (remote-files))
-  (if-failed (gpg-decrypt (local/all) (remote/files)) "could not DECRYPT file data FROM the cloud")
-(read-all (local/all)))
+(ifn(gpg-decrypt (local/all) (remote/files)) (error "could not DECRYPT file data FROM the cloud")
+(read-all (local/all))))
 
-(when ok
 (when (or added-files upload-queue removed-files)
-  (ifn (write-all (local/all)) (setf ok (clog :error "could not save data to %s" (local/all)))
-    (if-failed (gpg-encrypt (local/all) (remote/files)) "could not ENCRYPT file data TO the cloud"
-    (setf added-files nil upload-queue nil removed-files nil))))
+  (ifn (write-all (local/all)) (error "could not save data to %s" (local/all))
+    (ifn(gpg-encrypt (local/all) (remote/files)) (error "could not ENCRYPT file data TO the cloud"))))
 
-(do-make))))) "Could not (un)lock remote directory! Please investigate"
+(do-make))
 
 (dolist (msg (reverse important-msgs)) (message msg))
 (setf important-msgs nil)
 (clog :info "done syncing")
 (write-region (format "%s: %s -- %s
-" localhost  (TS (current-time)) (format-time-string "%H:%M:%S" (current-time))) nil (history) t))
-ok)))
+" localhost  (TS (current-time)) (format-time-string "%H:%M:%S" (current-time))) nil (history) t))))
 
 (defun before-exit()
 ;; (write-conf)
@@ -886,8 +792,9 @@ nil (local/log) t)
 
 (require 'nadvice)
 ;; (advice-remove #'dired-delete-file 'dired-delete-file@uncloud)
-(define-advice dired-delete-file (:after (FN) uncloud)
-  (and (cloud-forget FN) (new-action i-delete FN)))
+(define-advice dired-delete-file (:after (FN &optional RECURSIVE TRASH) uncloud)
+   (cloud-forget FN)
+   (new-action i-delete FN))
 
 (defun cloud-rm (args)
 (let ((ok (cloud-forget-many args)))
@@ -897,10 +804,9 @@ ok))
 
 (defun cloud-forget-many (args)
   (interactive) 
-(let ((ok t))
-  (dolist (arg args)
-    (setf ok (and (cloud-forget-recursive arg) ok)))
-ok))
+(error-in "cloud-forget-many"
+  (dolist (arg args) (unless(cloud-forget-recursive arg) (error "could not forget %s" arg)))
+t))
 
 (defun contained-in(DN)
   (let* ((dir-name (tilde DN)) res (dir-name (to-dir dir-name)))
@@ -931,8 +837,8 @@ ok))
   "remove host from the cloud sync-system"
     (when (yes-or-no-p (format "Forget the host %s?" localhost))
       (new-action i-host-forget localhost)
-      (if (cloud-sync)
-	  (safe-dired-delete (local/host/conf))
+      (if(cloud-sync)
+        (dired-delete-file (local/host/conf) "always")
 	(clog :error "sync failed, so I will not erase local configuration"))))
 
 (defun cloud-add(&optional FN)
@@ -961,27 +867,27 @@ ok))
  (when ignored-dirs (string-match(substring(apply #'concat
 (mapcar #'(lambda(d)(format "\\(^%s\\)\\|" d)) ignored-dirs)) 0 -2) FN))
  (progn
-   (unless file-rec (setf file-rec (get-file-properties FN)))
+   (unless file-rec (setf file-rec (get-file-properties* FN)))
    (when file-rec
      (or
       (member (aref file-rec gname) '("tmp"))
       (< 1048000 (aref file-rec size))))))))
   (cons result file-rec)))
 
-(defun white-p(FN &optional file-rec)
-(unless file-rec (setf file-rec (get-file-properties FN)))
-(cons (member (aref file-rec gname) '("important" "keepOneYear" "keepTwoYears" "keepThreeYears")) file-rec))
+(defun white-p(FN &optional FR)
+  (unless FR (setf FR (get-file-properties* FN)))
+  (cons (member (aref FR gname) '("important" "keepOneYear" "keepTwoYears" "keepThreeYears")) FR))
 
 (defun add-file(FN &optional file-rec)
 (when FN
 (let ((FN (untilde (file-chase-links FN))))
 (unless (cloud-locate-FN FN)
 (ifn (file-directory-p FN)
-  (needs ((GFP (or file-rec (get-file-properties* FN)) (clog :error "Aborting attempt to cloud inexisting file %s" FN))
+  (needs ((GFP (or file-rec (cloud-get-file-properties FN)) (clog :error "cannot cloud inexisting file %s" FN))
           (CN (new-file-name remote-directory)) (FN (tilde FN)))
     (push FN added-files)
     (aset GFP cipher CN)
-    (push GFP file-DB)
+    (push GFP file-DB) (clog :info "file %s is now clouded" FN)
     (upload GFP)
     (when (member (file-name-extension FN) '("jpeg" "png" "jpg"))
 
@@ -1004,7 +910,7 @@ ok))
 
 (defun auto-add-file(FN &optional file-rec)
 "when the file is clouded automatically"
- (unless (car(black-p FN file-rec)) (add-file FN file-rec)) t)
+ (unless (car(black-p FN file-rec)) (add-file FN file-rec)))
 
 (defun cloud-forget-file(FN)
   (needs ((DB-rec (cloud-locate-FN FN)
@@ -1018,9 +924,7 @@ ok))
 
 (drop file-DB DB-rec)
 (push FN removed-files)
-(let((ok t))
-(if-failed(safe-dired-delete cloud-FN) '("could not erase %s" cloud-FN)
-(list ok)))))
+(dired-delete-file cloud-FN "always")))
 
 (defun cloud-forget-recursive(FN)
 (new-action i-forget FN)
@@ -1032,7 +936,7 @@ ok))
   (interactive)
 (if FN (cloud-forget-recursive FN)
   (if (string= major-mode "dired-mode")
-      (dired-map-over-marks (cloud-forget-recursive (dired-get-filename)) nil)
+      (dired-map-over-marks(cloud-forget-recursive(dired-get-filename))nil)
 (if-let ((FN (buffer-file-name))) (cloud-forget-recursive FN)
     (unless
 	(cloud-forget-recursive (read-string "file to be forgotten=" (if FN FN "")))
@@ -1047,23 +951,21 @@ ok))
             (aset target property (aref source property)))
       (drop file-DB source))
      (source (aset source plain new))
-     (target (setf target (get-file-properties* new))))))
+     (target (setf target (cloud-get-file-properties new))))))
 
-(defun dired-rename-file (old-FN new-FN ok-if-already-exists)
-  (let (failure)
-    (clog :debug "DRF")
+(defun DRF(old-function old-FN new-FN ok-if-already-exists)
+  (let (failure (isDir (file-directory-p old-FN)))
     (condition-case err
-	(funcall DRF old-FN new-FN ok-if-already-exists)
+	(funcall old-function old-FN new-FN ok-if-already-exists)
       (file-error
-       (clog :error "DRF error!")
-       (message "%s" (error-message-string err))
-       (setf failure t)))
+        (clog :error "DRF error!")
+        (setf failure t)))
     (unless failure
       (clog :debug "cloud-rename-file %s --> %s" old-FN new-FN)
       (cloud-rename-file old-FN new-FN)
       (new-action i-rename old-FN new-FN)
 
-(when (file-directory-p old-FN)
+(when isDir
   (let* ((old-dir (to-dir old-FN)) (LOD (length old-dir))
          (new-dir (to-dir new-FN)))
     (dolist (rec (contained-in old-FN))
@@ -1073,6 +975,7 @@ ok))
 	  (let ((new-name (concat new-dir (substring FN LOD))))
             (cloud-rename-file FN new-name)
 	    (new-action i-rename FN new-name))))))))))
+(add-function :around (symbol-function 'dired-rename-file) #'DRF)
 
 (defun rename-directory (old-dir new-dir)
 "recursively update plain-names of clouded files due to renaming of a directory"
@@ -1095,7 +998,7 @@ ok))
 (progn
   (clog :warning "could not read local configuration file, trying to (re)create configuration")
   (when (cloud-init remote-directory)
-  (clog :info "check newly created configuraion %s and then M-x cloud-start" (local/host/conf))))
+    (clog :info "check newly created configuraion %s and then M-x cloud-start" (local/host/conf))))
 
 (update-conf conf "remote-directory" "junk-extensions" "ignored-dirs" "remote/files" "number-of-CPU-cores" "password")
 
@@ -1109,6 +1012,7 @@ ok))
   (add-file (image-passes)))
 
 (reset-Makefile)
+(when(file-exists-p(local/all)) (read-all (local/all)))
 (cloud-sync)))))
 (provide 'cloud)
 ;;; cloud.el ends here

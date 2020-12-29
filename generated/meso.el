@@ -3,8 +3,8 @@
 (one-virgin-host nil
   (should (progn
   (cloud-init remote-directory) 
-(when-let ((FR (get-file-properties (concat emacs-d "cloud/" localhost "/config")))
-           (FSize (aref (get-file-properties (concat emacs-d "cloud/" localhost "/config")) size)))
+(when-let ((FR (cloud-get-file-properties (concat emacs-d "cloud/" localhost "/config")))
+           (FSize (aref (get-file-properties* (concat emacs-d "cloud/" localhost "/config")) size)))
     (clog :info "deftest cloud-init: config file size = %d bytes" FSize)
 (< 100 FSize))))))
 
@@ -14,7 +14,7 @@
 (clog :info "read-write-conf: (local/host/conf) => %s" (local/host/conf))
 (clog :info "
 Here is the generated config file: ==>")
-(with-temp-buffer (safe-insert-file (local/host/conf))
+(with-temp-buffer (insert-file-contents (local/host/conf))
 (while-let (str) (< 0 (length (setf str (read-line)))) (clog :info "%s" str)))
 (clog :info "<== end of config file
 ")
@@ -34,7 +34,7 @@ Here is the generated config file: ==>")
 (write-conf))
 (clog :info "
 Here is my artificial config file: ==>")
-(with-temp-buffer (safe-insert-file (local/host/conf))
+(with-temp-buffer (insert-file-contents (local/host/conf))
   (while-let (str) (< 0 (length (setf str (read-line)))) (clog :info "%s" str)))
 (clog :info "<== end of config file
 ")

@@ -4,6 +4,13 @@ Change log for the [[https://github.com/chalaev/cloud][cloud synchronizer]].
 No more fountainng with ideas; just making the existing code more reliable.
 Mostly fixing the errors; the ideas are either implemented or postponed for (probably remote) future.
 
+** fat removal
+Eliminating =ok= variables, more relying on conditions now.
+*** 12/28
+1. updated file-rename block(=DRF=); updated code needs testing.
+2. moved several code pieces from [[https://github.com/chalaev/cloud][cloud project]] to [[https://github.com/chalaev/lisp-goodies][lisp-goodies]].
+3. (hopefully) fixed the bug with forgetting clouded files when restarting emacs.
+
 ** fixed macroscopic tests
 See [[file:testing.org][testing.org]] for the definition of "macroscopic".
 *** 2020-12-24
