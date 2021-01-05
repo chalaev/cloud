@@ -5,7 +5,6 @@
 (add-function :before (symbol-function 'ert-pass) #'ert/when-passed)
 (defun delete-dirs (&rest dirs)
  (mapcar #'(lambda(DN) (delete-directory DN t)) dirs))
-
 (let (tmp-dirs)
 (defun ert/home(&rest dirs)
 "setting list of temporary directories"

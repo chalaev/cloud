@@ -38,11 +38,6 @@
 ;;(clog :debug "ended write-conf")
  t)
 
-(defmacro while-let(var-defs while-cond &rest body)
-  `(let* (,@var-defs)
-     (while ,while-cond
-       ,@body)))
-
 (defun read-conf()
   "reads configuration file"
 (let ((conf (read-conf-file (local/host/conf))))
@@ -232,16 +227,18 @@ CF)))))
 (upload CF)))))))
 t)))))
 
-(defun touch(FN)
+(defun cloud-touch(&rest FNs)
 "called when the file named FN is changed"
+  (interactive)
+(dolist(FN FNs)
   (when-let ((FR (cloud-locate-FN FN)))
     (aset FR mtime (current-time))
     (clog :debug "touch/upload: %s(%s)" FN (TS(aref FR mtime)))
-    (upload FR)))
+    (upload FR))))
 (defun on-current-buffer-save()
   (when-let ((FN (buffer-file-name)))
     (auto-add-file FN)
-    (touch FN)))
+    (cloud-touch FN)))
 (add-hook 'after-save-hook 'on-current-buffer-save)
 
 (defmacro NL() '(push "
@@ -375,7 +372,7 @@ FN gunzipped)))
            (clouded (cloud-get-file-properties RN))
            (local-mtime (aref FR mtime)))
 (when (time< local-mtime (aref clouded mtime))
-(clog :debug "changing time stamp to %s" (FS (time-add local-mtime -60)))
+(clog :debug "changing time stamp to %s" (TS(time-add local-mtime -60)))
   (set-file-times
 (concat (remote-directory) (plain-name clouded) (cip-ext (plain-name FR)))
 (time-add local-mtime (- -60 (random 6000)))))))
@@ -607,7 +604,7 @@ t))
 (write-region
   (format "%s %s
 " CN (rand-str 18)) nil (image-passes) t)
-(touch (image-passes))))
+(cloud-touch (image-passes))))
 
 (let ((DN (to-dir FN)))
 (dolist (FN (directory-files DN nil nil t))
@@ -700,10 +697,6 @@ t))
         (when (and (<= LOD (length FN))
 		   (string= old-dir (substring FN 0 LOD)))
 	  (aset rec plain (concat new-dir (substring FN LOD)))))))))
-
-(defun update-conf(conf &rest conf-params)
-  (dolist (CP conf-params)
-    (when-let ((CPV (cdr (assoc CP conf)))) (set (intern CP) CPV))))
 
 (defun cloud-start()
 (save-some-buffers)

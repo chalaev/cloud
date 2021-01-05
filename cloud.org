@@ -194,14 +194,6 @@ By default we assume that our configuration parameters have a string value. Ther
  t)
 #+END_SRC
 
-It is possible that this new macro will be later moved into [[https://github.com/chalaev/lisp-goodies][my lisp-goodies]] package:
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defmacro while-let(var-defs while-cond &rest body)
-  `(let* (,@var-defs)
-     (while ,while-cond
-       ,@body)))
-#+END_SRC
-
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun read-conf()
   "reads configuration file"
@@ -283,6 +275,7 @@ file-blacklist
 #+END_SRC
 
 Suppose we opened a ~dired~ buffer, and =M-x cloud-add= on a directory. Files with certain extensions in the (sub)directory should not be clouded by default:
+(Probably I should rename =junk-extensions= → =black-extensions= and =ignored-dirs= → =black-dirs= for compatibility with [[https://github.com/chalaev/el-backup][el-backup]].)
 #+BEGIN_SRC emacs-lisp :tangle generated/variables.el
 (junk-extensions '("ac3" "afm" "aux" "idx" "ilg" "ind" "avi" "bak" "bbl" "blg" "brf" "bst" "bz2" "cache" "chm" "cp" "cps" "dat" "deb" "dvi" "dv" "eps" "fb2"
 "fn" "fls" "img" "iso" "gpx" "segments" "ky" "mjpeg" "m" "md" "mov" "mpg" "mkv" "jpg" "gif" "jpeg" "png" "log" "mp3" "mp4" "m2v" "ogg" "ogm" "out" "part" "pbm" "pdf"
@@ -669,16 +662,18 @@ At this point we ended up parsing the list of files.
 When the file is saved in emacs (=C-x s=), we mark it so that it is going
 to be uploaded to the cloud when the user calls =cloud-sync= next time:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun touch(FN)
+(defun cloud-touch(&rest FNs)
 "called when the file named FN is changed"
+  (interactive)
+(dolist(FN FNs)
   (when-let ((FR (cloud-locate-FN FN)))
     (aset FR mtime (current-time))
     (clog :debug "touch/upload: %s(%s)" FN (TS(aref FR mtime)))
-    (upload FR)))
+    (upload FR))))
 (defun on-current-buffer-save()
   (when-let ((FN (buffer-file-name)))
     (auto-add-file FN)
-    (touch FN)))
+    (cloud-touch FN)))
 (add-hook 'after-save-hook 'on-current-buffer-save)
 #+END_SRC
 * Creating make file
@@ -994,7 +989,7 @@ GNU make won't upload (with encryption) the file to the server if target is youn
            (clouded (cloud-get-file-properties RN))
            (local-mtime (aref FR mtime)))
 (when (time< local-mtime (aref clouded mtime))
-(clog :debug "changing time stamp to %s" (FS (time-add local-mtime -60)))
+(clog :debug "changing time stamp to %s" (TS(time-add local-mtime -60)))
   (set-file-times
 (concat (remote-directory) (plain-name clouded) (cip-ext (plain-name FR)))
 (time-add local-mtime (- -60 (random 6000)))))))
@@ -1380,7 +1375,7 @@ Since we are clouding an image, we need to
 (write-region
   (format "%s %s
 " CN (rand-str 18)) nil (image-passes) t)
-(touch (image-passes))))
+(cloud-touch (image-passes))))
 #+END_SRC
 In case when ~FN~ is a directory:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
@@ -1515,13 +1510,6 @@ The above function =DRF= needs =rename-directory=:
 
 * Starting all this machinery
 ** Every time we start ~emacs~
-We will update global configuration variables using
-#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun update-conf(conf &rest conf-params)
-  (dolist (CP conf-params)
-    (when-let ((CPV (cdr (assoc CP conf)))) (set (intern CP) CPV))))
-#+END_SRC
-
 I suggest running =(cloud-start)= from =~/.emacs= every time you restart ~emacs~ (see [[file:README.org::Quick start][README.org]]):
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun cloud-start()

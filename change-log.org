@@ -6,6 +6,11 @@ Mostly fixing the errors; the ideas are either implemented or postponed for (pro
 
 ** fat removal
 Eliminating =ok= variables, more relying on conditions now.
+*** 01/04
+1. fixed a typo =(FS (time-add ...))= → =(TS (time-add ...))= in [[file:cloud.org][cloud.org]]
+2. created =shell/cloud-sed-i=
+3. renamed =touch= → =cloud-touch= and updated it
+
 *** 12/28
 1. updated file-rename block(=DRF=); updated code needs testing.
 2. moved several code pieces from [[https://github.com/chalaev/cloud][cloud project]] to [[https://github.com/chalaev/lisp-goodies][lisp-goodies]].

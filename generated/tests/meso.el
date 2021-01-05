@@ -5,7 +5,6 @@
 (add-function :before (symbol-function 'ert-pass) #'ert/when-passed)
 (defun delete-dirs (&rest dirs)
  (mapcar #'(lambda(DN) (delete-directory DN t)) dirs))
-
 (let (tmp-dirs)
 (defun ert/home(&rest dirs)
 "setting list of temporary directories"
@@ -102,7 +101,7 @@ root-dir is (optional, might be nil) root directory for this host"
 (should(< 0 t1))
 (clog :info "touch 'now + 5 sec' %s" file-1a) (set-file-times (untilde file-1a) (time-add (current-time) 5))
 (sleep-for 1)
-(touch (untilde file-1a)); as if we saved the changes to file-1a in emacs
+(cloud-touch (untilde file-1a)); as if we saved the changes to file-1a in emacs
 (let((t2 (file-mtime file-1a t0)))
 (should(< t1 t2)); 12/28 fails
 (cloud-sync)

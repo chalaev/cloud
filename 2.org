@@ -46,19 +46,6 @@
 ← returns usual (standard for me) structure =(successP . more-details)=
 ← should I replace everywhere =shell-command= → =start-process= or =call-process= (see [[file:learn.org][learn.org]])?
 
-In =time<= I have to add 3 seconds of time to avoid chatter effects:
-if at some moment the files are synchronized between the host and the cloud,
-this situation might change due to time-desynchronization.
-#+BEGIN_SRC emacs-lisp :tangle generated/2.el
-(defun time< (t1 t2)
-  (and
-    (time-less-p (time-add t1 3) t2)
-    (not (time-less-p (time-add t2 3) t1))))
-#+END_SRC
-This problem demonstrates the importance of the time synchronization (via =ntpdate= or an =ntp= server);
-however, it is not too serious because it just results in useless downloading or uploading,
-with replacement of files with their exact copies. This should not result in data loss.
-
 Not that important, still handy function replacing file extension:
 #+BEGIN_SRC emacs-lisp :tangle generated/2.el
 (defun replace-file-ext(FN new-ext)

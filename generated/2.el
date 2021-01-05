@@ -34,11 +34,6 @@
 (= 0 (shell-command 
 (format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --decrypt %s" password (untilde FN) (concat (remote-directory) XYZ ".gpg")))))
 
-(defun time< (t1 t2)
-  (and
-    (time-less-p (time-add t1 3) t2)
-    (not (time-less-p (time-add t2 3) t1))))
-
 (defun replace-file-ext(FN new-ext)
   "replacing file extension"
   (concat (file-name-sans-extension FN) "." new-ext))

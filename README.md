@@ -1,22 +1,20 @@
 
 # Table of Contents
 
-1.  [Description](#org04b8d5c)
-2.  [Prerequisites](#org4efa394)
-3.  [Quick start](#orge4f439f)
-    1.  [Initial setup](#orgaee7e42)
-    2.  [Uploading and downloading files](#org9772b48)
-4.  [Commands](#org361664a)
-5.  [Source code files](#org35f3bc1)
-6.  [Motivation](#org8911306)
-7.  [Limitations](#orgc7d9333)
-8.  [License](#orge87116c)
-9.  [Support](#orgd861bc6)
+1.  [Description](#orgb2018a9)
+2.  [Prerequisites](#org1b18661)
+3.  [Quick start](#org751ec71)
+    1.  [Initial setup](#org2924cf8)
+    2.  [Uploading and downloading files](#org2e8e68e)
+4.  [Commands](#org750da8e)
+5.  [Source code files](#org11f6018)
+6.  [Limitations](#org1526aee)
+7.  [License](#orga6e9cff)
 
 Intended for linux users who have [emacs](https://www.gnu.org/software/emacs/) always open.
 
 
-<a id="org04b8d5c"></a>
+<a id="orgb2018a9"></a>
 
 # Description
 
@@ -35,7 +33,7 @@ Synchronizing important files on two or more computers using
 Encrypted files saved in the cloud have **random names** to minimize the amount of information cloud owners can extract by monitoring our cloud directory.
 
 
-<a id="org4efa394"></a>
+<a id="org1b18661"></a>
 
 # Prerequisites
 
@@ -43,10 +41,10 @@ We need
 
 1.  `emacs`, GNU `make`, `ImageMagick`, `gpg`, `sed`, and `gawk`; in Debian these can be installed as follows:  
     `aptitude install emacs make imagemagick gpg sed gawk`
-2.  [lisp-goodies](https://github.com/chalaev/lisp-goodies): [start.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/start.el) (used by [Makefile](Makefile)), and [shalaev.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el)
+2.  [lisp-goodies](https://github.com/chalaev/lisp-goodies): [batch-start.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/batch-start.el) (used by [Makefile](Makefile)), and [shalaev.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el)
 
 
-<a id="orge4f439f"></a>
+<a id="org751ec71"></a>
 
 # Quick start
 
@@ -57,13 +55,13 @@ I am running `emacs` in daemon mode (in text console) using the following line i
 Once `emacs` was started in the daemon mode, I can use `emacsclient -c` to open a new (gui) emacs window.
 
 
-<a id="orgaee7e42"></a>
+<a id="org2924cf8"></a>
 
 ## Initial setup
 
 1.  `mkdir ~/.emacs.d/local-packages/`
 2.  Place [shalaev.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el) and [cloud.el](packaged/cloud.el) to `~/.emacs.d/local-packages/`
-3.  Load [start.el](goodies/start.el) in your [~/.emacs](.emacs)
+3.  Load [batch-start.el](goodies/batch-start.el) in your [~/.emacs](.emacs)
 4.  Evaluate `cloud.el` in `emacs` at start by placing the following lines
     
         (require 'cloud)
@@ -74,7 +72,7 @@ Once `emacs` was started in the daemon mode, I can use `emacsclient -c` to open 
 5.  Mount remote directory. The mounting point may be arbitrary (specified as `cloud-directory` in [~/.emacs.d/cloud/\`hostname\`/config](config)), the default one is `/mnt/cloud/`.
 
 
-<a id="org9772b48"></a>
+<a id="org2e8e68e"></a>
 
 ## Uploading and downloading files
 
@@ -93,7 +91,7 @@ For this purpose I have a line in my `crontab`:
 `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="org361664a"></a>
+<a id="org750da8e"></a>
 
 # Commands
 
@@ -110,7 +108,7 @@ Except for `M-x cloud-sync`, commands are barely used:
     `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="org35f3bc1"></a>
+<a id="org11f6018"></a>
 
 # Source code files
 
@@ -128,29 +126,7 @@ Except for `M-x cloud-sync`, commands are barely used:
     b. ideas on further development.
 
 
-<a id="org8911306"></a>
-
-# Motivation
-
-I like cloud file storages: they are cheap (or even free) and reliable.
-
-However, Evil Corporations and governments are trying to spy on people using the information
-that they extract from private data stored in the cloud.
-
-Most of my important files (for example, emails or document scans) are not regularly changed;
-for those I use [backup2l](https://github.com/chalaev/backup2l.conf) with gpg encryption, and store encrypted archives
-using one of cloud services that allow `WebDav` access to the storage directory (Russian [Yandex Disk](https://disk.yandex.com/) or Swiss [pCloud](https://www.pcloud.com)).
-
-This approach does not work so well for regularly changed files.
-Since emacs is my only text editor, it is enough to write eLisp code that
-
-1.  Saves unencrypted file locally and its encrypted copy in the cloud.
-2.  Encrypted files are stored under randomly generated names and modification dates/times.
-3.  Remotely stored files are periodically syncronized with the local ones.
-4.  Dired-compatible: whatever I do with a file in dired (delete, rename), will be automatically done on other computers.
-
-
-<a id="orgc7d9333"></a>
+<a id="org1526aee"></a>
 
 # Limitations
 
@@ -162,19 +138,9 @@ Since emacs is my only text editor, it is enough to write eLisp code that
     After encrypting an image file and then decrypting it back, we get the same, but not identical picture (file size is changed).
 
 
-<a id="orge87116c"></a>
+<a id="orga6e9cff"></a>
 
 # License
 
 This code is released under [MIT license](https://mit-license.org/).
-
-
-<a id="orgd861bc6"></a>
-
-# Support
-
-You can support this project by sending
-
-1.  comments/questions to [oleg@chalaev.com](mailto:oleg@chalaev.com) and
-2.  donations via [liberapay](https://liberapay.com/shalaev/donate) or [paypal](https://www.paypal.com/paypalme/chalaev).
 

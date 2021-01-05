@@ -1,0 +1,16 @@
+* Motivation
+I like cloud file storages: they are cheap (or even free) and reliable.
+
+However, Evil Corporations and governments are trying to spy on people using the information
+that they extract from private data stored in the cloud.
+
+Most of my important files (for example, emails or document scans) are not regularly changed;
+for those I use [[https://github.com/chalaev/el-backup][el-backup]], and store encrypted archives
+using one of cloud services that allow ~WebDav~ access to the storage directory (Russian [[https://disk.yandex.com/][Yandex Disk]] or Swiss [[https://www.pcloud.com][pCloud]]).
+
+This approach does not work so well for regularly changed files.
+Since emacs is my only text editor, it is enough to write eLisp code that
+1. Saves unencrypted file locally and its encrypted copy in the cloud.
+2. Encrypted files are stored under randomly generated names and modification dates/times.
+3. Remotely stored files are periodically syncronized with the local ones.
+4. Dired-compatible: whatever I do with a file in dired (delete, rename), will be automatically done on other computers.

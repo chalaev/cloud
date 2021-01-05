@@ -95,14 +95,6 @@
 ;;   (when (string-match (concat parname "=\\(\\ca+\\)$") str)
 ;;       (match-string 1 str)))
 
-(defun to-dir(root &rest dirs)
-(if (car dirs)
-    (apply #'to-dir
-(cons 
-  (file-name-as-directory (concat (file-name-as-directory root) (car dirs)))
-  (cdr dirs)))
-  (file-name-as-directory root)))
-
 (defun need-dir(&rest DNs)
   (ensure-dir-exists (apply #'to-dir DNs)))
 

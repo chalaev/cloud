@@ -18,7 +18,7 @@ Encrypted files saved in the cloud have *random names* to minimize the amount of
 We need
 1. ~emacs~, GNU ~make~, ~ImageMagick~, ~gpg~, ~sed~, and ~gawk~; in Debian these can be installed as follows:\\
    =aptitude install emacs make imagemagick gpg sed gawk=
-2. [[https://github.com/chalaev/lisp-goodies][lisp-goodies]]: [[https://github.com/chalaev/lisp-goodies/blob/master/packaged/start.el][start.el]] (used by [[file:Makefile][Makefile]]), and [[https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el][shalaev.el]]
+2. [[https://github.com/chalaev/lisp-goodies][lisp-goodies]]: [[https://github.com/chalaev/lisp-goodies/blob/master/packaged/batch-start.el][batch-start.el]] (used by [[file:Makefile][Makefile]]), and [[https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el][shalaev.el]]
 
 * Quick start
 I am running ~emacs~ in daemon mode (in text console) using the following line in [[https://github.com/chalaev/lisp-goodies/blob/master/.login][~/.login]]:
@@ -30,7 +30,7 @@ Once ~emacs~ was started in the daemon mode, I can use =emacsclient -c= to open 
 ** Initial setup
 1. =mkdir ~/.emacs.d/local-packages/=
 2. Place [[https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el][shalaev.el]] and [[file:packaged/cloud.el][cloud.el]] to =~/.emacs.d/local-packages/=
-3. Load [[file:goodies/start.el][start.el]] in your [[file:.emacs][~/.emacs]]
+3. Load [[file:goodies/batch-start.el][batch-start.el]] in your [[file:.emacs][~/.emacs]]
 4. Evaluate ~cloud.el~ in ~emacs~ at start by placing the following lines
    #+BEGIN_SRC emacs-lisp
    (require 'cloud)
@@ -80,23 +80,6 @@ Except for =M-x cloud-sync=, commands are barely used:
    a. error and problem list, and
    b. ideas on further development.
 
-* Motivation
-I like cloud file storages: they are cheap (or even free) and reliable.
-
-However, Evil Corporations and governments are trying to spy on people using the information
-that they extract from private data stored in the cloud.
-
-Most of my important files (for example, emails or document scans) are not regularly changed;
-for those I use [[https://github.com/chalaev/backup2l.conf][backup2l]] with gpg encryption, and store encrypted archives
-using one of cloud services that allow ~WebDav~ access to the storage directory (Russian [[https://disk.yandex.com/][Yandex Disk]] or Swiss [[https://www.pcloud.com][pCloud]]).
-
-This approach does not work so well for regularly changed files.
-Since emacs is my only text editor, it is enough to write eLisp code that
-1. Saves unencrypted file locally and its encrypted copy in the cloud.
-2. Encrypted files are stored under randomly generated names and modification dates/times.
-3. Remotely stored files are periodically syncronized with the local ones.
-4. Dired-compatible: whatever I do with a file in dired (delete, rename), will be automatically done on other computers.
-
 * Limitations
 1. I use [[https://www.gnu.org/software/make/][GNU make]] together with its =--jobs= option to enjoy [[https://www.emacswiki.org/emacs/EmacsLispLimitations][(unsupported in emacs)]] multi-threading, and thus
    I have to suffer from the [[https://www.gnu.org/software/make/][make]] restriction: only nicely named files will work.\\
@@ -107,7 +90,3 @@ Since emacs is my only text editor, it is enough to write eLisp code that
 
 * License
 This code is released under [[https://mit-license.org/][MIT license]].
-* Support
-You can support this project by sending
-1. comments/questions to [[mailto:oleg@chalaev.com][oleg@chalaev.com]] and
-2. donations via [[https://liberapay.com/shalaev/donate][liberapay]] or [[https://www.paypal.com/paypalme/chalaev][paypal]].
