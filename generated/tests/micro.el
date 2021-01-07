@@ -6,10 +6,10 @@
 (ert-deftest format-conf()
 (let ((remote-directory "/mnt/my-cloud/")
       (number-of-CPU-cores 123)
-      (ignored-dirs '("/abc/" "/def/")))
+      (black-root-dirs '("/abc/" "/def/")))
 (should (string= "remote-directory=/mnt/my-cloud/"   (format-conf "remote-directory")))
 (should (string= "number-of-CPU-cores=123" (format-conf "number-of-CPU-cores")))
-(should (string= "ignored-dirs=/abc/ /def/ " (format-conf "ignored-dirs")))))
+(should (string= "black-root-dirs=/abc/ /def/ " (format-conf "black-root-dirs")))))
 
 (let ((general-FR ["~/pam.d/xscreensaver" "shalaev" "shalaev" (24506 18567 0 0) 41 416 "qwe"])
       (gzipped ["~/shalaev.1.obsolete.gz" "shalaev" "shalaev" (21621 47298 0 0) 41 416 "4R6" ])

@@ -1,85 +1,61 @@
-Running 2 tests (2021-01-05 17:17:42-0500)
-:info 17:17:42 home directory(~)= /tmp/cloud-test.PAIR-root.W4zuEe/A/user/, remote-directory= /tmp/cloud-test.PAIR-remote.MqKSki/, local-dir= /tmp/cloud-test.PAIR-root.W4zuEe/A/user/.emacs.d/cloud/
-:info 17:17:42 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.MqKSki/ as a cloud
-:info 17:17:42 saved local configuration in /tmp/cloud-test.PAIR-root.W4zuEe/A/user/.emacs.d/cloud/
-:info 17:17:42 home directory(~)= /tmp/cloud-test.PAIR-root.W4zuEe/B/user/, remote-directory= /tmp/cloud-test.PAIR-remote.MqKSki/, local-dir= /tmp/cloud-test.PAIR-root.W4zuEe/B/user/.emacs.d/cloud/
-:info 17:17:42 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.MqKSki/ as a cloud
-:info 17:17:42 saved local configuration in /tmp/cloud-test.PAIR-root.W4zuEe/B/user/.emacs.d/cloud/
-:info 17:17:42 host A> remote/files= qtu, password= 12345, HOME= /tmp/cloud-test.PAIR-root.W4zuEe/A/user
+Running 2 tests (2021-01-06 20:10:11-0500)
+:info 20:10:11 home directory(~)= /tmp/cloud-test.PAIR-root.QZakrm/A/user/, remote-directory= /tmp/cloud-test.PAIR-remote.4JPCBu/, local-dir= /tmp/cloud-test.PAIR-root.QZakrm/A/user/.emacs.d/cloud/
+:info 20:10:11 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.4JPCBu/ as a cloud
+:info 20:10:11 saved local configuration in /tmp/cloud-test.PAIR-root.QZakrm/A/user/.emacs.d/cloud/
+:info 20:10:11 home directory(~)= /tmp/cloud-test.PAIR-root.QZakrm/B/user/, remote-directory= /tmp/cloud-test.PAIR-remote.4JPCBu/, local-dir= /tmp/cloud-test.PAIR-root.QZakrm/B/user/.emacs.d/cloud/
+:info 20:10:11 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.4JPCBu/ as a cloud
+:info 20:10:11 saved local configuration in /tmp/cloud-test.PAIR-root.QZakrm/B/user/.emacs.d/cloud/
+:info 20:10:11 host A> remote/files= vLb, password= 12345, HOME= /tmp/cloud-test.PAIR-root.QZakrm/A/user
 
-:debug 17:17:42 RCF 2 remote-directory=/tmp/cloud-test.PAIR-remote.MqKSki/
-:debug 17:17:42 RCF 2 junk-extensions=Z ac3 afm aux avi bak bbl blg brf bst bz2 cache chm cp cps dat deb dv dvi eps fb2 fls fn gif gpx gz idx ilg img ind iso jpeg jpg ky log m m2v md mjpeg mkv mov mp3 mp4 mpg ogg ogm out part pbm pdf pfb pg pgm png pnm pod ps rar raw segments sfd tbz tga tgz tif tiff toc tp vob vr wav woff xcf xml xz zip 
-:debug 17:17:42 RCF 2 ignored-dirs=/etc/ /mnt/ /ssh: /tmp/ 
-:debug 17:17:42 RCF 2 remote/files=qtu
-:debug 17:17:42 RCF 2 number-of-CPU-cores=1
-:debug 17:17:42 RCF 2 password=12345
-:info 17:17:42 file ~/.emacs.d/cloud/individual.passes is now clouded
+:info 20:10:11 file ~/.emacs.d/cloud/individual.passes is now clouded
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
-:info 17:17:43 done syncing
-:info 17:17:43 file ~/file-1.4KgDBA is now clouded
+:info 20:10:11 done syncing
+:info 20:10:11 file ~/file-1.QfO2g9 is now clouded
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
-:info 17:17:45 done syncing
-:info 17:17:45 host B> remote/files= qtu, password= 12345, HOME= /tmp/cloud-test.PAIR-root.W4zuEe/B/user
+:info 20:10:13 done syncing
+:info 20:10:13 host B> remote/files= vLb, password= 12345, HOME= /tmp/cloud-test.PAIR-root.QZakrm/B/user
 
-:debug 17:17:45 RCF 2 remote-directory=/tmp/cloud-test.PAIR-remote.MqKSki/
-:debug 17:17:45 RCF 2 junk-extensions=ac3 afm aux avi bak bbl blg brf bst bz2 cache chm cp cps dat deb dv dvi eps fb2 fls fn gif gpx gz idx ilg img ind iso jpeg jpg ky log m m2v md mjpeg mkv mov mp3 mp4 mpg ogg ogm out part pbm pdf pfb pg pgm png pnm pod ps rar raw segments sfd tbz tga tgz tif tiff toc tp vob vr wav woff xcf xml xz zip 
-:debug 17:17:45 RCF 2 ignored-dirs=/tmp/ 
-:debug 17:17:45 RCF 2 remote/files=qtu
-:debug 17:17:45 RCF 2 number-of-CPU-cores=1
-:debug 17:17:45 RCF 2 password=12345
-:info 17:17:45 file ~/.emacs.d/cloud/individual.passes is now clouded
-:debug 17:17:45 updating /tmp/cloud-test.PAIR-root.W4zuEe/B/user/.emacs.d/cloud/kalinin/all obsoleted by /tmp/cloud-test.PAIR-remote.MqKSki/qtu.gpg
+:info 20:10:13 file ~/.emacs.d/cloud/individual.passes is now clouded
+:debug 20:10:13 updating /tmp/cloud-test.PAIR-root.QZakrm/B/user/.emacs.d/cloud/kalinin/all obsoleted by /tmp/cloud-test.PAIR-remote.4JPCBu/vLb.gpg
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
-:info 17:17:47 done syncing
-:info 17:17:47 cleaning up /tmp/cloud-test.PAIR-root.W4zuEe/B/
-:info 17:17:47 erasing /tmp/cloud-test.PAIR-root.W4zuEe/B/
+:info 20:10:15 done syncing
+:info 20:10:15 cleaning up /tmp/cloud-test.PAIR-root.QZakrm/B/
+:info 20:10:15 erasing /tmp/cloud-test.PAIR-root.QZakrm/B/
    passed  1/2  cloud-sync-1
-:info 17:17:47 home directory(~)= /tmp/cloud-test.PAIR-root.3befM4/A/user/, remote-directory= /tmp/cloud-test.PAIR-remote.Mhvs0r/, local-dir= /tmp/cloud-test.PAIR-root.3befM4/A/user/.emacs.d/cloud/
-:info 17:17:47 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.Mhvs0r/ as a cloud
-:info 17:17:47 saved local configuration in /tmp/cloud-test.PAIR-root.3befM4/A/user/.emacs.d/cloud/
-:info 17:17:47 home directory(~)= /tmp/cloud-test.PAIR-root.3befM4/B/user/, remote-directory= /tmp/cloud-test.PAIR-remote.Mhvs0r/, local-dir= /tmp/cloud-test.PAIR-root.3befM4/B/user/.emacs.d/cloud/
-:info 17:17:47 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.Mhvs0r/ as a cloud
-:info 17:17:47 saved local configuration in /tmp/cloud-test.PAIR-root.3befM4/B/user/.emacs.d/cloud/
-:info 17:17:47 host A> remote/files= oKo, password= 12345, HOME= /tmp/cloud-test.PAIR-root.3befM4/A/user
+:info 20:10:15 home directory(~)= /tmp/cloud-test.PAIR-root.wPIDfu/A/user/, remote-directory= /tmp/cloud-test.PAIR-remote.iFagCU/, local-dir= /tmp/cloud-test.PAIR-root.wPIDfu/A/user/.emacs.d/cloud/
+:info 20:10:15 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.iFagCU/ as a cloud
+:info 20:10:15 saved local configuration in /tmp/cloud-test.PAIR-root.wPIDfu/A/user/.emacs.d/cloud/
+:info 20:10:15 home directory(~)= /tmp/cloud-test.PAIR-root.wPIDfu/B/user/, remote-directory= /tmp/cloud-test.PAIR-remote.iFagCU/, local-dir= /tmp/cloud-test.PAIR-root.wPIDfu/B/user/.emacs.d/cloud/
+:info 20:10:15 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.iFagCU/ as a cloud
+:info 20:10:15 saved local configuration in /tmp/cloud-test.PAIR-root.wPIDfu/B/user/.emacs.d/cloud/
+:info 20:10:15 host A> remote/files= Iy1, password= 12345, HOME= /tmp/cloud-test.PAIR-root.wPIDfu/A/user
 
-:debug 17:17:47 RCF 2 remote-directory=/tmp/cloud-test.PAIR-remote.Mhvs0r/
-:debug 17:17:47 RCF 2 junk-extensions=ac3 afm aux avi bak bbl blg brf bst bz2 cache chm cp cps dat deb dv dvi eps fb2 fls fn gif gpx gz idx ilg img ind iso jpeg jpg ky log m m2v md mjpeg mkv mov mp3 mp4 mpg ogg ogm out part pbm pdf pfb pg pgm png pnm pod ps rar raw segments sfd tbz tga tgz tif tiff toc tp vob vr wav woff xcf xml xz zip 
-:debug 17:17:47 RCF 2 ignored-dirs=/tmp/ 
-:debug 17:17:47 RCF 2 remote/files=oKo
-:debug 17:17:47 RCF 2 number-of-CPU-cores=1
-:debug 17:17:47 RCF 2 password=12345
-:info 17:17:47 file ~/.emacs.d/cloud/individual.passes is now clouded
+:info 20:10:15 file ~/.emacs.d/cloud/individual.passes is now clouded
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
-:info 17:17:48 done syncing
-:info 17:17:48 touch ’now + 5 sec’ /tmp/cloud-test.PAIR-root.3befM4/A/user/file-1a.dat
-:info 17:17:48 file ~/file-1a.dat is now clouded
+:info 20:10:16 done syncing
+:info 20:10:16 touch ’now + 5 sec’ /tmp/cloud-test.PAIR-root.wPIDfu/A/user/file-1a.dat
+:info 20:10:16 file ~/file-1a.dat is now clouded
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
-:info 17:17:49 done syncing
-:info 17:17:49 host B> remote/files= oKo, password= 12345, HOME= /tmp/cloud-test.PAIR-root.3befM4/B/user
+:info 20:10:17 done syncing
+:info 20:10:17 host B> remote/files= Iy1, password= 12345, HOME= /tmp/cloud-test.PAIR-root.wPIDfu/B/user
 
-:debug 17:17:49 RCF 2 remote-directory=/tmp/cloud-test.PAIR-remote.Mhvs0r/
-:debug 17:17:49 RCF 2 junk-extensions=ac3 afm aux avi bak bbl blg brf bst bz2 cache chm cp cps dat deb dv dvi eps fb2 fls fn gif gpx gz idx ilg img ind iso jpeg jpg ky log m m2v md mjpeg mkv mov mp3 mp4 mpg ogg ogm out part pbm pdf pfb pg pgm png pnm pod ps rar raw segments sfd tbz tga tgz tif tiff toc tp vob vr wav woff xcf xml xz zip 
-:debug 17:17:49 RCF 2 ignored-dirs=/tmp/ 
-:debug 17:17:49 RCF 2 remote/files=oKo
-:debug 17:17:49 RCF 2 number-of-CPU-cores=1
-:debug 17:17:49 RCF 2 password=12345
-:info 17:17:49 file ~/.emacs.d/cloud/individual.passes is now clouded
-:debug 17:17:49 updating /tmp/cloud-test.PAIR-root.3befM4/B/user/.emacs.d/cloud/kalinin/all obsoleted by /tmp/cloud-test.PAIR-remote.Mhvs0r/oKo.gpg
+:info 20:10:17 file ~/.emacs.d/cloud/individual.passes is now clouded
+:debug 20:10:17 updating /tmp/cloud-test.PAIR-root.wPIDfu/B/user/.emacs.d/cloud/kalinin/all obsoleted by /tmp/cloud-test.PAIR-remote.iFagCU/Iy1.gpg
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
-:info 17:17:51 done syncing
-:info 17:17:51 cleaning up /tmp/cloud-test.PAIR-root.3befM4/B/
-:info 17:17:51 erasing /tmp/cloud-test.PAIR-root.3befM4/B/
+:info 20:10:19 done syncing
+:info 20:10:19 cleaning up /tmp/cloud-test.PAIR-root.wPIDfu/B/
+:info 20:10:19 erasing /tmp/cloud-test.PAIR-root.wPIDfu/B/
    passed  2/2  cloud-sync-2
 
-Ran 2 tests, 2 results as expected (2021-01-05 17:17:51-0500)
+Ran 2 tests, 2 results as expected (2021-01-06 20:10:19-0500)
 
-:warning 17:17:51 refuse to sync because remote directory not mounted
-:debug 17:17:51 flushing comments before quiting emacs
+:warning 20:10:19 refuse to sync because remote directory not mounted
+:debug 20:10:19 flushing comments before quiting emacs

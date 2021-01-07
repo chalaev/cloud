@@ -1,0 +1,27 @@
+#!/bin/bash
+
+sed -i $*
+
+while [ -z $noMoreArgs ]
+      do
+	  if [[ $1 == "-e" ]]
+	  then
+	      echo "detected -e"
+	      ePrefix=1
+	      shift
+	      shift
+	  else
+	      if [ -z $ePrefix ]; then
+		  shift
+	      fi
+	      noMoreArgs=1
+	  fi
+done
+
+CTargs=""
+
+for FN in $*; do
+    CTargs="$CTargs \"$FN\""
+done
+
+emacsclient -e "(cloud-touch $CTargs)"

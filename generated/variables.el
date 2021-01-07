@@ -38,16 +38,16 @@ remote/files; "3-symbol DB name on the server, e.g., WzT"
 (defun local/host/conf() (concat (local/host/) "config"))
 
 (define-vars ((numerical-parameters '("number-of-CPU-cores"))
- (lists-of-strings '("junk-extensions" "ignored-dirs"))))
+ (lists-of-strings '("black-extensions" "black-root-dirs"))))
 
 (define-vars (cloud-hosts; host names participating in file synchronization
 remote-actions; actions to be saved in the cloud
 file-DB; list of vectors, each corresponding to a clouded file
 
 file-blacklist
-(ignored-dirs '("/tmp/" "/mnt/" "/etc/" "/ssh:")); temporary or system or remote directories
+(black-root-dirs(split-string "/mnt/ /tmp/ /etc/ /ssh:"))
 
-(junk-extensions '("ac3" "afm" "aux" "idx" "ilg" "ind" "avi" "bak" "bbl" "blg" "brf" "bst" "bz2" "cache" "chm" "cp" "cps" "dat" "deb" "dvi" "dv" "eps" "fb2"
+(black-extensions '("ac3" "afm" "aux" "idx" "ilg" "ind" "avi" "bak" "bbl" "blg" "brf" "bst" "bz2" "cache" "chm" "cp" "cps" "dat" "deb" "dvi" "dv" "eps" "fb2"
 "fn" "fls" "img" "iso" "gpx" "segments" "ky" "mjpeg" "m" "md" "mov" "mpg" "mkv" "jpg" "gif" "jpeg" "png" "log" "mp3" "mp4" "m2v" "ogg" "ogm" "out" "part" "pbm" "pdf"
 "pfb" "pg" "pod" "pgm" "pnm" "ps" "rar" "raw" "gz" "sfd" "woff" "tbz" "tgz" "tga" "tif" "tiff" "toc" "tp" "vob" "vr" "wav" "xcf" "xml" "xz" "Z" "zip"))))
 

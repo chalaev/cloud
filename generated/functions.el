@@ -34,7 +34,7 @@
 ;;(clog :debug "starting write-conf")
 (with-temp-file (local/host/conf)
 (mapcar #'(lambda(CP) (insert(format-conf CP)) (newline)) 
-  '("remote-directory" "junk-extensions" "ignored-dirs" "remote/files" "number-of-CPU-cores" "password")))
+  '("remote-directory" "black-extensions" "black-root-dirs" "remote/files" "number-of-CPU-cores" "password")))
 ;;(clog :debug "ended write-conf")
  t)
 
@@ -231,13 +231,16 @@ t)))))
 "called when the file named FN is changed"
   (interactive)
 (dolist(FN FNs)
-  (when-let ((FR (cloud-locate-FN FN)))
+(let((FR (cloud-locate-FN FN)))
+(unless FR
+  (auto-add-file FN)
+  (setf FR (cloud-locate-FN FN)))
+(when FR
     (aset FR mtime (current-time))
     (clog :debug "touch/upload: %s(%s)" FN (TS(aref FR mtime)))
-    (upload FR))))
+    (upload FR)))))
 (defun on-current-buffer-save()
   (when-let ((FN (buffer-file-name)))
-    (auto-add-file FN)
     (cloud-touch FN)))
 (add-hook 'after-save-hook 'on-current-buffer-save)
 
@@ -374,7 +377,9 @@ FN gunzipped)))
 (when (time< local-mtime (aref clouded mtime))
 (clog :debug "changing time stamp to %s" (TS(time-add local-mtime -60)))
   (set-file-times
-(concat (remote-directory) (plain-name clouded) (cip-ext (plain-name FR)))
+;;(concat (remote-directory) (plain-name clouded) (cip-ext (plain-name FR)))
+;; 01/06 replaced it with
+(concat (remote-directory) (cipher-name clouded) (cip-ext (plain-name FR)))
 (time-add local-mtime (- -60 (random 6000)))))))
 
 (defun upload(FR)
@@ -463,8 +468,7 @@ FAILED with error(s): %s" (cat-file(untilde(cloud-mk))) (cat-file(concat(untilde
 
 (defun before-exit()
 ;; (write-conf)
-(when (cloud-sync)
-  (safe-delete-dir /tmp/cloud/)))
+(when (cloud-sync) (delete-directory /tmp/cloud/)))
 
 (defun new-action (a-ID &rest args)
 (mapcar #'(lambda(FN) (clog :debug "new-action(%d %s)" a-ID FN)) args)
@@ -501,22 +505,22 @@ nil (local/log) t)
 (apply #'concat (mapcar #'(lambda(HN) (format "%S " HN)) (aref action i-hostnames))))); 5. hostnames, where the action has to be performed (several columns).
 
 (require 'nadvice)
-;; (advice-remove #'dired-delete-file 'dired-delete-file@uncloud)
-(define-advice dired-delete-file (:after (FN &optional RECURSIVE TRASH) uncloud)
+;; (advice-remove #'dired-delete-file 'dired-delete-file@DDF)
+(define-advice dired-delete-file (:after (FN &optional RECURSIVE TRASH) DDF)
    (cloud-forget FN)
-   (new-action i-delete FN))
+   (unless(BRDp FN) (new-action i-delete FN)))
 
 (defun cloud-rm (args)
-(let ((ok (cloud-forget-many args)))
-  (dolist (arg args)
-    (setf ok (and (safe-delete-dir arg t) (cloud-forget-recursive arg) ok)))
-ok))
+(cloud-forget-many args)
+(error-in "cloud-rm"
+(dolist (arg args)
+  (delete-directory arg t)
+  (cloud-forget-recursive arg))))
 
 (defun cloud-forget-many (args)
-  (interactive) 
-(error-in "cloud-forget-many"
-  (dolist (arg args) (unless(cloud-forget-recursive arg) (error "could not forget %s" arg)))
-t))
+  (error-in "cloud-forget-many"
+    (dolist (arg args)
+      (unless(cloud-forget-recursive arg) (error "could not forget %s" arg)))))
 
 (defun contained-in(DN)
   (let* ((dir-name (tilde DN)) res (dir-name (to-dir dir-name)))
@@ -543,7 +547,7 @@ t))
   (new-action i-host-add localhost)
   (add-to-actions localhost))
 
-(defun cloud-host-forget ()
+(defun cloud-host-forget()
   "remove host from the cloud sync-system"
     (when (yes-or-no-p (format "Forget the host %s?" localhost))
       (new-action i-host-forget localhost)
@@ -566,16 +570,17 @@ t))
  (cloud-forget-file FN)
 (unless (member FN file-blacklist)
  (push FN file-blacklist))))
+(defun BRDp(FN)
+  (when black-root-dirs(string-match (eval `(rx bol ,(cons 'or black-root-dirs))) FN)))
 (defun black-p(FN &optional file-rec)
 (let ((result
 (or
  (member FN file-blacklist) 
  (string-match (rx (or "tmp" "/old/" "/.git/")) FN)
  (string-match (concat ~ "\\.") (untilde FN))
- (member (file-name-extension FN) junk-extensions)
+ (member (file-name-extension FN) black-extensions)
  (backup-file-name-p FN)
- (when ignored-dirs (string-match(substring(apply #'concat
-(mapcar #'(lambda(d)(format "\\(^%s\\)\\|" d)) ignored-dirs)) 0 -2) FN))
+ (BRDp FN)
  (progn
    (unless file-rec (setf file-rec (get-file-properties* FN)))
    (when file-rec
@@ -663,17 +668,12 @@ t))
      (source (aset source plain new))
      (target (setf target (cloud-get-file-properties new))))))
 
-(defun DRF(old-function old-FN new-FN ok-if-already-exists)
-  (let (failure (isDir (file-directory-p old-FN)))
-    (condition-case err
-	(funcall old-function old-FN new-FN ok-if-already-exists)
-      (file-error
-        (clog :error "DRF error!")
-        (setf failure t)))
-    (unless failure
-      (clog :debug "cloud-rename-file %s --> %s" old-FN new-FN)
-      (cloud-rename-file old-FN new-FN)
-      (new-action i-rename old-FN new-FN)
+(defun DRF (old-function old-FN new-FN ok-if-already-exists)
+(let((isDir (file-directory-p old-FN)))
+(error-in "DRF" (funcall old-function old-FN new-FN ok-if-already-exists)
+(clog :debug "cloud-rename-file %s --> %s" old-FN new-FN)
+(cloud-rename-file old-FN new-FN)
+(unless(BRDp FN) (new-action i-rename old-FN new-FN))
 
 (when isDir
   (let* ((old-dir (to-dir old-FN)) (LOD (length old-dir))
@@ -684,19 +684,9 @@ t))
 	     (string= old-FN (substring FN 0 LOD)))
 	  (let ((new-name (concat new-dir (substring FN LOD))))
             (cloud-rename-file FN new-name)
-	    (new-action i-rename FN new-name))))))))))
-(add-function :around (symbol-function 'dired-rename-file) #'DRF)
-
-(defun rename-directory (old-dir new-dir)
-"recursively update plain-names of clouded files due to renaming of a directory"
-(when (file-directory-p old-dir)
-  (let* ((old-dir (to-dir old-dir)) (LOD (length old-dir))
-         (new-dir (to-dir new-dir)))
-    (dolist (rec (contained-in old-dir))
-      (let ((FN (aref rec plain)))
-        (when (and (<= LOD (length FN))
-		   (string= old-dir (substring FN 0 LOD)))
-	  (aset rec plain (concat new-dir (substring FN LOD)))))))))
+   (unless(BRDp FN)
+	    (new-action i-rename FN new-name)))))))))))
+(advice-add 'dired-rename-file :around #'DRF)
 
 (defun cloud-start()
 (save-some-buffers)
@@ -706,7 +696,7 @@ t))
   (when (cloud-init remote-directory)
     (clog :info "check newly created configuraion %s and then M-x cloud-start" (local/host/conf))))
 
-(update-conf conf "remote-directory" "junk-extensions" "ignored-dirs" "remote/files" "number-of-CPU-cores" "password")
+(update-conf conf "remote-directory" "black-extensions" "black-root-dirs" "remote/files" "number-of-CPU-cores" "password")
 
 (ifn (remote-directory) (clog :error "You have to set remote-directory for me before I can proceed")
 (ifn password (clog :error "You have to set encryption password for me before I can proceed")
