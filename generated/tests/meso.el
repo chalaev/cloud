@@ -19,17 +19,19 @@
  (clog :info "erasing %s" CDs)
  (apply #'delete-dirs tmp-dirs))))))
 
-(defvar host-par-names '(file-DB ~ HOME emacs-d password remote/files removed-files important-msgs gpg-process cloud-was-connected all Makefile uploaded stanze
-   remote-directory dot-file dot-dir conf-file dir-1 file-1 file-1a file-2 file-3 file-4 file-5))
+(defvar host-par-names '(localhost file-DB ~ HOME emacs-d password remote/files removed-files important-msgs gpg-process cloud-was-connected all Makefile uploaded stanze
+   remote-directory dot-file dot-dir conf-file dir-1 file-1 file-1a dir-1a file-2 file-3 file-4 file-5))
 (eval (cons 'progn (mapcar #'(lambda(VD) `(defvar ,VD nil)) host-par-names)))
 ;;(define-vars (dot-file dot-dir conf-file dir-1 file-1 file-2 file-3 file-4 file-5))
 
-(defmacro one-virgin-host(dirs &rest body)
+(defvar localhost-counter 0)
+(defmacro one-virgin-host(LH dirs &rest body)
 "simulating first run on a new host -- in order to test config file creation;
 dirs is a list (root-dir remote-dir), might be nil,
 root-dir is (optional, might be nil) root directory for this host"
 (let ((ds (s-gensym "ds")))
 `(let* ((,ds ,dirs)
+   (localhost (or ,LH (format "%s-%d" localhost (incf localhost-counter))))
    (root-dir (to-dir (or (car ,ds) (make-temp-file "cloud-test.root." t))))
    (~ (need-dir root-dir "user")) (HOME (directory-file-name ~))
    (/tmp/cloud-test/ (need-dir (make-temp-file "cloud." t)))
@@ -45,14 +47,16 @@ root-dir is (optional, might be nil) root directory for this host"
 (conf-file (make-temp-file (concat dot-dir "file.") nil nil "conf-file; it is blacklisted"))
 
 (file-1 (tilde(make-temp-file (concat ~ "file-1.") nil nil (concat "file-1 " signature))))
-(file-1a  (concat ~ "file-1a.dat")); let us fix its name 
+(file-1a (concat ~ "file-1a.dat")); let us fix its name 
 (dir-1 (to-dir(make-temp-file (concat ~ "dir-1.") t)))
+(dir-1a (concat ~ "dir-1a")); let us fix its name 
 (file-2 (make-temp-file (concat dir-1 "tmp-2.") nil nil (concat "file-2 " signature))); blacklisted
 (file-3 (make-temp-file (concat dir-1 "file-3.") nil nil (concat "file-3 " signature)))
 (file-4 (make-temp-file (concat dir-1 "file-4.") nil nil (concat "file-4 " signature))); to be encrypted
 (file-5 (make-temp-file (concat dir-1 "file-5.") nil nil (concat "file-5 " signature))); to be gzipped
 (host-conf (make-hash-table)))
 (write-region (rand-str 3) nil file-1a)
+(make-directory (untilde dir-1a) t)
 (ert/home root-dir)
 (clog :info "home directory(~)= %s, remote-directory= %s, local-dir= %s" ~ remote-directory (local-dir))
 (ensure-dir-exists (local-dir))
@@ -63,7 +67,7 @@ root-dir is (optional, might be nil) root directory for this host"
  ,@body)))
 (ert-deftest cloud-and-upload()
 "clouding a file and uploading it to remote directory"
-(one-virgin-host nil
+(one-virgin-host nil nil
 (should (file-exists-p(untilde file-1)))
 (cloud-add file-1)
 (let((remote-files-1(directory-files remote-directory nil "...\...." t)))
@@ -86,7 +90,7 @@ root-dir is (optional, might be nil) root directory for this host"
 
 (ert-deftest save-then-upload()
 "uploading previously updated file that was clouded before"
-(one-virgin-host nil
+(one-virgin-host nil nil
 (should(file-exists-p(untilde file-1a)))
 (cloud-add file-1a)
 (let((FR(cloud-locate-FN file-1a)))
@@ -109,7 +113,7 @@ root-dir is (optional, might be nil) root directory for this host"
 (should(< t1 t3))))))))))
 (ert-deftest cloud-init()
    "just check that non-empty config file is created during the first run"
-(one-virgin-host nil
+(one-virgin-host nil nil
   (should (progn
   (cloud-init remote-directory) 
 (when-let ((FR (cloud-get-file-properties (concat emacs-d "cloud/" localhost "/config")))
@@ -119,7 +123,7 @@ root-dir is (optional, might be nil) root directory for this host"
 
 (ert-deftest read-write-conf()
    "testing cloud-init, read-conf, and write-conf"
-(one-virgin-host nil (cloud-init)
+(one-virgin-host nil nil (cloud-init)
 (clog :info "read-write-conf: (local/host/conf) => %s" (local/host/conf))
 (clog :info "
 Here is the generated config file: ==>")

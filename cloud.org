@@ -145,7 +145,7 @@ See [[file:testing.org][testing.org]] about multi-scale testing:
 #+BEGIN_SRC emacs-lisp :tangle generated/meso.el
 (ert-deftest cloud-init()
    "just check that non-empty config file is created during the first run"
-(one-virgin-host nil
+(one-virgin-host nil nil
   (should (progn
   (cloud-init remote-directory) 
 (when-let ((FR (cloud-get-file-properties (concat emacs-d "cloud/" localhost "/config")))
@@ -212,7 +212,7 @@ conf)))
 #+BEGIN_SRC emacs-lisp :tangle generated/meso.el
 (ert-deftest read-write-conf()
    "testing cloud-init, read-conf, and write-conf"
-(one-virgin-host nil (cloud-init)
+(one-virgin-host nil nil (cloud-init)
 (clog :info "read-write-conf: (local/host/conf) => %s" (local/host/conf))
 (clog :info "
 Here is the generated config file: ==>")
@@ -302,7 +302,6 @@ The content of ~file-DB~ is locally stored in the file named =(local/all)=:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun print-actions()
 (dolist (action remote-actions)
-  (clog :debug "printing-action %s" (format-action action))
   (insert (format-action action))
   (drop remote-actions action)
   ;;(backspace) 
@@ -991,12 +990,9 @@ GNU make won't upload (with encryption) the file to the server if target is youn
            (RN (concat (remote-directory) (aref FR cipher) (cip-ext FN)))
            (clouded (cloud-get-file-properties RN))
            (local-mtime (aref FR mtime)))
+(clog :debug "make-cloud-older: FN= %s, RN= %s" FN RN)
 (when (time< local-mtime (aref clouded mtime))
-(clog :debug "changing time stamp to %s" (TS(time-add local-mtime -60)))
-  (set-file-times
-;;(concat (remote-directory) (plain-name clouded) (cip-ext (plain-name FR)))
-;; 01/06 replaced it with
-(concat (remote-directory) (cipher-name clouded) (cip-ext (plain-name FR)))
+  (set-file-times RN
 (time-add local-mtime (- -60 (random 6000)))))))
 #+END_SRC
 
@@ -1164,7 +1160,7 @@ where =i-Nargs= is used only when parsing action lines from the remote file DB.
 
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun new-action (a-ID &rest args)
-(mapcar #'(lambda(FN) (clog :debug "new-action(%d %s)" a-ID FN)) args)
+(clog :debug "new-action(%d %s)" a-ID (together args))
   (let ((action (make-vector (length action-fields) nil)))
     (aset action i-ID a-ID)
     (aset action i-time (current-time))
@@ -1190,12 +1186,12 @@ nil (local/log) t)
       (i-host-add (dolist (arg arguments) (push arg cloud-hosts)) t)
       (i-forget (cloud-forget-many arguments) t)
       (i-delete (cloud-rm arguments) t)
-      (i-rename (cloud-rename-file (first arguments) (second arguments)) t)
+      (i-rename (cloud-rename-file (untilde(first arguments)) (untilde(second arguments))))
 #+END_SRC
 When the file(s) are finally shared among /all/ hosts (so that ~localhost~ is the last one), we just forget the file(s):
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
       (i-share (when (= 1 (length HNs)) (cloud-forget-many arguments)))
-      (otherwise (clog :error "unknown action %d" (aref action i-ID))))) t)
+      (otherwise (clog :error "unknown action %d" (aref action i-ID))))))
 #+END_SRC
 
 We must inform other hosts about actions they have to perform; for that we write list of actions
@@ -1467,17 +1463,21 @@ Remove file from the database and erase its encrypted copy in the cloud:
             (aset target property (aref source property)))
       (drop file-DB source))
      (source (aset source plain new))
-     (target (setf target (cloud-get-file-properties new))))))
+     (target (setf target (cloud-get-file-properties new))))
+(clog :debug "mv %s %s" old new)
+(when(file-exists-p old)
+(unless(file-exists-p(file-name-directory new)) (make-directory(file-name-directory new)))
+(error-in "cloud-rename-file" (rename-file old new t) t))))
 #+END_SRC
 
 Updating =dired-rename-file=:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun DRF (old-function old-FN new-FN ok-if-already-exists)
-(let((isDir (file-directory-p old-FN)))
-(error-in "DRF" (funcall old-function old-FN new-FN ok-if-already-exists)
+(defun DRF(old-function old-FN new-FN ok-if-already-exists)
 (clog :debug "cloud-rename-file %s --> %s" old-FN new-FN)
+(let((isDir (file-directory-p old-FN)))
+(error-in "DRF" (funcall old-function (untilde old-FN) (untilde new-FN) ok-if-already-exists)
 (cloud-rename-file old-FN new-FN)
-(unless(BRDp FN) (new-action i-rename old-FN new-FN))
+(unless(BRDp old-FN) (new-action i-rename old-FN new-FN))
 #+END_SRC
 In case we are renaming directories:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
@@ -1490,7 +1490,7 @@ In case we are renaming directories:
 	     (string= old-FN (substring FN 0 LOD)))
 	  (let ((new-name (concat new-dir (substring FN LOD))))
             (cloud-rename-file FN new-name)
-   (unless(BRDp FN)
+   (unless(BRDp old-FN)
 	    (new-action i-rename FN new-name)))))))))))
 (advice-add 'dired-rename-file :around #'DRF)
 #+END_SRC

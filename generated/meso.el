@@ -1,6 +1,6 @@
 (ert-deftest cloud-init()
    "just check that non-empty config file is created during the first run"
-(one-virgin-host nil
+(one-virgin-host nil nil
   (should (progn
   (cloud-init remote-directory) 
 (when-let ((FR (cloud-get-file-properties (concat emacs-d "cloud/" localhost "/config")))
@@ -10,7 +10,7 @@
 
 (ert-deftest read-write-conf()
    "testing cloud-init, read-conf, and write-conf"
-(one-virgin-host nil (cloud-init)
+(one-virgin-host nil nil (cloud-init)
 (clog :info "read-write-conf: (local/host/conf) => %s" (local/host/conf))
 (clog :info "
 Here is the generated config file: ==>")

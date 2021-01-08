@@ -6,6 +6,10 @@ Mostly fixing the errors; the ideas are either implemented or postponed for (pro
 
 ** fat removal
 Eliminating =ok= variables, relying more on conditions now.
+*** 01/08
+1. added new tests: =rename-file= + =rename-directory=
+2. corrected =DRF= + =make-cloud-older= + =perform=
+
 *** 01/06
 1. stopped using =safe-delete-dir=
 2. renamed =ignored-dirs= → =black-root-dirs= (for compatibility with [[https://github.com/chalaev/el-backup][el-backup]])
