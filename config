@@ -1,6 +1,7 @@
+# this file will most probably be *different* on different hosts
 remote-directory=/mnt/lws/cloud/
-junk-extensions=Z ac3 afm aux avi bak bbl blg brf bst bz2 cache chm cp cps dat deb dv dvi eps fb2 fls fn gif gpx gz idx ilg img ind iso jpeg jpg ky log m m2v md mjpeg mkv mov mp3 mp4 mpg ogg ogm out part pbm pdf pfb pg pgm png pnm pod ps rar raw segments sfd tbz tga tgz tif tiff toc tp vob vr wav woff xcf xml xz zip 
-black-root-dirs=/etc/ /mnt/ /tmp/ /ssh:
-remote/files=XYZ
+black-extensions=Z ac3 afm aux avi bak bbl blg brf bst bz2 cache chm cp cps dat deb dv dvi eps fb2 fls fn gif gpx gz idx ilg img ind iso jpeg jpg ky log m m2v md mjpeg mkv mov mp3 mp4 mpg ogg ogm out part pbm pdf pfb pg pgm png pnm pod ps rar raw segments sfd tbz tga tgz tif tiff toc tp vob vr wav woff xcf xml xz zip 
+black-root-dirs=/etc/ /mnt/ /ssh: /tmp/ 
+remote/files=GWG
 number-of-CPU-cores=8
 password=*********

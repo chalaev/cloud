@@ -24,18 +24,17 @@
 (clog :info "saved local configuration in %s" (local-dir))))))
 
 (defun format-conf(CP)
+(ifn-let((SVI (symbol-value(intern CP)))) ""
 (cond
-  ((member CP numerical-parameters) (format "%s=%d" CP (symbol-value(intern CP))))
+  ((member CP numerical-parameters) (format "%s=%d" CP SVI))
   ((member CP lists-of-strings) (format "%s=%s" CP
-(apply #'concat (mapcar #'(lambda(item) (format "%s " item)) (sort (symbol-value(intern CP)) #'string<)))))
-  (t (format "%s=%s" CP (symbol-value(intern CP))))))
+(apply #'concat (mapcar #'(lambda(item) (format "%s " item)) (sort SVI #'string<)))))
+  (t (format "%s=%s" CP SVI)))))
 
 (defun write-conf()
-;;(clog :debug "starting write-conf")
 (with-temp-file (local/host/conf)
-(mapcar #'(lambda(CP) (insert(format-conf CP)) (newline)) 
-  '("remote-directory" "black-extensions" "black-root-dirs" "remote/files" "number-of-CPU-cores" "password")))
-;;(clog :debug "ended write-conf")
+(mapcar #'(lambda(CP) (insert(format-conf CP)) (newline))
+ (split-string "black-matches black-root-dirs remote-directory black-extensions remote/files number-of-CPU-cores password")))
  t)
 
 (defun read-conf()
@@ -428,7 +427,7 @@ password (cloud-mk) (cloud-mk))
   (set-file-times (local/all) (current-time))
   (save-Makefile)
   (setf added-files nil upload-queue nil removed-files nil)
-(let ((make (format "HOME=%s make -j%d -f %s all &> %s.log" HOME number-of-CPU-cores (untilde(cloud-mk)) (untilde(cloud-mk)))))
+(let((make (format "HOME=%s make -i -j%d -f %s all &> %s.log" HOME number-of-CPU-cores (untilde(cloud-mk)) (untilde(cloud-mk)))))
 
 (ifn(= 0 (shell-command make)) (clog :error "make file containing
 %s
@@ -567,12 +566,12 @@ nil (local/log) t)
 (unless (member FN file-blacklist)
  (push FN file-blacklist))))
 (defun BRDp(FN)
-  (when black-root-dirs(string-match (eval `(rx bol ,(cons 'or black-root-dirs))) FN)))
+  (when black-root-dirs (string-match (eval `(rx bol ,(cons 'or black-root-dirs))) FN)))
 (defun black-p(FN &optional file-rec)
 (let ((result
 (or
  (member FN file-blacklist) 
- (string-match (rx (or "tmp" "/old/" "/.git/")) FN)
+ (when black-matches (string-match (eval `(rx ,(cons 'or black-matches))) FN))
  (string-match (concat ~ "\\.") (untilde FN))
  (member (file-name-extension FN) black-extensions)
  (backup-file-name-p FN)
@@ -696,7 +695,7 @@ nil (local/log) t)
   (when (cloud-init remote-directory)
     (clog :info "check newly created configuraion %s and then M-x cloud-start" (local/host/conf))))
 
-(update-conf conf "remote-directory" "black-extensions" "black-root-dirs" "remote/files" "number-of-CPU-cores" "password")
+(update-conf conf (split-string "remote-directory black-extensions black-root-dirs remote/files number-of-CPU-cores password"))
 
 (ifn (remote-directory) (clog :error "You have to set remote-directory for me before I can proceed")
 (ifn password (clog :error "You have to set encryption password for me before I can proceed")

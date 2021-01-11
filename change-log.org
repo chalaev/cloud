@@ -6,6 +6,13 @@ Mostly fixing the errors; the ideas are either implemented or postponed for (pro
 
 ** fat removal
 Eliminating =ok= variables, relying more on conditions now.
+*** 01/11
+Improved file filtering:
+1. corrected =black-p=
+2. introduced/updated =black-matches= and =black-root-dirs=
+3. in =write-conf= added treatment for =nil= parameters
+4. added =-i= option (ignore errors) to =make=
+
 *** 01/08
 1. added new tests: =rename-file= + =rename-directory=
 2. corrected =DRF= + =make-cloud-older= + =perform=

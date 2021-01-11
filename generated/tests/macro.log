@@ -1,127 +1,127 @@
-Running 4 tests (2021-01-08 14:56:13-0500)
-:info 14:56:13 home directory(~)= /tmp/cloud-test.PAIR-root.SGDH5Q/A/user/, remote-directory= /tmp/cloud-test.PAIR-remote.kD3QiM/, local-dir= /tmp/cloud-test.PAIR-root.SGDH5Q/A/user/.emacs.d/cloud/
-:info 14:56:13 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.kD3QiM/ as a cloud
-:info 14:56:13 saved local configuration in /tmp/cloud-test.PAIR-root.SGDH5Q/A/user/.emacs.d/cloud/
-:info 14:56:13 home directory(~)= /tmp/cloud-test.PAIR-root.SGDH5Q/B/user/, remote-directory= /tmp/cloud-test.PAIR-remote.kD3QiM/, local-dir= /tmp/cloud-test.PAIR-root.SGDH5Q/B/user/.emacs.d/cloud/
-:info 14:56:13 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.kD3QiM/ as a cloud
-:info 14:56:13 saved local configuration in /tmp/cloud-test.PAIR-root.SGDH5Q/B/user/.emacs.d/cloud/
-:info 14:56:13 host A= testA> remote/files= oYr, password= 12345, HOME= /tmp/cloud-test.PAIR-root.SGDH5Q/A/user
+Running 4 tests (2021-01-11 14:00:09-0500)
+:info 14:00:09 home directory(~)= /tmp/cloud-test.PAIR-root.cPFpAv/A/user/, remote-directory= /tmp/cloud-test.PAIR-remote.wOgo2e/, local-dir= /tmp/cloud-test.PAIR-root.cPFpAv/A/user/.emacs.d/cloud/
+:info 14:00:09 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.wOgo2e/ as a cloud
+:info 14:00:09 saved local configuration in /tmp/cloud-test.PAIR-root.cPFpAv/A/user/.emacs.d/cloud/
+:info 14:00:09 home directory(~)= /tmp/cloud-test.PAIR-root.cPFpAv/B/user/, remote-directory= /tmp/cloud-test.PAIR-remote.wOgo2e/, local-dir= /tmp/cloud-test.PAIR-root.cPFpAv/B/user/.emacs.d/cloud/
+:info 14:00:09 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.wOgo2e/ as a cloud
+:info 14:00:09 saved local configuration in /tmp/cloud-test.PAIR-root.cPFpAv/B/user/.emacs.d/cloud/
+:info 14:00:09 host A= testA> remote/files= svd, password= 12345, HOME= /tmp/cloud-test.PAIR-root.cPFpAv/A/user
 
-:info 14:56:13 file ~/.emacs.d/cloud/individual.passes is now clouded
+:info 14:00:09 file ~/.emacs.d/cloud/individual.passes is now clouded
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
-:info 14:56:14 done syncing
-:info 14:56:14 file ~/file-1.olahco is now clouded
+:info 14:00:10 done syncing
+:info 14:00:10 file ~/file-1.I10R8T is now clouded
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
-:info 14:56:16 done syncing
-:info 14:56:16 host B= testB> remote/files= oYr, password= 12345, HOME= /tmp/cloud-test.PAIR-root.SGDH5Q/B/user
+:info 14:00:11 done syncing
+:info 14:00:11 host B= testB> remote/files= svd, password= 12345, HOME= /tmp/cloud-test.PAIR-root.cPFpAv/B/user
 
-:info 14:56:16 file ~/.emacs.d/cloud/individual.passes is now clouded
-:debug 14:56:16 updating /tmp/cloud-test.PAIR-root.SGDH5Q/B/user/.emacs.d/cloud/testB/all obsoleted by /tmp/cloud-test.PAIR-remote.kD3QiM/oYr.gpg
+:info 14:00:11 file ~/.emacs.d/cloud/individual.passes is now clouded
+:debug 14:00:11 updating /tmp/cloud-test.PAIR-root.cPFpAv/B/user/.emacs.d/cloud/testB/all obsoleted by /tmp/cloud-test.PAIR-remote.wOgo2e/svd.gpg
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
-:info 14:56:18 done syncing
-:info 14:56:18 cleaning up /tmp/cloud-test.PAIR-root.SGDH5Q/B/
-:info 14:56:18 erasing /tmp/cloud-test.PAIR-root.SGDH5Q/B/
+:info 14:00:13 done syncing
+:info 14:00:13 cleaning up /tmp/cloud-test.PAIR-root.cPFpAv/B/
+:info 14:00:13 erasing /tmp/cloud-test.PAIR-root.cPFpAv/B/
    passed  1/4  cloud-sync-1
-:info 14:56:18 home directory(~)= /tmp/cloud-test.PAIR-root.LrjMey/A/user/, remote-directory= /tmp/cloud-test.PAIR-remote.wQU70H/, local-dir= /tmp/cloud-test.PAIR-root.LrjMey/A/user/.emacs.d/cloud/
-:info 14:56:18 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.wQU70H/ as a cloud
-:info 14:56:18 saved local configuration in /tmp/cloud-test.PAIR-root.LrjMey/A/user/.emacs.d/cloud/
-:info 14:56:18 home directory(~)= /tmp/cloud-test.PAIR-root.LrjMey/B/user/, remote-directory= /tmp/cloud-test.PAIR-remote.wQU70H/, local-dir= /tmp/cloud-test.PAIR-root.LrjMey/B/user/.emacs.d/cloud/
-:info 14:56:18 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.wQU70H/ as a cloud
-:info 14:56:18 saved local configuration in /tmp/cloud-test.PAIR-root.LrjMey/B/user/.emacs.d/cloud/
-:info 14:56:18 host A= testA> remote/files= CAZ, password= 12345, HOME= /tmp/cloud-test.PAIR-root.LrjMey/A/user
+:info 14:00:13 home directory(~)= /tmp/cloud-test.PAIR-root.iIYRkl/A/user/, remote-directory= /tmp/cloud-test.PAIR-remote.mpL4Xk/, local-dir= /tmp/cloud-test.PAIR-root.iIYRkl/A/user/.emacs.d/cloud/
+:info 14:00:13 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.mpL4Xk/ as a cloud
+:info 14:00:13 saved local configuration in /tmp/cloud-test.PAIR-root.iIYRkl/A/user/.emacs.d/cloud/
+:info 14:00:13 home directory(~)= /tmp/cloud-test.PAIR-root.iIYRkl/B/user/, remote-directory= /tmp/cloud-test.PAIR-remote.mpL4Xk/, local-dir= /tmp/cloud-test.PAIR-root.iIYRkl/B/user/.emacs.d/cloud/
+:info 14:00:13 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.mpL4Xk/ as a cloud
+:info 14:00:13 saved local configuration in /tmp/cloud-test.PAIR-root.iIYRkl/B/user/.emacs.d/cloud/
+:info 14:00:13 host A= testA> remote/files= cuw, password= 12345, HOME= /tmp/cloud-test.PAIR-root.iIYRkl/A/user
 
-:info 14:56:18 file ~/.emacs.d/cloud/individual.passes is now clouded
+:info 14:00:13 file ~/.emacs.d/cloud/individual.passes is now clouded
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
-:info 14:56:18 done syncing
-:info 14:56:18 touch ’now + 5 sec’ /tmp/cloud-test.PAIR-root.LrjMey/A/user/file-1a.dat
-:info 14:56:18 file ~/file-1a.dat is now clouded
+:info 14:00:14 done syncing
+:info 14:00:14 touch ’now + 5 sec’ /tmp/cloud-test.PAIR-root.iIYRkl/A/user/file-1a.dat
+:info 14:00:14 file ~/file-1a.dat is now clouded
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
-:info 14:56:20 done syncing
-:info 14:56:20 host B= testB> remote/files= CAZ, password= 12345, HOME= /tmp/cloud-test.PAIR-root.LrjMey/B/user
+:info 14:00:16 done syncing
+:info 14:00:16 host B= testB> remote/files= cuw, password= 12345, HOME= /tmp/cloud-test.PAIR-root.iIYRkl/B/user
 
-:info 14:56:20 file ~/.emacs.d/cloud/individual.passes is now clouded
-:debug 14:56:20 updating /tmp/cloud-test.PAIR-root.LrjMey/B/user/.emacs.d/cloud/testB/all obsoleted by /tmp/cloud-test.PAIR-remote.wQU70H/CAZ.gpg
+:info 14:00:16 file ~/.emacs.d/cloud/individual.passes is now clouded
+:debug 14:00:16 updating /tmp/cloud-test.PAIR-root.iIYRkl/B/user/.emacs.d/cloud/testB/all obsoleted by /tmp/cloud-test.PAIR-remote.mpL4Xk/cuw.gpg
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
-:info 14:56:22 done syncing
-:info 14:56:22 cleaning up /tmp/cloud-test.PAIR-root.LrjMey/B/
-:info 14:56:22 erasing /tmp/cloud-test.PAIR-root.LrjMey/B/
+:info 14:00:18 done syncing
+:info 14:00:18 cleaning up /tmp/cloud-test.PAIR-root.iIYRkl/B/
+:info 14:00:18 erasing /tmp/cloud-test.PAIR-root.iIYRkl/B/
    passed  2/4  cloud-sync-2
-:info 14:56:22 home directory(~)= /tmp/cloud-test.PAIR-root.3fykBk/A/user/, remote-directory= /tmp/cloud-test.PAIR-remote.UhvdqR/, local-dir= /tmp/cloud-test.PAIR-root.3fykBk/A/user/.emacs.d/cloud/
-:info 14:56:22 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.UhvdqR/ as a cloud
-:info 14:56:22 saved local configuration in /tmp/cloud-test.PAIR-root.3fykBk/A/user/.emacs.d/cloud/
-:info 14:56:22 home directory(~)= /tmp/cloud-test.PAIR-root.3fykBk/B/user/, remote-directory= /tmp/cloud-test.PAIR-remote.UhvdqR/, local-dir= /tmp/cloud-test.PAIR-root.3fykBk/B/user/.emacs.d/cloud/
-:info 14:56:22 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.UhvdqR/ as a cloud
-:info 14:56:22 saved local configuration in /tmp/cloud-test.PAIR-root.3fykBk/B/user/.emacs.d/cloud/
-:info 14:56:22 host A= testA> remote/files= NBu, password= 12345, HOME= /tmp/cloud-test.PAIR-root.3fykBk/A/user
-:info 14:56:22 FN1= ~/dir-1a/ BN1= dir-1a/, DN1= ~/, FN2= ~/new-dir-1a/
-:debug 14:56:22 dired-rename-file ~/dir-1a --> ~/new-dir-1a
-:debug 14:56:22 cloud-rename-file ~/dir-1a --> ~/new-dir-1a
-:debug 14:56:22 mv ~/dir-1a ~/new-dir-1a
-:debug 14:56:22 new-action(2 ~/dir-1a ~/new-dir-1a)
-:info 14:56:22 rename action: "2021-01-08 14:56:22 EST" 2 2 "~/dir-1a" "~/new-dir-1a"  "testB" 
+:info 14:00:18 home directory(~)= /tmp/cloud-test.PAIR-root.PTPbcQ/A/user/, remote-directory= /tmp/cloud-test.PAIR-remote.oTMgtX/, local-dir= /tmp/cloud-test.PAIR-root.PTPbcQ/A/user/.emacs.d/cloud/
+:info 14:00:18 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.oTMgtX/ as a cloud
+:info 14:00:18 saved local configuration in /tmp/cloud-test.PAIR-root.PTPbcQ/A/user/.emacs.d/cloud/
+:info 14:00:18 home directory(~)= /tmp/cloud-test.PAIR-root.PTPbcQ/B/user/, remote-directory= /tmp/cloud-test.PAIR-remote.oTMgtX/, local-dir= /tmp/cloud-test.PAIR-root.PTPbcQ/B/user/.emacs.d/cloud/
+:info 14:00:18 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.oTMgtX/ as a cloud
+:info 14:00:18 saved local configuration in /tmp/cloud-test.PAIR-root.PTPbcQ/B/user/.emacs.d/cloud/
+:info 14:00:18 host A= testA> remote/files= VU5, password= 12345, HOME= /tmp/cloud-test.PAIR-root.PTPbcQ/A/user
+:info 14:00:18 FN1= ~/dir-1a/ BN1= dir-1a/, DN1= ~/, FN2= ~/new-dir-1a/
+:debug 14:00:18 dired-rename-file ~/dir-1a --> ~/new-dir-1a
+:debug 14:00:18 cloud-rename-file ~/dir-1a --> ~/new-dir-1a
+:debug 14:00:18 mv ~/dir-1a ~/new-dir-1a
+:debug 14:00:18 new-action(2 ~/dir-1a ~/new-dir-1a)
+:info 14:00:18 rename action: "2021-01-11 14:00:18 EST" 2 2 "~/dir-1a" "~/new-dir-1a"  "testB" 
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
-:info 14:56:23 done syncing
-:info 14:56:23 host B= testB> remote/files= NBu, password= 12345, HOME= /tmp/cloud-test.PAIR-root.3fykBk/B/user
-:info 14:56:23 file1= /tmp/cloud-test.PAIR-root.3fykBk/B/user/dir-1a
+:info 14:00:18 done syncing
+:info 14:00:18 host B= testB> remote/files= VU5, password= 12345, HOME= /tmp/cloud-test.PAIR-root.PTPbcQ/B/user
+:info 14:00:18 file1= /tmp/cloud-test.PAIR-root.PTPbcQ/B/user/dir-1a
 
-:info 14:56:23 file ~/.emacs.d/cloud/individual.passes is now clouded
-:debug 14:56:23 updating /tmp/cloud-test.PAIR-root.3fykBk/B/user/.emacs.d/cloud/testB/all obsoleted by /tmp/cloud-test.PAIR-remote.UhvdqR/NBu.gpg
-:debug 14:56:23 action string="2021-01-08 14:56:22 EST" 2 2 "~/dir-1a" "~/new-dir-1a"  "testB" 
-:debug 14:56:23 parse-action("2021-01-08 14:56:22 EST" 2 2 "~/dir-1a" "~/new-dir-1a"  "testB" ) ...
-:info 14:56:23 ... will later be referenced as 01/08 14:56:22
-:debug 14:56:23 mv /tmp/cloud-test.PAIR-root.3fykBk/B/user/dir-1a /tmp/cloud-test.PAIR-root.3fykBk/B/user/new-dir-1a
-:info 14:56:23 sucessfully performed action 01/08 14:56:22
+:info 14:00:18 file ~/.emacs.d/cloud/individual.passes is now clouded
+:debug 14:00:18 updating /tmp/cloud-test.PAIR-root.PTPbcQ/B/user/.emacs.d/cloud/testB/all obsoleted by /tmp/cloud-test.PAIR-remote.oTMgtX/VU5.gpg
+:debug 14:00:19 action string="2021-01-11 14:00:18 EST" 2 2 "~/dir-1a" "~/new-dir-1a"  "testB" 
+:debug 14:00:19 parse-action("2021-01-11 14:00:18 EST" 2 2 "~/dir-1a" "~/new-dir-1a"  "testB" ) ...
+:info 14:00:19 ... will later be referenced as 01/11 14:00:18
+:debug 14:00:19 mv /tmp/cloud-test.PAIR-root.PTPbcQ/B/user/dir-1a /tmp/cloud-test.PAIR-root.PTPbcQ/B/user/new-dir-1a
+:info 14:00:19 sucessfully performed action 01/11 14:00:18
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
-:info 14:56:24 done syncing
-:info 14:56:24 cleaning up /tmp/cloud-test.PAIR-root.3fykBk/B/
-:info 14:56:24 erasing /tmp/cloud-test.PAIR-root.3fykBk/B/
+:info 14:00:20 done syncing
+:info 14:00:20 cleaning up /tmp/cloud-test.PAIR-root.PTPbcQ/B/
+:info 14:00:20 erasing /tmp/cloud-test.PAIR-root.PTPbcQ/B/
    passed  3/4  rename-directory
-:info 14:56:24 home directory(~)= /tmp/cloud-test.PAIR-root.rgrQD1/A/user/, remote-directory= /tmp/cloud-test.PAIR-remote.keONCO/, local-dir= /tmp/cloud-test.PAIR-root.rgrQD1/A/user/.emacs.d/cloud/
-:info 14:56:24 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.keONCO/ as a cloud
-:info 14:56:24 saved local configuration in /tmp/cloud-test.PAIR-root.rgrQD1/A/user/.emacs.d/cloud/
-:info 14:56:24 home directory(~)= /tmp/cloud-test.PAIR-root.rgrQD1/B/user/, remote-directory= /tmp/cloud-test.PAIR-remote.keONCO/, local-dir= /tmp/cloud-test.PAIR-root.rgrQD1/B/user/.emacs.d/cloud/
-:info 14:56:24 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.keONCO/ as a cloud
-:info 14:56:24 saved local configuration in /tmp/cloud-test.PAIR-root.rgrQD1/B/user/.emacs.d/cloud/
-:info 14:56:24 cloud-hosts= testB testA
-:info 14:56:24 host A= testA> remote/files= lQO, password= 12345, HOME= /tmp/cloud-test.PAIR-root.rgrQD1/A/user
-:info 14:56:24 FN1= ~/file-1a.dat BN1= file-1a.dat, DN1= ~/, FN2= ~/new-file-1a.dat
-:debug 14:56:24 cloud-rename-file ~/file-1a.dat --> ~/new-file-1a.dat
-:debug 14:56:24 mv ~/file-1a.dat ~/new-file-1a.dat
-:debug 14:56:24 new-action(2 ~/file-1a.dat ~/new-file-1a.dat)
-:info 14:56:24 rename action: "2021-01-08 14:56:24 EST" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"  "testB" 
+:info 14:00:20 home directory(~)= /tmp/cloud-test.PAIR-root.LL1BjK/A/user/, remote-directory= /tmp/cloud-test.PAIR-remote.8tqrM3/, local-dir= /tmp/cloud-test.PAIR-root.LL1BjK/A/user/.emacs.d/cloud/
+:info 14:00:20 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.8tqrM3/ as a cloud
+:info 14:00:20 saved local configuration in /tmp/cloud-test.PAIR-root.LL1BjK/A/user/.emacs.d/cloud/
+:info 14:00:20 home directory(~)= /tmp/cloud-test.PAIR-root.LL1BjK/B/user/, remote-directory= /tmp/cloud-test.PAIR-remote.8tqrM3/, local-dir= /tmp/cloud-test.PAIR-root.LL1BjK/B/user/.emacs.d/cloud/
+:info 14:00:20 will use (remote) unused directory /tmp/cloud-test.PAIR-remote.8tqrM3/ as a cloud
+:info 14:00:20 saved local configuration in /tmp/cloud-test.PAIR-root.LL1BjK/B/user/.emacs.d/cloud/
+:info 14:00:20 cloud-hosts= testB testA
+:info 14:00:20 host A= testA> remote/files= dNm, password= 12345, HOME= /tmp/cloud-test.PAIR-root.LL1BjK/A/user
+:info 14:00:20 FN1= ~/file-1a.dat BN1= file-1a.dat, DN1= ~/, FN2= ~/new-file-1a.dat
+:debug 14:00:20 cloud-rename-file ~/file-1a.dat --> ~/new-file-1a.dat
+:debug 14:00:20 mv ~/file-1a.dat ~/new-file-1a.dat
+:debug 14:00:20 new-action(2 ~/file-1a.dat ~/new-file-1a.dat)
+:info 14:00:20 rename action: "2021-01-11 14:00:20 EST" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"  "testB" 
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
-:info 14:56:25 done syncing
-:info 14:56:25 host B= testB> remote/files= lQO, password= 12345, HOME= /tmp/cloud-test.PAIR-root.rgrQD1/B/user
-:info 14:56:25 file1= /tmp/cloud-test.PAIR-root.rgrQD1/B/user/file-1a.dat
+:info 14:00:21 done syncing
+:info 14:00:21 host B= testB> remote/files= dNm, password= 12345, HOME= /tmp/cloud-test.PAIR-root.LL1BjK/B/user
+:info 14:00:21 file1= /tmp/cloud-test.PAIR-root.LL1BjK/B/user/file-1a.dat
 
-:info 14:56:25 file ~/.emacs.d/cloud/individual.passes is now clouded
-:debug 14:56:25 updating /tmp/cloud-test.PAIR-root.rgrQD1/B/user/.emacs.d/cloud/testB/all obsoleted by /tmp/cloud-test.PAIR-remote.keONCO/lQO.gpg
-:debug 14:56:26 action string="2021-01-08 14:56:24 EST" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"  "testB" 
-:debug 14:56:26 parse-action("2021-01-08 14:56:24 EST" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"  "testB" ) ...
-:info 14:56:26 ... will later be referenced as 01/08 14:56:24
-:debug 14:56:26 mv /tmp/cloud-test.PAIR-root.rgrQD1/B/user/file-1a.dat /tmp/cloud-test.PAIR-root.rgrQD1/B/user/new-file-1a.dat
-:info 14:56:26 sucessfully performed action 01/08 14:56:24
+:info 14:00:21 file ~/.emacs.d/cloud/individual.passes is now clouded
+:debug 14:00:21 updating /tmp/cloud-test.PAIR-root.LL1BjK/B/user/.emacs.d/cloud/testB/all obsoleted by /tmp/cloud-test.PAIR-remote.8tqrM3/dNm.gpg
+:debug 14:00:21 action string="2021-01-11 14:00:20 EST" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"  "testB" 
+:debug 14:00:21 parse-action("2021-01-11 14:00:20 EST" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"  "testB" ) ...
+:info 14:00:21 ... will later be referenced as 01/11 14:00:20
+:debug 14:00:21 mv /tmp/cloud-test.PAIR-root.LL1BjK/B/user/file-1a.dat /tmp/cloud-test.PAIR-root.LL1BjK/B/user/new-file-1a.dat
+:info 14:00:21 sucessfully performed action 01/11 14:00:20
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
-:info 14:56:26 done syncing
-:info 14:56:26 cleaning up /tmp/cloud-test.PAIR-root.rgrQD1/B/
-:info 14:56:26 erasing /tmp/cloud-test.PAIR-root.rgrQD1/B/
+:info 14:00:22 done syncing
+:info 14:00:22 cleaning up /tmp/cloud-test.PAIR-root.LL1BjK/B/
+:info 14:00:22 erasing /tmp/cloud-test.PAIR-root.LL1BjK/B/
    passed  4/4  rename-file
 
-Ran 4 tests, 4 results as expected (2021-01-08 14:56:26-0500)
+Ran 4 tests, 4 results as expected (2021-01-11 14:00:22-0500)
 
-:warning 14:56:26 refuse to sync because remote directory not mounted
-:debug 14:56:26 flushing comments before quiting emacs
+:warning 14:00:22 refuse to sync because remote directory not mounted
+:debug 14:00:22 flushing comments before quiting emacs

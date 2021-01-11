@@ -259,7 +259,7 @@ Copying from hostA to hostB file that did exist on hostB:
   (should (string= CF (cat-file (untilde file-1a)))))))
 #+END_SRC
 
-*** renaming a file
+*** Renaming
 #+BEGIN_SRC emacs-lisp :tangle generated/macro.el
 (require 'dired-aux)
 (ert-deftest rename-file()
