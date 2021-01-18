@@ -1,20 +1,19 @@
 
 # Table of Contents
 
-1.  [Description](#orgb2018a9)
-2.  [Prerequisites](#org1b18661)
-3.  [Quick start](#org751ec71)
-    1.  [Initial setup](#org2924cf8)
-    2.  [Uploading and downloading files](#org2e8e68e)
-4.  [Commands](#org750da8e)
-5.  [Source code files](#org11f6018)
-6.  [Limitations](#org1526aee)
-7.  [License](#orga6e9cff)
+1.  [Description](#org3e62acd)
+2.  [Prerequisites](#orgaba29d0)
+3.  [Quick start](#orgc1ecce3)
+    1.  [Initial setup](#org2727f07)
+    2.  [Uploading and downloading files](#org2ceac28)
+4.  [Commands](#orgf145328)
+5.  [Limitations](#org6514c31)
+6.  [License](#orgc31fe73)
 
 Intended for linux users who have [emacs](https://www.gnu.org/software/emacs/) always open.
 
 
-<a id="orgb2018a9"></a>
+<a id="org3e62acd"></a>
 
 # Description
 
@@ -33,7 +32,7 @@ Synchronizing important files on two or more computers using
 Encrypted files saved in the cloud have **random names** to minimize the amount of information cloud owners can extract by monitoring our cloud directory.
 
 
-<a id="org1b18661"></a>
+<a id="orgaba29d0"></a>
 
 # Prerequisites
 
@@ -44,7 +43,7 @@ We need
 2.  [lisp-goodies](https://github.com/chalaev/lisp-goodies): [batch-start.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/batch-start.el) (used by [Makefile](Makefile)), and [shalaev.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el)
 
 
-<a id="org751ec71"></a>
+<a id="orgc1ecce3"></a>
 
 # Quick start
 
@@ -55,7 +54,7 @@ I am running `emacs` in daemon mode (in text console) using the following line i
 Once `emacs` was started in the daemon mode, I can use `emacsclient -c` to open a new (gui) emacs window.
 
 
-<a id="org2924cf8"></a>
+<a id="org2727f07"></a>
 
 ## Initial setup
 
@@ -72,7 +71,7 @@ Once `emacs` was started in the daemon mode, I can use `emacsclient -c` to open 
 5.  Mount remote directory. The mounting point may be arbitrary (specified as `cloud-directory` in [~/.emacs.d/cloud/\`hostname\`/config](config)), the default one is `/mnt/cloud/`.
 
 
-<a id="org2e8e68e"></a>
+<a id="org2ceac28"></a>
 
 ## Uploading and downloading files
 
@@ -91,7 +90,7 @@ For this purpose I have a line in my `crontab`:
 `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="org750da8e"></a>
+<a id="orgf145328"></a>
 
 # Commands
 
@@ -108,25 +107,7 @@ Except for `M-x cloud-sync`, commands are barely used:
     `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="org11f6018"></a>
-
-# Source code files
-
-(Dynamically created/updated logs and data files are described in [files.org](files.org).)
-
-1.  [README.org](README.org) generates `README.md` for [notabug](https://notabug.org/shalaev/emacs-cloud) and [github](https://github.com/chalaev/cloud).
-2.  [cloud.org](cloud.org) contains the code from [generated/main.el](generated/main.el) together with explanations.
-3.  [0.el](0.el), [1.el](1.el), and [2.org](2.org) are kind of "Appendix" containing some pieces of code which not interesting enough to be included in [cloud.org](cloud.org).
-4.  [Makefile](Makefile) merges all the code into [packaged/cloud.el](packaged/cloud.el) which is the main file to be launched when `emacs` starts.
-5.  [shell/cloud-git](shell/cloud-git) synchronizes file operations in `git` with this code, for example:  
-    `cloud-git rm files.org` or `cloud-git mv log-files.org files.org`
-6.  [testing.org](testing.org) describes multi-scale testing procedure.
-7.  [bugs.org](bugs.org) contains
-    a. error and problem list, and
-    b. ideas on further development.
-
-
-<a id="org1526aee"></a>
+<a id="org6514c31"></a>
 
 # Limitations
 
@@ -138,7 +119,7 @@ Except for `M-x cloud-sync`, commands are barely used:
     After encrypting an image file and then decrypting it back, we get the same, but not identical picture (file size is changed).
 
 
-<a id="orga6e9cff"></a>
+<a id="orgc31fe73"></a>
 
 # License
 

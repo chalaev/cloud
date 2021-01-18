@@ -1,4 +1,6 @@
-*Multi-scale code testing*
+#+TITLE: Multi-scale code testing
+#+AUTHOR: Oleg Shalaev
+#+EMAIL:  oleg@chalaev.com
 
 * Testing concept
 For me code testing resembles testing an apple before deciding if I want to eat it.

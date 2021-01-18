@@ -1,12 +1,24 @@
-~gihub~ does not display this file properly, use ~emacs~ to open it.
+~gihub~ does not display this file properly; better use ~emacs~ to open it.
 
+* Source files
+1. [[file:README.org][README.org]] generates =README.md= for [[https://notabug.org/shalaev/emacs-cloud][notabug]] and [[https://github.com/chalaev/cloud][github]].
+2. [[file:cloud.org][cloud.org]] contains the code from [[file:generated/main.el][generated/main.el]] together with explanations.
+3. [[file:0.el][0.el]], [[file:1.el][1.el]], and [[file:2.org][2.org]] are kind of "Appendix" containing some pieces of code which not interesting enough to be included in [[file:cloud.org][cloud.org]].
+4. [[file:Makefile][Makefile]] merges all the code into [[file:packaged/cloud.el][packaged/cloud.el]] which is the main file to be launched when ~emacs~ starts.
+5. [[file:shell/cloud-git][shell/cloud-git]] synchronizes file operations in ~git~ with this code, for example:\\
+   =cloud-git rm files.org= or =cloud-git mv log-files.org files.org=
+6. [[file:shell/cloud-sed-i][shell/cloud-sed-i]] calls ~sed -i~ to update the file(s) and notifies elisp code about that.
+7. [[file:testing.org][testing.org]] describes multi-scale testing procedure.
+8. [[file:bugs.org][bugs.org]] contains
+   a. error and problem list, and
+   b. ideas on further development.
+
+* Generated files
 *Notes*:
 a. remote directory mount point is arbitrary and can be configured in =~/.emacs.d/cloud/config=; here I use the default value =/mnt/cloud/=
 b. `hostname` stands for the host name, my host names are "kalinin" and "kolmogorov".
 
-Main (static) files are described in [[file:README.org][README.org]]; the code dynamically creates the following files:
-
-* Log files
+** Log files
 Debugging becaomes easier when we watch all the logs:
 #+BEGIN_SRC shell
 tail -f /mnt/cloud/history /mnt/cloud/hosts/* ~/.emacs.d/elisp.log ~/.emacs.d/cloud/pass.d/updated ~/.emacs.d/cloud/*/log ~/.emacs.d/cloud/*.log
@@ -50,7 +62,7 @@ While emacs is frozen while syncronization is not done, this file allows to see 
 ** ~/.emacs.d/elisp.log
 Previous log files were project-specific.
 Apart from them, there is also "global" log file =~/.emacs.d/elisp.log=.
-Its content is created by my [[https://github.com/chalaev/elisp-goodies][logging code]] using =(clog ...)= commands.
+Its content is created by my [[https://github.com/chalaev/lisp-goodies][logging code]] using =(clog ...)= commands.
 
 =clog= outputs log messages both to ~*Messages*~ buffer and to =~/.emacs.d/elisp.log=.
 When the variable  =*log-level*= is set to =:info= level
@@ -64,25 +76,15 @@ To see more messages, set =*log-level*=  to =:debug= (zero) level:
 (setf *log-level* 0)
 #+END_SRC
 
-** [[file:generated/make.log][make.log]]
-[[file:generated/make.log][make.log]] contains typical output of successful =make=.
-
 ** Test logs
 Three files generated/tests/{[[file:generated/tests/micro.log][micro]],[[file:generated/tests/meso.log][meso]],[[file:generated/tests/macro.log][macro]]}.log contain output from [[file:testing.org][multi-scaled testing]].
 
-* Other files
+** Other files
 1. [[file:config][~/.emacs.d/cloud/`hostname`/config]] (contains gpg password – don't cloud it!) Created by the user or by the code at the very first code run.
 2. [[file:make-files/1.mk][~/.emacs.d/cloud/cloud.mk]] is the last GNU make file created during the previous =(cloud-sync)=
 3. =~/.emacs.d/cloud/individual.passes= contains individual password for *all* images, e.g.,\\
    cL2 EKPBqTxuHoo8CF4v
    RGq f9f0vIgxu9VOvrjc
 4. Numerous =~/.emacs.d/cloud/images/???= (temporary, one per image) files contain individual image passwords.
-5. =~/.emacs.d/cloud/`hostname`.log= is the host-specific log file for the `hostname`.
-6. =/mnt/cloud/now-syncing/= is a lock directory; its existence tells other hosts that the cloud is busy now and they have to wait before launching =cloud-sync=.
-7. =/mnt/cloud/now-syncing/`hostname`= tells the time when the =cloud-sync= on =`hostname`= started. Normally erased after =cloud-sync= has done the job.
-8. =~/.emacs.d/cloud/pending.`hostname`= contains
-   1. (1st line) list of clouded hosts
-   2. (starting from 3rd line) list of actions waiting to be transmitted to the cloud, when we get internet.
-      There is no need to cloud this file.
-9. =/mnt/cloud/hosts/`hostname`= ← these file's modification dates tell us who was the last host to change the files on the remote server.
-   For now these files also contain (unnecessary) time stamps.
+5. =/mnt/cloud/now-syncing/= is a lock directory; its existence tells other hosts that the cloud is busy now and they have to wait before launching their =cloud-sync=.
+6. =/mnt/cloud/now-syncing/`hostname`= tells the time when the =cloud-sync= on =`hostname`= started. Normally erased after =cloud-sync= has done the job.

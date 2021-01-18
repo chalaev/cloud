@@ -4,8 +4,17 @@ Change log for the [[https://github.com/chalaev/cloud][cloud synchronizer]].
 No more fountainng with ideas; just making the existing code more reliable.
 Mostly fixing the errors; the ideas are either implemented or postponed for (probably remote) future.
 
+** improving reliability
+
+*** 01/18
+1. added =black-matches= to configuration file,
+2. =cloud-forget= became recursive,
+3. made =read-conf= more reliable (previously it could fail in case when the same parameter appeared more than once in the config file), and
+4. now it is o.k. if some files cannot be downloaded because their direcory cannot be created.
+
 ** fat removal
 Eliminating =ok= variables, relying more on conditions now.
+
 *** 01/11
 Improved file filtering:
 1. corrected =black-p=

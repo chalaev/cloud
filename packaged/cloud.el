@@ -3,7 +3,7 @@
 ;; Copyright (C) 2020 Oleg Shalaev <oleg@chalaev.com>
 
 ;; Author:     Oleg Shalaev <oleg@chalaev.com>
-;; Version:    1.5.5
+;; Version:    1.5.6
 
 ;; Package-Requires: (cl epg dired-aux timezone diary-lib subr-x shalaev)
 ;; Keywords:   syncronization, cloud, gpg, encryption
@@ -308,21 +308,22 @@ file-blacklist
 (defun write-conf()
 (with-temp-file (local/host/conf)
 (mapcar #'(lambda(CP) (insert(format-conf CP)) (newline))
- (split-string "black-matches black-root-dirs remote-directory black-extensions remote/files number-of-CPU-cores password")))
+ (split-string "black-matches black-matches black-root-dirs remote-directory black-extensions remote/files number-of-CPU-cores password")))
  t)
 
 (defun read-conf()
   "reads configuration file"
-(let ((conf (read-conf-file (local/host/conf))))
-(ifn conf (clog :error "refuse to work until you specify 3-symbol contents name \"remote/files\" in %s" (local/host/conf))
-(dolist (CP (mapcar #'car conf))
-;;(clog :debug "read-conf(%s)" CP)
-  (setcdr (assoc CP conf)
+(let ((conf0 (read-conf-file(local/host/conf))) conf1)
+(ifn conf0 (clog :error "refuse to work until you specify 3-symbol contents name \"remote/files\" in %s" (local/host/conf))
+(dolist (CP (mapcar #'car conf0))
+(push(cons CP 
+(let((val (cdr(assoc CP conf0))))
     (cond
-((member CP numerical-parameters) (string-to-number (cdr (assoc CP conf))))
-((member CP lists-of-strings)  (split-string (cdr (assoc CP conf))))
-(t (car (split-string (cdr (assoc CP conf))))))))
-conf)))
+((member CP numerical-parameters) (string-to-number val))
+((member CP lists-of-strings)  (split-string val))
+(t (car (split-string val))))))
+conf1))
+(reverse conf1))))
 
 (defun print-hosts()
 (unless cloud-hosts (push localhost cloud-hosts))
@@ -352,7 +353,7 @@ conf)))
   (delete-region (line-beginning-position) (progn (safe-FL) (point)))))
 
 (defun parse-action(str)
-(clog :debug "parse-action(%s) ..." str)
+(clog :debug "parse-action(%s) that ..." str)
 (let ((action (make-vector (length action-fields) nil)))
 
 (dolist (column (list
@@ -637,16 +638,21 @@ FN gunzipped)))
 (defun download(FR)
 (needs ((FN (aref FR plain) (clog :error "download: file lacks plain name"))
         (stanza (dec-make-stanza FR) (clog :error "download: could not create stanza for %s" FN)))
-(ensure-dir-exists(file-name-directory FN))
-(push FN stanze)
-(push stanza Makefile) (NL)))
+(let((DN (file-name-directory FN)))
+  (condition-case err
+      (progn
+	(ensure-dir-exists DN)
+	(push FN stanze)
+	(push stanza Makefile) (NL))
+    (file-error
+     (clog :error "failed to download %s: could not create %s: %s" FN DN (error-message-string err)))))))
 
 (defun make-cloud-older(FR)
 (when-let ((FN (aref FR plain))
            (RN (concat (remote-directory) (aref FR cipher) (cip-ext FN)))
            (clouded (cloud-get-file-properties RN))
            (local-mtime (aref FR mtime)))
-(clog :debug "make-cloud-older: FN= %s, RN= %s" FN RN)
+(clog :debug "make-cloud-older: FN= %s, RN= %s" (tilde FN) RN)
 (when (time< local-mtime (aref clouded mtime))
   (set-file-times RN
 (time-add local-mtime (- -60 (random 6000)))))))
@@ -794,10 +800,10 @@ nil (local/log) t)
 (defun contained-in(DN)
   (let* ((dir-name (tilde DN)) res (dir-name (to-dir dir-name)))
     (dolist (DB-rec file-DB)
-      (when(and
-(< (length dir-name) (length (aref DB-rec plain)))
-(string=(substring-no-properties (aref DB-rec plain) 0 (length dir-name)) dir-name))
-        (push DB-rec res)))
+      (let((FN(tilde(aref DB-rec plain))))
+        (when(and (< (length dir-name) (length FN))
+                  (string=(substring-no-properties FN 0 (length dir-name)) dir-name))
+          (push DB-rec res))))
       res))
 
 (defun add-to-actions(hostname)
@@ -911,6 +917,7 @@ nil (local/log) t)
 (dired-delete-file cloud-FN "always")))
 
 (defun cloud-forget-recursive(FN)
+(clog :info "CFR %s" FN)
 (new-action i-forget FN)
 (dolist (sub-FN (mapcar #'plain-name (contained-in FN)))
   (cloud-forget-file sub-FN))
@@ -969,7 +976,7 @@ nil (local/log) t)
   (when (cloud-init remote-directory)
     (clog :info "check newly created configuraion %s and then M-x cloud-start" (local/host/conf))))
 
-(update-conf conf (split-string "remote-directory black-extensions black-root-dirs remote/files number-of-CPU-cores password"))
+(update-conf conf (split-string "black-matches remote-directory black-extensions black-root-dirs remote/files number-of-CPU-cores password"))
 
 (ifn (remote-directory) (clog :error "You have to set remote-directory for me before I can proceed")
 (ifn password (clog :error "You have to set encryption password for me before I can proceed")

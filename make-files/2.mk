@@ -12,13 +12,13 @@ date=`date '+%m/%d %T'`
 	echo $(date) > $@
 	-chgrp -R tmp ~/.emacs.d/cloud/pass.d/*
 
-$(cloud)mel.gpg: ~/Private/work/cloud/todo.txt
+$(cloud)mel.gpg: ~//work/cloud/todo.txt
 	@$(enc) $@ $<
-	-echo "$(date): uploaded ~/Private/work/cloud/todo.txt" >> $(localLog)
+	-echo "$(date): uploaded ~//work/cloud/todo.txt" >> $(localLog)
 
-$(cloud)vEV.gpg: ~/Private/work/cloud/README.org
+$(cloud)vEV.gpg: ~//work/cloud/README.org
 	@$(enc) $@ $<
-	-echo "$(date): uploaded ~/Private/work/cloud/README.org" >> $(localLog)
+	-echo "$(date): uploaded ~//work/cloud/README.org" >> $(localLog)
 
 $(cloud)UJT.gpg: ~/.emacs.d/cloud/individual.passes
 	@$(enc) $@ $<
