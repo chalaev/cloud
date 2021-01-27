@@ -248,7 +248,8 @@ t)))))
 (defmacro inl (&rest format-pars) `(progn (push ,(cons 'format format-pars) Makefile) (NL)))
 (define-vars (all Makefile uploaded stanze))
 
-(defun cancel-pending-upload(FN) (drop stanze FN))
+(defun cancel-pending-upload(FN) 
+  (drop stanze (tilde FN) (untilde FN)))
 (defun pass-d () (to-dir (local-dir) "pass.d"))
 (defun updated() (concat (pass-d) "updated"))
 
@@ -423,23 +424,24 @@ FN gunzipped)))
 localhost
 (history)
 password (cloud-mk) (cloud-mk))
-(write-region (apply #'concat (reverse Makefile)) nil (untilde(cloud-mk))))
+(write-region (apply #'concat (reverse Makefile)) nil (untilde(cloud-mk)))
+
+(setf stanze nil added-files nil upload-queue nil removed-files nil)
+(reset-Makefile))
 
 (defun cloud-sync()
 (interactive)
 (error-in "cloud-sync"
 
 (defun do-make()
-  (set-file-times (local/all) (current-time))
+  (set-file-times (local/all) (current-time)); touch local file DB
   (save-Makefile)
-  (setf added-files nil upload-queue nil removed-files nil)
 (let((make (format "HOME=%s make -i -j%d -f %s all &> %s.log" HOME number-of-CPU-cores (untilde(cloud-mk)) (untilde(cloud-mk)))))
 
 (ifn(= 0 (shell-command make)) (clog :error "make file containing
 %s
 FAILED with error(s): %s" (cat-file(untilde(cloud-mk))) (cat-file(concat(untilde(cloud-mk))".log")))
-(delete-file(untilde(cloud-mk)))
-(reset-Makefile))))
+(delete-file(untilde(cloud-mk))))))
 
 (ifn(cloud-connected-p) (clog :warning "refuse to sync because remote directory not mounted")
 (directory-lock(lock-dir) (format "%s
@@ -448,7 +450,7 @@ FAILED with error(s): %s" (cat-file(untilde(cloud-mk))) (cat-file(concat(untilde
 (ifn (or (file-exists-p(remote-files)) (file-exists-p(local/all)))
 (ifn (write-all(local/all)) (clog :error "could not save data to %s" (local/all))
 (ifn(gpg-encrypt (local/all) (remote/files)) (error "could not encrypt %s to %s" (local/all) (remote/files))
-(do-make))))
+(do-make)))
 
 (when(file-newer-than-file-p (remote-files) (local/all))
 (clog :debug "updating %s obsoleted by %s" (local/all) (remote-files))
@@ -456,12 +458,12 @@ FAILED with error(s): %s" (cat-file(untilde(cloud-mk))) (cat-file(concat(untilde
 (read-all (local/all))))
 
 (when (or added-files upload-queue removed-files)
-  (ifn (write-all (local/all)) (error "could not save data to %s" (local/all))
-    (ifn(gpg-encrypt (local/all) (remote/files)) (error "could not ENCRYPT file data TO the cloud"))))
+  (ifn(write-all (local/all)) (error "could not save data to %s" (local/all))
+    (ifn(gpg-encrypt (local/all) (remote/files)) (error "could not ENCRYPT %s TO the cloud" (local/all)))))
 
-(do-make))
+(do-make)))
 
-(dolist (msg (reverse important-msgs)) (message msg))
+(dolist (msg(reverse important-msgs)) (message msg))
 (setf important-msgs nil)
 (clog :info "done syncing")
 (write-region (format "%s: %s -- %s

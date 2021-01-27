@@ -59,7 +59,7 @@ For this purpose I have a line in my ~crontab~:\\
 Except for =M-x cloud-sync=, commands are barely used:
 - =M-x cloud-add= adds one or several files to the list of "clouded" files.
      This means that =M-x cloud-sync= command will upload these "clouded" files to the remote server if they are updated. Supposed to be used in dired buffer for several
-     (marked) files, or (when no files are marked) for a single file. *Files edited in emacs are clouded automatically,* but there are exceptions – see the
+     (marked) files, or (when no files are marked) for a single file. *Files edited in emacs are clouded automatically,* but there are exceptions – see
      [[file:config][sample configuration file]] and the [[file:cloud.org][source code]].
      Works both on files and directories.
 - =M-x cloud-forget= is the opposite of =M-x cloud-add=. 

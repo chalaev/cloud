@@ -454,9 +454,9 @@ so I added ~reconnect~ option to the ~/etc/fstab~ entry
 (this probably will not work if you have to supply password to unlock the ssh key):
 #+BEGIN_SRC 
 # /etc/fstab
-sshfs#shalaev@leanws.com: /mnt/lws fuse reconnect,users,auto 0 0
+sshfs#shalaev@chalaev.com: /mnt/lws fuse reconnect,users,auto 0 0
 #+END_SRC
-where "shalaev" is my user name, and ~leanws.com~ is the ssh-server (replace these with your values).
+where "shalaev" is my user name, and ~chalaev.com~ is the ssh-server (replace these with your values).
 
 To limit the timeout to 30 seconds, update =~/.ssh/config= as follows:
 #+name: ssh-config
@@ -689,7 +689,8 @@ When the make file is ready, we launch it with =make -jN ~/.emacs.d/cloud/cloud.
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun cancel-pending-upload(FN) (drop stanze FN))
+(defun cancel-pending-upload(FN) 
+  (drop stanze (tilde FN) (untilde FN)))
 (defun pass-d () (to-dir (local-dir) "pass.d"))
 (defun updated() (concat (pass-d) "updated"))
 #+END_SRC
@@ -1043,7 +1044,12 @@ GNU make won't upload (with encryption) the file to the server if target is youn
 localhost
 (history)
 password (cloud-mk) (cloud-mk))
-(write-region (apply #'concat (reverse Makefile)) nil (untilde(cloud-mk))))
+(write-region (apply #'concat (reverse Makefile)) nil (untilde(cloud-mk)))
+#+END_SRC
+Now let us clean the data that we used to create Makefile:
+#+BEGIN_SRC emacs-lisp :tangle generated/functions.el
+(setf stanze nil added-files nil upload-queue nil removed-files nil)
+(reset-Makefile))
 #+END_SRC
 
 * cloud-sync
@@ -1062,9 +1068,8 @@ Common =do-make= block is used
 2. during normal run when we run =make= command:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (defun do-make()
-  (set-file-times (local/all) (current-time))
+  (set-file-times (local/all) (current-time)); touch local file DB
   (save-Makefile)
-  (setf added-files nil upload-queue nil removed-files nil)
 (let((make (format "HOME=%s make -i -j%d -f %s all &> %s.log" HOME number-of-CPU-cores (untilde(cloud-mk)) (untilde(cloud-mk)))))
 #+END_SRC
 ← where we may need to change home directory for [[file:testing.org][testing]] purposes.
@@ -1072,8 +1077,7 @@ Common =do-make= block is used
 (ifn(= 0 (shell-command make)) (clog :error "make file containing
 %s
 FAILED with error(s): %s" (cat-file(untilde(cloud-mk))) (cat-file(concat(untilde(cloud-mk))".log")))
-(delete-file(untilde(cloud-mk)))
-(reset-Makefile))))
+(delete-file(untilde(cloud-mk))))))
 #+END_SRC
 Before we start doing whatever with the remote directory (shared among several hosts) let us lock it:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
@@ -1089,7 +1093,7 @@ A very special case during the first run: neither =(remote-files)=, nor =(local/
 (ifn (or (file-exists-p(remote-files)) (file-exists-p(local/all)))
 (ifn (write-all(local/all)) (clog :error "could not save data to %s" (local/all))
 (ifn(gpg-encrypt (local/all) (remote/files)) (error "could not encrypt %s to %s" (local/all) (remote/files))
-(do-make))))
+(do-make)))
 #+END_SRC
 ← so we have addressed this special case and now we forget about it.
 
@@ -1105,18 +1109,18 @@ O.k., now when we've got the most recent version of the file =(local/all)=, let 
 If we made any changes before =(cloud-sync)=, let us upload the updates to the cloud:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
 (when (or added-files upload-queue removed-files)
-  (ifn (write-all (local/all)) (error "could not save data to %s" (local/all))
-    (ifn(gpg-encrypt (local/all) (remote/files)) (error "could not ENCRYPT file data TO the cloud"))))
+  (ifn(write-all (local/all)) (error "could not save data to %s" (local/all))
+    (ifn(gpg-encrypt (local/all) (remote/files)) (error "could not ENCRYPT %s TO the cloud" (local/all)))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(do-make))
+(do-make)))
 #+END_SRC
 ←  end of =(directory-lock...)=
 
 Finally let us print stored messages (printed by =end-log=):
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(dolist (msg (reverse important-msgs)) (message msg))
+(dolist (msg(reverse important-msgs)) (message msg))
 (setf important-msgs nil)
 (clog :info "done syncing")
 (write-region (format "%s: %s -- %s

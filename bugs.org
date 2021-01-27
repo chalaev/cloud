@@ -1,19 +1,20 @@
 * Errors
-** some files are not uploaded
-updated ~lisp-goodies/shalaev.org~ which is clouded:
-["~/Private/work/lisp-goodies/shalaev.org" "RMk" (24551 52942 252182 340000) 432 61436 "shalaev"]
-but ~/mnt/lws/cloud/RMk*~ does not exist, and =(cloud-sync)= does not upload it!
+** 01/21 Makefile is growing
+(might be fixed on 01/27)
+1. it is not cleaned after =cloud-sync=
+2. the problem disappears after emacs is reloaded
 
-It is reproducible!
-I edit this file in emacs, get message
-:debug 10:45:54 touch/upload: /home/shalaev/Private/work/lisp-goodies/shalaev.org(12/27 10:45:54)
+** 01/21 cloud-forget does not cancel previously scheduled upload
+might be fixed on 01/27
 
-The reason is:
- (member FN uploaded) → t
-(in defun upload)
+** 01/20 same files downloaded multiple times
+- again and again, until they are not locally updated (and thus become younger than the remote ones).
+Note that there is no similar problem with /upload/.
 
-Makefile
-
+** 01/20 remote delete
+does not work for /clouded/ files.
+Deleted (on host A) file creates an action to be executed on host B,
+but on host B the file is uploaded instead of deletion.
 ** .gz files
 are uploaded, then clouded on another host, but are not downloaded there
 write test!

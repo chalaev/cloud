@@ -1,83 +1,81 @@
-Running 4 tests (2021-01-18 17:15:15-0500)
-:info 17:15:15 home directory(~)= /tmp/cloud-test.root.AQjqj6/user/, remote-directory= /tmp/cloud-test.root.AQjqj6/remote/, local-dir= /tmp/cloud-test.root.AQjqj6/user/.emacs.d/cloud/
-:info 17:15:15 will use (remote) unused directory /tmp/cloud-test.root.AQjqj6/remote/ as a cloud
-:info 17:15:15 saved local configuration in /tmp/cloud-test.root.AQjqj6/user/.emacs.d/cloud/
-:info 17:15:15 file ~/file-1.n33iZz is now clouded
-:info 17:15:15 before syncying there are 0 files in the remote diredtory: 
+Running 4 tests (2021-01-27 14:18:21-0500)
+:info 14:18:21 home directory(~)= /tmp/cloud-test.root.a72HSu/user/, remote-directory= /tmp/cloud-test.root.a72HSu/remote/, local-dir= /tmp/cloud-test.root.a72HSu/user/.emacs.d/cloud/
+:info 14:18:21 will use (remote) unused directory /tmp/cloud-test.root.a72HSu/remote/ as a cloud
+:info 14:18:21 saved local configuration in /tmp/cloud-test.root.a72HSu/user/.emacs.d/cloud/
+:info 14:18:21 file ~/file-1.rlglgY is now clouded
+:info 14:18:21 before syncying there are 0 files in the remote diredtory: 
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
+:info 14:18:23 done syncing
+:info 14:18:23 after syncying there are 3 files in the remote diredtory: history YZE.gpg Cf5.gpg
+:info 14:18:23 will now cloud /tmp/cloud-test.root.a72HSu/user/dir-1.KWvAmF/tmp-2.ra79sm and sync
+:info 14:18:23 file ~/dir-1.KWvAmF/tmp-2.ra79sm is now clouded
 (Shell command succeeded with no output)
-:info 17:15:16 done syncing
-:info 17:15:16 after syncying there are 3 files in the remote diredtory: history Qh1.gpg uPD.gpg
-:info 17:15:16 will now cloud /tmp/cloud-test.root.AQjqj6/user/dir-1.yAVhK4/tmp-2.Brdovz and sync
-:info 17:15:16 file ~/dir-1.yAVhK4/tmp-2.Brdovz is now clouded
 (Shell command succeeded with no output)
-(Shell command succeeded with no output)
-:info 17:15:18 done syncing
-:info 17:15:18 after syncying there are 4 files in the remote diredtory: history oJb.gpg Qh1.gpg uPD.gpg
-:info 17:15:18 cleaning up /tmp/cloud-test.root.AQjqj6/
-:info 17:15:18 erasing /tmp/cloud-test.root.AQjqj6/
+:info 14:18:24 done syncing
+:info 14:18:24 after syncying there are 4 files in the remote diredtory: history YZE.gpg kpk.gpg Cf5.gpg
+:info 14:18:24 cleaning up /tmp/cloud-test.root.a72HSu/
+:info 14:18:24 erasing /tmp/cloud-test.root.a72HSu/
    passed  1/4  cloud-and-upload
-:info 17:15:18 home directory(~)= /tmp/cloud-test.root.U7vJys/user/, remote-directory= /tmp/cloud-test.root.U7vJys/remote/, local-dir= /tmp/cloud-test.root.U7vJys/user/.emacs.d/cloud/
-:info 17:15:18 will use (remote) unused directory /tmp/cloud-test.root.U7vJys/remote/ as a cloud
-:info 17:15:18 saved local configuration in /tmp/cloud-test.root.U7vJys/user/.emacs.d/cloud/
-:info 17:15:18 will use (remote) unused directory /tmp/cloud-test.root.U7vJys/remote/ as a cloud
-:info 17:15:18 saved local configuration in /tmp/cloud-test.root.U7vJys/user/.emacs.d/cloud/
-:info 17:15:18 deftest cloud-init: config file size = 498 bytes
-:info 17:15:18 cleaning up /tmp/cloud-test.root.U7vJys/
-:info 17:15:18 erasing /tmp/cloud-test.root.U7vJys/
+:info 14:18:24 home directory(~)= /tmp/cloud-test.root.w3xl8Z/user/, remote-directory= /tmp/cloud-test.root.w3xl8Z/remote/, local-dir= /tmp/cloud-test.root.w3xl8Z/user/.emacs.d/cloud/
+:info 14:18:24 will use (remote) unused directory /tmp/cloud-test.root.w3xl8Z/remote/ as a cloud
+:info 14:18:24 saved local configuration in /tmp/cloud-test.root.w3xl8Z/user/.emacs.d/cloud/
+:info 14:18:24 will use (remote) unused directory /tmp/cloud-test.root.w3xl8Z/remote/ as a cloud
+:info 14:18:24 saved local configuration in /tmp/cloud-test.root.w3xl8Z/user/.emacs.d/cloud/
+:info 14:18:24 deftest cloud-init: config file size = 498 bytes
+:info 14:18:24 cleaning up /tmp/cloud-test.root.w3xl8Z/
+:info 14:18:24 erasing /tmp/cloud-test.root.w3xl8Z/
    passed  2/4  cloud-init
-:info 17:15:18 home directory(~)= /tmp/cloud-test.root.qMcAmQ/user/, remote-directory= /tmp/cloud-test.root.qMcAmQ/remote/, local-dir= /tmp/cloud-test.root.qMcAmQ/user/.emacs.d/cloud/
-:info 17:15:18 will use (remote) unused directory /tmp/cloud-test.root.qMcAmQ/remote/ as a cloud
-:info 17:15:18 saved local configuration in /tmp/cloud-test.root.qMcAmQ/user/.emacs.d/cloud/
-:info 17:15:18 will use (remote) unused directory /tmp/cloud-test.root.qMcAmQ/remote/ as a cloud
-:info 17:15:18 saved local configuration in /tmp/cloud-test.root.qMcAmQ/user/.emacs.d/cloud/
-:info 17:15:18 read-write-conf: (local/host/conf) => /tmp/cloud-test.root.qMcAmQ/user/.emacs.d/cloud/kalinin-3/config
-:info 17:15:18 
+:info 14:18:24 home directory(~)= /tmp/cloud-test.root.4urPD8/user/, remote-directory= /tmp/cloud-test.root.4urPD8/remote/, local-dir= /tmp/cloud-test.root.4urPD8/user/.emacs.d/cloud/
+:info 14:18:24 will use (remote) unused directory /tmp/cloud-test.root.4urPD8/remote/ as a cloud
+:info 14:18:24 saved local configuration in /tmp/cloud-test.root.4urPD8/user/.emacs.d/cloud/
+:info 14:18:24 will use (remote) unused directory /tmp/cloud-test.root.4urPD8/remote/ as a cloud
+:info 14:18:24 saved local configuration in /tmp/cloud-test.root.4urPD8/user/.emacs.d/cloud/
+:info 14:18:24 read-write-conf: (local/host/conf) => /tmp/cloud-test.root.4urPD8/user/.emacs.d/cloud/kalinin-3/config
+:info 14:18:24 
 Here is the generated config file: ==>
-:info 17:15:18 black-matches=tmp 
-:info 17:15:18 black-matches=tmp 
-:info 17:15:18 black-root-dirs=/mnt/ /ssh: /tmp/ 
-:info 17:15:18 remote-directory=/tmp/cloud-test.root.qMcAmQ/remote/
-:info 17:15:18 black-extensions=ac3 afm aux avi bak bbl blg brf bst bz2 cache chm cp cps dat deb dv dvi eps fb2 fls fn gif gpx gz idx ilg img ind iso jpeg jpg ky log m m2v md mjpeg mkv mov mp3 mp4 mpg ogg ogm out part pbm pdf pfb pg pgm png pnm pod ps rar raw segments sfd tbz tga tgz tif tiff toc tp vob vr wav woff xcf xml xz zip 
-:info 17:15:18 remote/files=pPZ
-:info 17:15:18 number-of-CPU-cores=1
-:info 17:15:18 password=12345
-:info 17:15:18 <== end of config file
+:info 14:18:24 black-matches=tmp 
+:info 14:18:24 black-matches=tmp 
+:info 14:18:24 black-root-dirs=/mnt/ /ssh: /tmp/ 
+:info 14:18:24 remote-directory=/tmp/cloud-test.root.4urPD8/remote/
+:info 14:18:24 black-extensions=ac3 afm aux avi bak bbl blg brf bst bz2 cache chm cp cps dat deb dv dvi eps fb2 fls fn gif gpx gz idx ilg img ind iso jpeg jpg ky log m m2v md mjpeg mkv mov mp3 mp4 mpg ogg ogm out part pbm pdf pfb pg pgm png pnm pod ps rar raw segments sfd tbz tga tgz tif tiff toc tp vob vr wav woff xcf xml xz zip 
+:info 14:18:24 remote/files=cZa
+:info 14:18:24 number-of-CPU-cores=1
+:info 14:18:24 password=12345
+:info 14:18:24 <== end of config file
 
-:info 17:15:18 
+:info 14:18:24 
 Here is my artificial config file: ==>
-:info 17:15:18 black-matches=tmp 
-:info 17:15:18 black-matches=tmp 
-:info 17:15:18 black-root-dirs=/trash/ 
-:info 17:15:18 remote-directory=/mnt/remote/galaxy/
-:info 17:15:18 black-extensions=abc def 
-:info 17:15:18 remote/files=QWERTY
-:info 17:15:18 number-of-CPU-cores=1
-:info 17:15:18 password=myDogsName
-:info 17:15:18 <== end of config file
+:info 14:18:24 black-matches=tmp 
+:info 14:18:24 black-matches=tmp 
+:info 14:18:24 black-root-dirs=/trash/ 
+:info 14:18:24 remote-directory=/mnt/remote/galaxy/
+:info 14:18:24 black-extensions=abc def 
+:info 14:18:24 remote/files=QWERTY
+:info 14:18:24 number-of-CPU-cores=1
+:info 14:18:24 password=myDogsName
+:info 14:18:24 <== end of config file
 
-:info 17:15:18 cleaning up /tmp/cloud-test.root.qMcAmQ/
-:info 17:15:18 erasing /tmp/cloud-test.root.qMcAmQ/
+:info 14:18:24 cleaning up /tmp/cloud-test.root.4urPD8/
+:info 14:18:24 erasing /tmp/cloud-test.root.4urPD8/
    passed  3/4  read-write-conf
-:info 17:15:18 home directory(~)= /tmp/cloud-test.root.sZgym8/user/, remote-directory= /tmp/cloud-test.root.sZgym8/remote/, local-dir= /tmp/cloud-test.root.sZgym8/user/.emacs.d/cloud/
-:info 17:15:18 will use (remote) unused directory /tmp/cloud-test.root.sZgym8/remote/ as a cloud
-:info 17:15:18 saved local configuration in /tmp/cloud-test.root.sZgym8/user/.emacs.d/cloud/
-:info 17:15:18 file ~/file-1a.dat is now clouded
+:info 14:18:24 home directory(~)= /tmp/cloud-test.root.YnVTuI/user/, remote-directory= /tmp/cloud-test.root.YnVTuI/remote/, local-dir= /tmp/cloud-test.root.YnVTuI/user/.emacs.d/cloud/
+:info 14:18:24 will use (remote) unused directory /tmp/cloud-test.root.YnVTuI/remote/ as a cloud
+:info 14:18:24 saved local configuration in /tmp/cloud-test.root.YnVTuI/user/.emacs.d/cloud/
+:info 14:18:24 file ~/file-1a.dat is now clouded
 (Shell command succeeded with no output)
 (Shell command succeeded with no output)
+:info 14:18:26 done syncing
+:info 14:18:26 touch ’now + 5 sec’ /tmp/cloud-test.root.YnVTuI/user/file-1a.dat
+:debug 14:18:27 touch/upload: /tmp/cloud-test.root.YnVTuI/user/file-1a.dat(01/27 14:18:27)
+:debug 14:18:27 make-cloud-older: FN= ~/file-1a.dat, RN= /tmp/cloud-test.root.YnVTuI/remote/bOn.gpg
 (Shell command succeeded with no output)
-:info 17:15:20 done syncing
-:info 17:15:20 touch ’now + 5 sec’ /tmp/cloud-test.root.sZgym8/user/file-1a.dat
-:debug 17:15:21 touch/upload: /tmp/cloud-test.root.sZgym8/user/file-1a.dat(01/18 17:15:21)
-:debug 17:15:21 make-cloud-older: FN= ~/file-1a.dat, RN= /tmp/cloud-test.root.sZgym8/remote/oh9.gpg
 (Shell command succeeded with no output)
-(Shell command succeeded with no output)
-:info 17:15:23 done syncing
-:info 17:15:23 cleaning up /tmp/cloud-test.root.sZgym8/
-:info 17:15:23 erasing /tmp/cloud-test.root.sZgym8/
+:info 14:18:29 done syncing
+:info 14:18:29 cleaning up /tmp/cloud-test.root.YnVTuI/
+:info 14:18:29 erasing /tmp/cloud-test.root.YnVTuI/
    passed  4/4  save-then-upload
 
-Ran 4 tests, 4 results as expected (2021-01-18 17:15:23-0500)
+Ran 4 tests, 4 results as expected (2021-01-27 14:18:29-0500)
 
-:debug 17:15:23 flushing comments before quiting emacs
+:debug 14:18:29 flushing comments before quiting emacs

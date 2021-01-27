@@ -5,6 +5,8 @@ No more fountainng with ideas; just making the existing code more reliable.
 Mostly fixing the errors; the ideas are either implemented or postponed for (probably remote) future.
 
 ** improving reliability
+*** 01/27
+updated =cloud-sync= + =cancel-pending-upload= (hopefully this fixes [[file:bugs.org][2 bugs]])
 
 *** 01/18
 1. added =black-matches= to configuration file,
@@ -106,7 +108,7 @@ updated "new-action" + "cloud-rename-file" + "dired-delete-file"
 Implementing new ideas/features, the code changes significantly
 
 ** 2020-11-02
-    heavilly edited "cloud.org" hoping to make it clearer + fixed the bugs
+heavilly edited "cloud.org" hoping to make it clearer + fixed the bugs
 
 *** 2020-11-06
     updated "cloud-add" and "cloud-forget-recursive"

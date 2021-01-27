@@ -1,19 +1,19 @@
 
 # Table of Contents
 
-1.  [Description](#org3e62acd)
-2.  [Prerequisites](#orgaba29d0)
-3.  [Quick start](#orgc1ecce3)
-    1.  [Initial setup](#org2727f07)
-    2.  [Uploading and downloading files](#org2ceac28)
-4.  [Commands](#orgf145328)
-5.  [Limitations](#org6514c31)
-6.  [License](#orgc31fe73)
+1.  [Description](#org303df28)
+2.  [Prerequisites](#orgbb56543)
+3.  [Quick start](#org60c3e33)
+    1.  [Initial setup](#orgb91174e)
+    2.  [Uploading and downloading files](#org3798290)
+4.  [Commands](#org554c5d0)
+5.  [Limitations](#org83cdc5f)
+6.  [License](#org0c712ac)
 
 Intended for linux users who have [emacs](https://www.gnu.org/software/emacs/) always open.
 
 
-<a id="org3e62acd"></a>
+<a id="org303df28"></a>
 
 # Description
 
@@ -32,7 +32,7 @@ Synchronizing important files on two or more computers using
 Encrypted files saved in the cloud have **random names** to minimize the amount of information cloud owners can extract by monitoring our cloud directory.
 
 
-<a id="orgaba29d0"></a>
+<a id="orgbb56543"></a>
 
 # Prerequisites
 
@@ -43,7 +43,7 @@ We need
 2.  [lisp-goodies](https://github.com/chalaev/lisp-goodies): [batch-start.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/batch-start.el) (used by [Makefile](Makefile)), and [shalaev.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el)
 
 
-<a id="orgc1ecce3"></a>
+<a id="org60c3e33"></a>
 
 # Quick start
 
@@ -54,7 +54,7 @@ I am running `emacs` in daemon mode (in text console) using the following line i
 Once `emacs` was started in the daemon mode, I can use `emacsclient -c` to open a new (gui) emacs window.
 
 
-<a id="org2727f07"></a>
+<a id="orgb91174e"></a>
 
 ## Initial setup
 
@@ -71,7 +71,7 @@ Once `emacs` was started in the daemon mode, I can use `emacsclient -c` to open 
 5.  Mount remote directory. The mounting point may be arbitrary (specified as `cloud-directory` in [~/.emacs.d/cloud/\`hostname\`/config](config)), the default one is `/mnt/cloud/`.
 
 
-<a id="org2ceac28"></a>
+<a id="org3798290"></a>
 
 ## Uploading and downloading files
 
@@ -90,7 +90,7 @@ For this purpose I have a line in my `crontab`:
 `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="orgf145328"></a>
+<a id="org554c5d0"></a>
 
 # Commands
 
@@ -98,7 +98,7 @@ Except for `M-x cloud-sync`, commands are barely used:
 
 -   `M-x cloud-add` adds one or several files to the list of "clouded" files.
     This means that `M-x cloud-sync` command will upload these "clouded" files to the remote server if they are updated. Supposed to be used in dired buffer for several
-    (marked) files, or (when no files are marked) for a single file. **Files edited in emacs are clouded automatically,** but there are exceptions – see the
+    (marked) files, or (when no files are marked) for a single file. **Files edited in emacs are clouded automatically,** but there are exceptions – see
     [sample configuration file](config) and the [source code](cloud.org).
     Works both on files and directories.
 -   `M-x cloud-forget` is the opposite of `M-x cloud-add`. 
@@ -107,7 +107,7 @@ Except for `M-x cloud-sync`, commands are barely used:
     `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="org6514c31"></a>
+<a id="org83cdc5f"></a>
 
 # Limitations
 
@@ -119,7 +119,7 @@ Except for `M-x cloud-sync`, commands are barely used:
     After encrypting an image file and then decrypting it back, we get the same, but not identical picture (file size is changed).
 
 
-<a id="orgc31fe73"></a>
+<a id="org0c712ac"></a>
 
 # License
 
