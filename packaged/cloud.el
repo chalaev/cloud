@@ -3,7 +3,7 @@
 ;; Copyright (C) 2020 Oleg Shalaev <oleg@chalaev.com>
 
 ;; Author:     Oleg Shalaev <oleg@chalaev.com>
-;; Version:    1.6.2
+;; Version:    1.6.3
 
 ;; Package-Requires: (cl epg dired-aux timezone diary-lib subr-x shalaev)
 ;; Keywords:   syncronization, cloud, gpg, encryption
@@ -710,7 +710,7 @@ password (cloud-mk) (cloud-mk))
 (defun do-make()
   (set-file-times (local/all) (current-time)); touch local file DB
   (save-Makefile)
-(let((make (format "HOME=%s make -i -j%d -f %s all &> %s.log" HOME number-of-CPU-cores (untilde(cloud-mk)) (untilde(cloud-mk)))))
+(let((make (format "HOME=%s make -j%d -ikf %s all &> %s.log" HOME number-of-CPU-cores (untilde(cloud-mk)) (untilde(cloud-mk)))))
 
 (ifn(= 0 (shell-command make)) (clog :error "make file containing
 %s

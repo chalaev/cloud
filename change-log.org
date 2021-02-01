@@ -5,6 +5,10 @@ No more fountainng with ideas; just making the existing code more reliable.
 Mostly fixing the errors; the ideas are either implemented or postponed for (probably remote) future.
 
 ** improving reliability
+*** 02/01
+added =-k= option to =make=; this should prevent =cloud-sync= from stopping when one of the all-dependencies (files) is missing
+(e.g., it might have been deleted).
+
 *** 01/27
 updated =cloud-sync= + =cancel-pending-upload= (hopefully this fixes [[file:bugs.org][2 bugs]])
 

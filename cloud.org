@@ -1070,7 +1070,7 @@ Common =do-make= block is used
 (defun do-make()
   (set-file-times (local/all) (current-time)); touch local file DB
   (save-Makefile)
-(let((make (format "HOME=%s make -i -j%d -f %s all &> %s.log" HOME number-of-CPU-cores (untilde(cloud-mk)) (untilde(cloud-mk)))))
+(let((make (format "HOME=%s make -j%d -ikf %s all &> %s.log" HOME number-of-CPU-cores (untilde(cloud-mk)) (untilde(cloud-mk)))))
 #+END_SRC
 ← where we may need to change home directory for [[file:testing.org][testing]] purposes.
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
