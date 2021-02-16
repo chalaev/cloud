@@ -513,12 +513,13 @@ nil (local/log) t)
    (cloud-forget FN)
    (unless(BRDp FN) (new-action i-delete FN)))
 
-(defun cloud-rm (args)
+(defun cloud-rm(args)
 (cloud-forget-many args)
 (error-in "cloud-rm"
 (dolist (arg args)
+  (ifn(file-directory-p arg)(delete-file arg)
   (delete-directory arg t)
-  (cloud-forget-recursive arg))))
+  (cloud-forget-recursive arg)))))
 
 (defun cloud-forget-many (args)
   (error-in "cloud-forget-many"

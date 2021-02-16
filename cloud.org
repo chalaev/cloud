@@ -1249,12 +1249,13 @@ where ~FN~ might be a directory.
 
 The following function is used to perform pending delete ordered by another host:
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el
-(defun cloud-rm (args)
+(defun cloud-rm(args)
 (cloud-forget-many args)
 (error-in "cloud-rm"
 (dolist (arg args)
+  (ifn(file-directory-p arg)(delete-file arg)
   (delete-directory arg t)
-  (cloud-forget-recursive arg))))
+  (cloud-forget-recursive arg)))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/functions.el

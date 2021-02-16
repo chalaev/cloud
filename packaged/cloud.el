@@ -3,7 +3,7 @@
 ;; Copyright (C) 2020 Oleg Shalaev <oleg@chalaev.com>
 
 ;; Author:     Oleg Shalaev <oleg@chalaev.com>
-;; Version:    1.6.3
+;; Version:    1.5.3
 
 ;; Package-Requires: (cl epg dired-aux timezone diary-lib subr-x shalaev)
 ;; Keywords:   syncronization, cloud, gpg, encryption
@@ -140,9 +140,6 @@
 ;; (defun grab-parameter (str parname); (grab-parameter "contentsName=z12"  "contentsName") => "z12"
 ;;   (when (string-match (concat parname "=\\(\\ca+\\)$") str)
 ;;       (match-string 1 str)))
-
-(defun need-dir(&rest DNs)
-  (ensure-dir-exists (apply #'to-dir DNs)))
 
 (defun cat-file(FN)
 "converts file to string"
@@ -787,12 +784,13 @@ nil (local/log) t)
    (cloud-forget FN)
    (unless(BRDp FN) (new-action i-delete FN)))
 
-(defun cloud-rm (args)
+(defun cloud-rm(args)
 (cloud-forget-many args)
 (error-in "cloud-rm"
 (dolist (arg args)
+  (ifn(file-directory-p arg)(delete-file arg)
   (delete-directory arg t)
-  (cloud-forget-recursive arg))))
+  (cloud-forget-recursive arg)))))
 
 (defun cloud-forget-many (args)
   (error-in "cloud-forget-many"

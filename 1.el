@@ -95,9 +95,6 @@
 ;;   (when (string-match (concat parname "=\\(\\ca+\\)$") str)
 ;;       (match-string 1 str)))
 
-(defun need-dir(&rest DNs)
-  (ensure-dir-exists (apply #'to-dir DNs)))
-
 (defun cat-file(FN)
 "converts file to string"
 (with-temp-buffer
