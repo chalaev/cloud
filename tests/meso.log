@@ -1,0 +1,216 @@
+Loading /home/shalaev/Private/work/cloud/tests/ert.el (source)...
+:debug 17:53:48 debug-set:old values -->
+:debug 17:53:48 root-test-dir= nil
+:debug 17:53:48 updated values -->
+:debug 17:53:48 root-test-dir = /tmp/cloud.test.HV2nQu/
+Running 4 tests (2021-04-28 17:53:48-0400)
+Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
+:debug 17:53:48 debug-set:old values -->
+:debug 17:53:48 ~= /home/shalaev/
+:debug 17:53:48 localhost= kalinin
+:debug 17:53:48 *config-directory*= /home/shalaev/.emacs.d/conf/
+:debug 17:53:48 updated values -->
+:debug 17:53:48 ~ = /tmp/cloud.test.HV2nQu/hostA/
+:debug 17:53:48 localhost = hostA
+:debug 17:53:48 *config-directory* = ~/.emacs.d/conf/
+entering cloud-add
+ entering add-file
+  entering cloud-locate-FN
+  leaving cloud-locate-FN
+  entering cloud-get-file-properties
+  leaving cloud-get-file-properties
+  entering new-file-in
+  leaving new-file-in
+:info 17:53:48 file ~/file-1.hostA is now clouded
+  entering upload
+   entering enc-make-stanza
+   leaving enc-make-stanza
+   entering make-cloud-older
+    entering cip-ext
+    leaving cip-ext
+    entering cloud-get-file-properties
+    leaving cloud-get-file-properties
+   leaving make-cloud-older
+   entering cip-ext
+   leaving cip-ext
+  leaving upload
+ leaving add-file
+leaving cloud-add
+:info 17:53:48 before syncying there are 0 files in the remote directory: 
+entering cloud-sync
+ entering cloud-connected-p
+ leaving cloud-connected-p
+ entering TS
+ leaving TS
+:debug 17:53:48 contents-FN= /tmp/cloud.test.HV2nQu/mnt/remote/AbC.gpg
+:debug 17:53:48 local/all= /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA/all
+:info 17:53:48 first run: creating /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA/all and AbC
+ entering write-all
+  entering print-hosts
+   entering backspace
+   leaving backspace
+  leaving print-hosts
+  entering print-actions
+  leaving print-actions
+  entering format-file
+  leaving format-file
+ leaving write-all
+ entering gpg-encrypt
+(Shell command succeeded with no output)
+ leaving gpg-encrypt
+ entering save-Makefile
+  entering reset-Makefile
+  leaving reset-Makefile
+ leaving save-Makefile
+:debug 17:53:48 Makefile is /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/cloud.mk
+(Shell command failed with code 2 and no output)
+:error 17:53:48 make file /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/cloud.mk containing
+
+
+$(cloud)Nrh.gpg: $(HD)file-1.hostA
+	@$(enc) $@ $<
+	-@echo "$$(date): uploaded $<" >> $(localLog)
+
+all: /tmp/cloud.test.HV2nQu/mnt/remote/Nrh.gpg
+	echo "background (en/de)cryption on hostA finished $(date)" >> /tmp/cloud.test.HV2nQu/mnt/remote/history
+	@sed 's/12345/******/g' $(HD).emacs.d/conf/cloud/cloud.mk > $(HD).emacs.d/conf/cloud/cloud.mk.bak
+
+
+FAILED with error(s): make[1]: вход в каталог «/home/shalaev/Private/work/cloud»
+make[1]: *** Нет правила для сборки цели «/tmp/cloud.test.HV2nQu/mnt/remote/Nrh.gpg», требуемой для «all».
+make[1]: Цель «all» не была пересобрана из-за ошибок.
+make[1]: выход из каталога «/home/shalaev/Private/work/cloud»
+
+:info 17:53:49 done syncing
+ entering TS
+ leaving TS
+leaving cloud-sync
+:info 17:53:49 after syncying there are 2 files in the remote directory: AbC.gpg history
+:info 17:53:49 will now cloud ~/tmp-2.hostA and sync
+entering cloud-add
+ entering add-file
+  entering cloud-locate-FN
+   entering plain-name
+   leaving plain-name
+  leaving cloud-locate-FN
+  entering cloud-get-file-properties
+  leaving cloud-get-file-properties
+  entering new-file-in
+  leaving new-file-in
+:info 17:53:49 file ~/tmp-2.hostA is now clouded
+  entering upload
+   entering enc-make-stanza
+   leaving enc-make-stanza
+   entering make-cloud-older
+    entering cip-ext
+    leaving cip-ext
+    entering cloud-get-file-properties
+    leaving cloud-get-file-properties
+   leaving make-cloud-older
+   entering cip-ext
+   leaving cip-ext
+  leaving upload
+ leaving add-file
+leaving cloud-add
+entering cloud-sync
+ entering cloud-connected-p
+ leaving cloud-connected-p
+ entering TS
+ leaving TS
+:debug 17:53:49 contents-FN= /tmp/cloud.test.HV2nQu/mnt/remote/AbC.gpg
+:debug 17:53:49 local/all= /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA/all
+:debug 17:53:49 (or added-files upload-queue removed-files remote-actions)
+ entering write-all
+  entering print-hosts
+   entering backspace
+   leaving backspace
+  leaving print-hosts
+  entering print-actions
+  leaving print-actions
+  entering format-file
+  leaving format-file
+  entering format-file
+  leaving format-file
+ leaving write-all
+ entering gpg-encrypt
+(Shell command succeeded with no output)
+ leaving gpg-encrypt
+ entering save-Makefile
+  entering reset-Makefile
+  leaving reset-Makefile
+ leaving save-Makefile
+:debug 17:53:49 Makefile is /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/cloud.mk
+(Shell command succeeded with no output)
+:info 17:53:50 done syncing
+ entering TS
+ leaving TS
+leaving cloud-sync
+:info 17:53:50 after syncying there are 3 files in the remote directory: AbC.gpg Lyd.gpg history
+:debug 17:53:50 leaving hostA with these files in /tmp/cloud.test.HV2nQu/mnt/remote/:
+. .. AbC.gpg Lyd.gpg history
+   passed  1/4  cloud-and-upload
+Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
+:debug 17:53:50 debug-set:old values -->
+:debug 17:53:50 ~= /tmp/cloud.test.HV2nQu/hostA/
+:debug 17:53:50 localhost= kalinin
+:debug 17:53:50 *config-directory*= ~/.emacs.d/conf/
+:debug 17:53:50 updated values -->
+:debug 17:53:50 ~ = /tmp/cloud.test.HV2nQu/hostA/
+:debug 17:53:50 localhost = hostA
+:debug 17:53:50 *config-directory* = ~/.emacs.d/conf/
+entering cloud-get-file-properties
+leaving cloud-get-file-properties
+entering get-file-properties*
+ entering cloud-locate-FN
+ leaving cloud-locate-FN
+ entering cloud-get-file-properties
+ leaving cloud-get-file-properties
+leaving get-file-properties*
+:info 17:53:50 deftest cloud-init: config file size = 84 bytes,
+and its content is
+remote-directory=/tmp/cloud.test.HV2nQu/mnt/remote/
+remote/files=AbC
+password=12345
+
+:debug 17:53:50 leaving hostA with these files in /tmp/cloud.test.HV2nQu/mnt/remote/:
+. ..
+   passed  2/4  cloud-init
+Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
+:debug 17:53:50 debug-set:old values -->
+:debug 17:53:50 ~= /tmp/cloud.test.HV2nQu/hostA/
+:debug 17:53:50 localhost= kalinin
+:debug 17:53:50 *config-directory*= ~/.emacs.d/conf/
+:debug 17:53:50 updated values -->
+:debug 17:53:50 ~ = /tmp/cloud.test.HV2nQu/hostA/
+:debug 17:53:50 localhost = hostA
+:debug 17:53:50 *config-directory* = ~/.emacs.d/conf/
+:debug 17:53:50 file-1= ~/file-1.hostA
+:info 17:53:50 read-write-conf: tmp-conf => /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA.conf.tmp
+:info 17:53:50 
+Here is the generated config file: ==>
+:info 17:53:50 remote-directory=/tmp/cloud.test.HV2nQu/mnt/remote/
+:info 17:53:50 remote/files=AbC
+:info 17:53:50 password=12345
+:info 17:53:50 <== end of config file
+
+:info 17:53:50 
+Here is my artificial config file: ==>
+:info 17:53:50 remote-directory=/tmp/cloud.test.HV2nQu/mnt/remote/
+:info 17:53:50 black-extensions=abc def
+:info 17:53:50 black-root-dirs=/trash/
+:info 17:53:50 remote/files=XYZ
+:info 17:53:50 password=myDogsName
+:info 17:53:50 <== end of config file
+
+:debug 17:53:50 test read-write-conf> remote-directory=> /tmp/cloud.test.HV2nQu/mnt/remote/, black-extensions=> (abc def)
+:debug 17:53:50 leaving hostA with these files in /tmp/cloud.test.HV2nQu/mnt/remote/:
+. ..
+   passed  3/4  read-write-conf
+  skipped  4/4  save-then-upload
+
+Ran 4 tests, 3 results as expected, 1 skipped (2021-04-28 17:53:50-0400)
+
+1 skipped results:
+  SKIPPED  save-then-upload
+
+:debug 17:53:50 flushing comments before quiting emacs

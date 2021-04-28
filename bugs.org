@@ -1,4 +1,5 @@
 * Errors
+** 02/19 check if directories can sometimes be clouded
 ** 02/01 cloud-add allows unexisting files
 (might be fixed on 02/01 by adding =-k= option to =make=)
 =cloud-add= may add a file that will not exist at the time of subsequent =cloud-sync= 

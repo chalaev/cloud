@@ -28,11 +28,11 @@
 
 (defun gpg-encrypt(FN XYZ)
 (= 0 (shell-command
-  (format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --symmetric %s" password (concat (remote-directory) XYZ ".gpg") (untilde FN)))))
+  (format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --symmetric %s" password (concat remote-directory XYZ ".gpg") (untilde FN)))))
 
 (defun gpg-decrypt(FN XYZ)
 (= 0 (shell-command 
-(format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --decrypt %s" password (untilde FN) (concat (remote-directory) XYZ ".gpg")))))
+(format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --decrypt %s" password (untilde FN) (concat remote-directory XYZ ".gpg")))))
 
 (defun replace-file-ext(FN new-ext)
   "replacing file extension"

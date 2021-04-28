@@ -21,4 +21,3 @@
 
 (defun TS (time)
   (format-time-string "%02m/%02d %H:%M:%S" time))
-

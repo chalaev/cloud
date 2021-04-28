@@ -1,0 +1,638 @@
+Loading /home/shalaev/Private/work/cloud/tests/ert.el (source)...
+:debug 17:53:50 debug-set:old values -->
+:debug 17:53:50 root-test-dir= nil
+:debug 17:53:50 updated values -->
+:debug 17:53:50 root-test-dir = /tmp/cloud.test.HV2nQu/
+Running 2 tests (2021-04-28 17:53:50-0400)
+Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
+:debug 17:53:50 debug-set:old values -->
+:debug 17:53:50 ~= /home/shalaev/
+:debug 17:53:50 localhost= kalinin
+:debug 17:53:50 *config-directory*= /home/shalaev/.emacs.d/conf/
+:debug 17:53:50 updated values -->
+:debug 17:53:50 ~ = /tmp/cloud.test.HV2nQu/hostA/
+:debug 17:53:50 localhost = hostA
+:debug 17:53:50 *config-directory* = ~/.emacs.d/conf/
+:debug 17:53:50 checking that ~/file-1.hostA exists on host A:
+entering cloud-start
+
+ entering cloud-init
+  entering reset-Makefile
+  leaving reset-Makefile
+:warning 17:53:50 will not overwrite existing /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA.conf
+:warning 17:53:50 please examine your config file /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA.conf
+:debug 17:53:50 cloud-init: clouding ~/.emacs.d/conf/cloud/individual.passes
+  entering add-file
+   entering cloud-locate-FN
+   leaving cloud-locate-FN
+   entering cloud-get-file-properties
+   leaving cloud-get-file-properties
+   entering new-file-in
+   leaving new-file-in
+:info 17:53:50 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
+   entering upload
+    entering enc-make-stanza
+    leaving enc-make-stanza
+    entering make-cloud-older
+     entering cip-ext
+     leaving cip-ext
+     entering cloud-get-file-properties
+     leaving cloud-get-file-properties
+    leaving make-cloud-older
+    entering cip-ext
+    leaving cip-ext
+   leaving upload
+  leaving add-file
+ leaving cloud-init
+ entering reset-Makefile
+ leaving reset-Makefile
+ entering read-all
+:error 17:53:50 (o.k. if this is the very first run) Invalid first line in the remote file DB /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA/all
+:warning 17:53:50 did not find any gpg-files in /tmp/cloud.test.HV2nQu/mnt/remote/; is this the very first run?
+ leaving read-all
+ entering cloud-sync
+  entering cloud-connected-p
+  leaving cloud-connected-p
+  entering TS
+  leaving TS
+:debug 17:53:50 contents-FN= /tmp/cloud.test.HV2nQu/mnt/remote/AbC.gpg
+:debug 17:53:50 local/all= /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA/all
+:debug 17:53:50 (or added-files upload-queue removed-files remote-actions)
+  entering write-all
+   entering print-hosts
+    entering backspace
+    leaving backspace
+   leaving print-hosts
+   entering print-actions
+   leaving print-actions
+   entering format-file
+   leaving format-file
+  leaving write-all
+  entering gpg-encrypt
+(Shell command succeeded with no output)
+  leaving gpg-encrypt
+  entering save-Makefile
+   entering reset-Makefile
+   leaving reset-Makefile
+  leaving save-Makefile
+:debug 17:53:51 Makefile is /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/cloud.mk
+(Shell command succeeded with no output)
+:info 17:53:51 done syncing
+  entering TS
+  leaving TS
+ leaving cloud-sync
+leaving cloud-start
+entering cloud-add
+ entering add-file
+  entering cloud-locate-FN
+   entering plain-name
+   leaving plain-name
+  leaving cloud-locate-FN
+  entering cloud-get-file-properties
+  leaving cloud-get-file-properties
+  entering new-file-in
+  leaving new-file-in
+:info 17:53:51 file ~/file-1.hostA is now clouded
+  entering upload
+   entering enc-make-stanza
+   leaving enc-make-stanza
+   entering make-cloud-older
+    entering cip-ext
+    leaving cip-ext
+    entering cloud-get-file-properties
+    leaving cloud-get-file-properties
+   leaving make-cloud-older
+   entering cip-ext
+   leaving cip-ext
+  leaving upload
+ leaving add-file
+leaving cloud-add
+entering cloud-sync
+ entering cloud-connected-p
+ leaving cloud-connected-p
+ entering TS
+ leaving TS
+:debug 17:53:51 contents-FN= /tmp/cloud.test.HV2nQu/mnt/remote/AbC.gpg
+:debug 17:53:51 local/all= /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA/all
+:debug 17:53:51 (or added-files upload-queue removed-files remote-actions)
+ entering write-all
+  entering print-hosts
+   entering backspace
+   leaving backspace
+  leaving print-hosts
+  entering print-actions
+  leaving print-actions
+  entering format-file
+  leaving format-file
+  entering format-file
+  leaving format-file
+ leaving write-all
+ entering gpg-encrypt
+(Shell command succeeded with no output)
+ leaving gpg-encrypt
+ entering save-Makefile
+  entering reset-Makefile
+  leaving reset-Makefile
+ leaving save-Makefile
+:debug 17:53:52 Makefile is /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/cloud.mk
+(Shell command succeeded with no output)
+:info 17:53:52 done syncing
+ entering TS
+ leaving TS
+leaving cloud-sync
+:debug 17:53:52 leaving hostA with these files in /tmp/cloud.test.HV2nQu/mnt/remote/:
+. .. AbC.gpg history riF.gpg
+:info 17:53:52 finished with host hostA, switching to hostB
+Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
+:debug 17:53:52 debug-set:old values -->
+:debug 17:53:52 ~= /tmp/cloud.test.HV2nQu/hostA/
+:debug 17:53:52 localhost= kalinin
+:debug 17:53:52 *config-directory*= ~/.emacs.d/conf/
+:debug 17:53:52 updated values -->
+:debug 17:53:52 ~ = /tmp/cloud.test.HV2nQu/hostB/
+:debug 17:53:52 localhost = hostB
+:debug 17:53:52 *config-directory* = ~/.emacs.d/conf/
+:debug 17:53:52 checking that ~/file-1.hostA DOES NOT exist on hostB BEFORE SYNCING:
+entering cloud-start
+
+ entering cloud-init
+:warning 17:53:52 I am not the first one who uses remote directory /tmp/cloud.test.HV2nQu/mnt/remote/ 
+  entering reset-Makefile
+  leaving reset-Makefile
+:warning 17:53:52 will not overwrite existing /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB.conf
+:warning 17:53:52 please examine your config file /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB.conf
+:debug 17:53:52 cloud-init: clouding ~/.emacs.d/conf/cloud/individual.passes
+  entering add-file
+   entering cloud-locate-FN
+   leaving cloud-locate-FN
+   entering cloud-get-file-properties
+   leaving cloud-get-file-properties
+   entering new-file-in
+   leaving new-file-in
+:info 17:53:52 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
+   entering upload
+    entering enc-make-stanza
+    leaving enc-make-stanza
+    entering make-cloud-older
+     entering cip-ext
+     leaving cip-ext
+     entering cloud-get-file-properties
+     leaving cloud-get-file-properties
+    leaving make-cloud-older
+    entering cip-ext
+    leaving cip-ext
+   leaving upload
+  leaving add-file
+ leaving cloud-init
+ entering reset-Makefile
+ leaving reset-Makefile
+ entering cloud-sync
+  entering cloud-connected-p
+  leaving cloud-connected-p
+  entering TS
+  leaving TS
+:debug 17:53:52 contents-FN= /tmp/cloud.test.HV2nQu/mnt/remote/AbC.gpg
+:debug 17:53:52 local/all= /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB/all
+:debug 17:53:52 updating /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB/all obsoleted by /tmp/cloud.test.HV2nQu/mnt/remote/AbC.gpg
+  entering gpg-decrypt
+  leaving gpg-decrypt
+  entering read-all
+:error 17:53:53 (o.k. if this is the very first run) Invalid first line in the remote file DB /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB/all
+   entering cloud-host-add
+    entering new-action
+:debug 17:53:53 new-action> clouded-hosts= hostB hostA
+:debug 17:53:53 new-action(3 hostB)
+    leaving new-action
+    entering add-to-actions
+    leaving add-to-actions
+   leaving cloud-host-add
+   entering str-to-DBrec
+    entering parse-time
+    leaving parse-time
+   leaving str-to-DBrec
+   entering plain-name
+   leaving plain-name
+   entering cloud-locate-FN
+    entering plain-name
+    leaving plain-name
+   leaving cloud-locate-FN
+   entering cloud-get-file-properties
+   leaving cloud-get-file-properties
+   entering download
+    entering dec-make-stanza
+     entering full-TS
+     leaving full-TS
+    leaving dec-make-stanza
+   leaving download
+   entering str-to-DBrec
+    entering parse-time
+    leaving parse-time
+   leaving str-to-DBrec
+   entering plain-name
+   leaving plain-name
+   entering cloud-locate-FN
+    entering plain-name
+    leaving plain-name
+    entering plain-name
+    leaving plain-name
+   leaving cloud-locate-FN
+  leaving read-all
+:debug 17:53:53 (or added-files upload-queue removed-files remote-actions)
+  entering write-all
+   entering print-hosts
+    entering backspace
+    leaving backspace
+   leaving print-hosts
+   entering print-actions
+    entering format-action
+     entering full-TS
+     leaving full-TS
+    leaving format-action
+   leaving print-actions
+   entering format-file
+   leaving format-file
+   entering format-file
+   leaving format-file
+  leaving write-all
+  entering gpg-encrypt
+(Shell command succeeded with no output)
+  leaving gpg-encrypt
+  entering save-Makefile
+   entering reset-Makefile
+   leaving reset-Makefile
+  leaving save-Makefile
+:debug 17:53:54 Makefile is /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/cloud.mk
+(Shell command succeeded with no output)
+:info 17:53:55 done syncing
+  entering TS
+  leaving TS
+ leaving cloud-sync
+leaving cloud-start
+:debug 17:53:55 leaving hostB with these files in /tmp/cloud.test.HV2nQu/mnt/remote/:
+. .. AbC.gpg history riF.gpg
+   passed  1/2  cloud-sync-1
+Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
+:debug 17:53:55 debug-set:old values -->
+:debug 17:53:55 ~= /tmp/cloud.test.HV2nQu/hostB/
+:debug 17:53:55 localhost= kalinin
+:debug 17:53:55 *config-directory*= ~/.emacs.d/conf/
+:debug 17:53:55 updated values -->
+:debug 17:53:55 ~ = /tmp/cloud.test.HV2nQu/hostA/
+:debug 17:53:55 localhost = hostA
+:debug 17:53:55 *config-directory* = ~/.emacs.d/conf/
+entering cloud-start
+
+ entering cloud-init
+  entering reset-Makefile
+  leaving reset-Makefile
+:warning 17:53:55 will not overwrite existing /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA.conf
+:warning 17:53:55 please examine your config file /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA.conf
+:debug 17:53:55 cloud-init: clouding ~/.emacs.d/conf/cloud/individual.passes
+  entering add-file
+   entering cloud-locate-FN
+   leaving cloud-locate-FN
+   entering cloud-get-file-properties
+   leaving cloud-get-file-properties
+   entering new-file-in
+   leaving new-file-in
+:info 17:53:55 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
+   entering upload
+    entering enc-make-stanza
+    leaving enc-make-stanza
+    entering make-cloud-older
+     entering cip-ext
+     leaving cip-ext
+     entering cloud-get-file-properties
+     leaving cloud-get-file-properties
+    leaving make-cloud-older
+    entering cip-ext
+    leaving cip-ext
+   leaving upload
+  leaving add-file
+ leaving cloud-init
+ entering reset-Makefile
+ leaving reset-Makefile
+ entering read-all
+:error 17:53:55 (o.k. if this is the very first run) Invalid first line in the remote file DB /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA/all
+:warning 17:53:55 did not find any gpg-files in /tmp/cloud.test.HV2nQu/mnt/remote/; is this the very first run?
+ leaving read-all
+ entering cloud-sync
+  entering cloud-connected-p
+  leaving cloud-connected-p
+  entering TS
+  leaving TS
+:debug 17:53:55 contents-FN= /tmp/cloud.test.HV2nQu/mnt/remote/AbC.gpg
+:debug 17:53:55 local/all= /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA/all
+:debug 17:53:55 (or added-files upload-queue removed-files remote-actions)
+  entering write-all
+   entering print-hosts
+    entering backspace
+    leaving backspace
+   leaving print-hosts
+   entering print-actions
+   leaving print-actions
+   entering format-file
+   leaving format-file
+  leaving write-all
+  entering gpg-encrypt
+(Shell command succeeded with no output)
+  leaving gpg-encrypt
+  entering save-Makefile
+   entering reset-Makefile
+   leaving reset-Makefile
+  leaving save-Makefile
+:debug 17:53:55 Makefile is /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/cloud.mk
+(Shell command succeeded with no output)
+:info 17:53:55 done syncing
+  entering TS
+  leaving TS
+ leaving cloud-sync
+leaving cloud-start
+:info 17:53:55 touch ’now + 5 sec’ ~/file-1a.dat
+entering cloud-add
+ entering add-file
+  entering cloud-locate-FN
+   entering plain-name
+   leaving plain-name
+  leaving cloud-locate-FN
+  entering cloud-get-file-properties
+  leaving cloud-get-file-properties
+  entering new-file-in
+  leaving new-file-in
+:info 17:53:55 file ~/file-1a.dat is now clouded
+  entering upload
+   entering enc-make-stanza
+   leaving enc-make-stanza
+   entering make-cloud-older
+    entering cip-ext
+    leaving cip-ext
+    entering cloud-get-file-properties
+    leaving cloud-get-file-properties
+   leaving make-cloud-older
+   entering cip-ext
+   leaving cip-ext
+  leaving upload
+ leaving add-file
+leaving cloud-add
+entering cloud-sync
+ entering cloud-connected-p
+ leaving cloud-connected-p
+ entering TS
+ leaving TS
+:debug 17:53:55 contents-FN= /tmp/cloud.test.HV2nQu/mnt/remote/AbC.gpg
+:debug 17:53:55 local/all= /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA/all
+:debug 17:53:55 (or added-files upload-queue removed-files remote-actions)
+ entering write-all
+  entering print-hosts
+   entering backspace
+   leaving backspace
+  leaving print-hosts
+  entering print-actions
+  leaving print-actions
+  entering format-file
+  leaving format-file
+  entering format-file
+  leaving format-file
+ leaving write-all
+ entering gpg-encrypt
+(Shell command succeeded with no output)
+ leaving gpg-encrypt
+ entering save-Makefile
+  entering reset-Makefile
+  leaving reset-Makefile
+ leaving save-Makefile
+:debug 17:53:56 Makefile is /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/cloud.mk
+(Shell command succeeded with no output)
+:info 17:53:57 done syncing
+ entering TS
+ leaving TS
+leaving cloud-sync
+:debug 17:53:57 leaving hostA with these files in /tmp/cloud.test.HV2nQu/mnt/remote/:
+. .. AbC.gpg OvC.gpg history
+Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
+:debug 17:53:57 debug-set:old values -->
+:debug 17:53:57 ~= /tmp/cloud.test.HV2nQu/hostA/
+:debug 17:53:57 localhost= kalinin
+:debug 17:53:57 *config-directory*= ~/.emacs.d/conf/
+:debug 17:53:57 updated values -->
+:debug 17:53:57 ~ = /tmp/cloud.test.HV2nQu/hostB/
+:debug 17:53:57 localhost = hostB
+:debug 17:53:57 *config-directory* = ~/.emacs.d/conf/
+entering cloud-start
+
+ entering cloud-init
+:warning 17:53:57 I am not the first one who uses remote directory /tmp/cloud.test.HV2nQu/mnt/remote/ 
+  entering reset-Makefile
+  leaving reset-Makefile
+:warning 17:53:57 will not overwrite existing /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB.conf
+:warning 17:53:57 please examine your config file /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB.conf
+:debug 17:53:57 cloud-init: clouding ~/.emacs.d/conf/cloud/individual.passes
+  entering add-file
+   entering cloud-locate-FN
+   leaving cloud-locate-FN
+   entering cloud-get-file-properties
+   leaving cloud-get-file-properties
+   entering new-file-in
+   leaving new-file-in
+:info 17:53:57 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
+   entering upload
+    entering enc-make-stanza
+    leaving enc-make-stanza
+    entering make-cloud-older
+     entering cip-ext
+     leaving cip-ext
+     entering cloud-get-file-properties
+     leaving cloud-get-file-properties
+    leaving make-cloud-older
+    entering cip-ext
+    leaving cip-ext
+   leaving upload
+  leaving add-file
+ leaving cloud-init
+ entering reset-Makefile
+ leaving reset-Makefile
+ entering read-all
+:error 17:53:57 (o.k. if this is the very first run) Invalid first line in the remote file DB /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB/all
+:debug 17:53:57 action string= "2021-04-28 17:53:53 EDT" 3 1 "hostB"  "hostB" "hostA" 
+  entering parse-action
+:debug 17:53:57 parse-action("2021-04-28 17:53:53 EDT" 3 1 "hostB"  "hostB" "hostA" ) that ...
+   entering begins-with
+    entering begins-with*
+    leaving begins-with*
+   leaving begins-with
+   entering begins-with
+    entering begins-with*
+    leaving begins-with*
+   leaving begins-with
+   entering begins-with
+    entering begins-with*
+    leaving begins-with*
+   leaving begins-with
+   entering begins-with
+    entering begins-with
+     entering begins-with*
+     leaving begins-with*
+    leaving begins-with
+   leaving begins-with
+   entering begins-with
+    entering begins-with*
+    leaving begins-with*
+    entering begins-with*
+    leaving begins-with*
+    entering begins-with*
+    leaving begins-with*
+   leaving begins-with
+:info 17:53:57 ... will later be referenced as 04/28 17:53:53
+  leaving parse-action
+  entering perform
+   entering TS
+   leaving TS
+   entering format-action
+    entering full-TS
+    leaving full-TS
+   leaving format-action
+  leaving perform
+:info 17:53:57 sucessfully performed action 04/28 17:53:53
+  entering str-to-DBrec
+   entering parse-time
+   leaving parse-time
+  leaving str-to-DBrec
+  entering plain-name
+  leaving plain-name
+  entering cloud-locate-FN
+   entering plain-name
+   leaving plain-name
+  leaving cloud-locate-FN
+  entering cloud-get-file-properties
+  leaving cloud-get-file-properties
+  entering str-to-DBrec
+   entering parse-time
+   leaving parse-time
+  leaving str-to-DBrec
+  entering plain-name
+  leaving plain-name
+  entering cloud-locate-FN
+   entering plain-name
+   leaving plain-name
+   entering plain-name
+   leaving plain-name
+  leaving cloud-locate-FN
+ leaving read-all
+ entering cloud-sync
+  entering cloud-connected-p
+  leaving cloud-connected-p
+  entering TS
+  leaving TS
+:debug 17:53:57 contents-FN= /tmp/cloud.test.HV2nQu/mnt/remote/AbC.gpg
+:debug 17:53:57 local/all= /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB/all
+:debug 17:53:57 updating /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB/all obsoleted by /tmp/cloud.test.HV2nQu/mnt/remote/AbC.gpg
+  entering gpg-decrypt
+  leaving gpg-decrypt
+  entering read-all
+:error 17:53:58 (o.k. if this is the very first run) Invalid first line in the remote file DB /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB/all
+   entering cloud-host-add
+    entering new-action
+:debug 17:53:58 new-action> clouded-hosts= hostB hostA
+:debug 17:53:58 new-action(3 hostB)
+    leaving new-action
+    entering add-to-actions
+    leaving add-to-actions
+   leaving cloud-host-add
+   entering str-to-DBrec
+    entering parse-time
+    leaving parse-time
+   leaving str-to-DBrec
+   entering plain-name
+   leaving plain-name
+   entering cloud-locate-FN
+    entering plain-name
+    leaving plain-name
+    entering plain-name
+    leaving plain-name
+   leaving cloud-locate-FN
+   entering cloud-get-file-properties
+   leaving cloud-get-file-properties
+   entering download
+    entering dec-make-stanza
+     entering full-TS
+     leaving full-TS
+    leaving dec-make-stanza
+   leaving download
+   entering str-to-DBrec
+    entering parse-time
+    leaving parse-time
+   leaving str-to-DBrec
+   entering plain-name
+   leaving plain-name
+   entering cloud-locate-FN
+    entering plain-name
+    leaving plain-name
+    entering plain-name
+    leaving plain-name
+    entering plain-name
+    leaving plain-name
+   leaving cloud-locate-FN
+  leaving read-all
+:debug 17:53:58 (or added-files upload-queue removed-files remote-actions)
+  entering write-all
+   entering print-hosts
+    entering backspace
+    leaving backspace
+   leaving print-hosts
+   entering print-actions
+    entering format-action
+     entering full-TS
+     leaving full-TS
+    leaving format-action
+    entering format-action
+     entering full-TS
+     leaving full-TS
+    leaving format-action
+   leaving print-actions
+   entering format-file
+   leaving format-file
+   entering format-file
+   leaving format-file
+   entering format-file
+   leaving format-file
+  leaving write-all
+  entering gpg-encrypt
+(Shell command succeeded with no output)
+  leaving gpg-encrypt
+  entering save-Makefile
+   entering reset-Makefile
+   leaving reset-Makefile
+  leaving save-Makefile
+:debug 17:53:58 Makefile is /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/cloud.mk
+(Shell command succeeded with no output)
+:info 17:53:59 done syncing
+  entering TS
+  leaving TS
+ leaving cloud-sync
+leaving cloud-start
+:debug 17:53:59 leaving hostB with these files in /tmp/cloud.test.HV2nQu/mnt/remote/:
+. .. AbC.gpg OvC.gpg history
+   passed  2/2  cloud-sync-2
+
+Ran 2 tests, 2 results as expected (2021-04-28 17:53:59-0400)
+
+entering before-exit
+ entering cloud-sync
+  entering cloud-connected-p
+  leaving cloud-connected-p
+  entering TS
+  leaving TS
+:debug 17:53:59 contents-FN= /tmp/cloud.test.HV2nQu/mnt/remote/AbC.gpg
+:debug 17:53:59 local/all= /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB/all
+  entering save-Makefile
+   entering reset-Makefile
+   leaving reset-Makefile
+  leaving save-Makefile
+:debug 17:53:59 Makefile is /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/cloud.mk
+(Shell command succeeded with no output)
+:info 17:53:59 done syncing
+  entering TS
+  leaving TS
+ leaving cloud-sync
+leaving before-exit
+:debug 17:53:59 flushing comments before quiting emacs

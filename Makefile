@@ -1,52 +1,42 @@
 OFNs = cloud 2
 ORGs = $(addsuffix .org, $(OFNs))
-EMACS = emacs -q --no-site-file --batch
+export EMACS = emacs -q --no-site-file --batch
 
-all: README.md $(addprefix generated/from/, $(ORGs)) test
-
-test: generated/tests/micro.log generated/tests/meso.log generated/tests/macro.log
-
-generated/tests/micro.log: packaged/cloud.el generated/from/cloud.org generated/from/2.org
-	@echo "\n-= Testing on MICRO scale: =-\n"
-	$(EMACS) -l goodies/start.el -l $< -l generated/tests/micro.el -f ert-run-tests-batch-and-exit 2> $@
-	@echo "\n`date '+%m/%d %H:%M'` MICRO TESTS PASSED :) -- see $@\n"
-
-generated/tests/macro.log: packaged/cloud.el generated/from/cloud.org generated/tests/meso.el generated/tests/macro.el
-	@echo "\n-= Testing on MACRO scale: =-\n"
-	$(EMACS) -l goodies/start.el -l $< -l generated/tests/macro.el -f ert-run-tests-batch-and-exit 2> $@
-	@echo "\n`date '+%m/%d %H:%M'` MACRO TESTS PASSED :) -- see $@\n"
-
-generated/tests/meso.log: packaged/cloud.el generated/from/cloud.org generated/tests/meso.el
-	@echo "\n-= Testing on MESO scale: =-\n"
-	$(EMACS) -l goodies/start.el -l $< -l generated/tests/meso.el  -f ert-run-tests-batch-and-exit 2> $@
-	@echo "\n`date '+%m/%d %H:%M'` MESO TESTS PASSED :) -- see $@\n"
-
-generated/tests/meso.el: generated/from/testing.org
-	cat generated/headers/tests.el generated/headers/meso.el generated/meso-0.el generated/meso.el > $@
-	-@chgrp tmp $@
-	-@chmod a-x $@
-
-generated/tests/macro.el: generated/from/testing.org
-	cat generated/headers/tests.el generated/headers/meso.el generated/macro.el > $@
-	-@chgrp tmp $@
-	-@chmod a-x $@
-
-packaged/cloud.el: version.org generated/from/cloud.org generated/from/2.org packaged/
-	sed "s/the-version/`head -n1 $<`/" header.el > $@
-	cat 0.el 1.el generated/2.el generated/variables.el generated/functions.el >> $@
-	echo "(provide 'cloud)" >> $@
-	echo ";;; cloud.el ends here" >> $@
+packaged/cloud.el: version.org packaged/ generated/cloud.el generated/from/cloud.org generated/from/2.org tests/micro.log tests/meso.log tests/macro-0.log tests/macro-1.log tests/macro-2.log
+	sed '/^;;test>;;/d' generated/cloud.el > $@
 	emacsclient -e '(untilde (cdr (assoc "local-packages" package-archives)))' | xargs cp $@
 	-@chgrp tmp $@
 
-version.org: change-log.org helpers/derive-version.el
-	emacsclient -e '(progn (load "$(CURDIR)/helpers/derive-version.el") (format-version "$<"))' | xargs echo > $@
-	@echo "← generated `date '+%m/%d %H:%M'` from [[file:$<][$<]]" >> $@
-	@echo "by [[file:helpers/derive-version.el][derive-version.el]]" >> $@
+generated/cloud.el: version.org packaged/ generated/from/cloud.org generated/from/2.org
+	sed "s/the-version/`head -n1 $<`/" header.el > $@
+	cat generated/main-0.el generated/indices.el generated/main-1.el 0.el 1.el generated/2.el generated/main-2.el >> $@
+	echo "(provide 'cloud)" >> $@
+	echo ";; cloud.el ends here" >> $@
 	-@chgrp tmp $@
 
-generated/from/%.org: %.org generated/from/ generated/headers/ generated/tests/
-	emacsclient -e '(progn (load "$(CURDIR)/helpers/derive-version.el") (printangle "$<"))' | xargs echo > $@
+tests/cloud.el: generated/cloud.el
+	sed 's/^;;test>;;//' $< > $@
+	-@chgrp tmp $@
+
+tests/%.log: generated/from/testing.org generated/from/debug.org tests/cloud.el tests/common.conf
+	@echo "\n-= Testing at $(patsubst %.log,%,$@) scale =-\n"
+	$(EMACS) --eval '(defvar debug-make-dir "$(CURDIR)")' -l ~/.emacs.d/start.el -l tests/common.el -l $(patsubst %.log,%.el,$@) -f ert-run-tests-batch-and-exit 2> $@
+	@echo "\n`date '+%m/%d %H:%M'` TEST PASSED :) -- see $@\n"
+	-@chgrp tmp $@
+
+tests/common.conf: generated/from/testing.org
+	$(EMACS) --eval '(defvar debug-make-dir "$(CURDIR)")' -l ~/.emacs.d/start.el -l tests/prepare.el 2> tests/prepare.log
+	-@chgrp tmp tests/prepare.log
+
+version.org: change-log.org
+	emacsclient -e "(progn (require 'version) (format-version \"$<\"))" | sed 's/"//g' > $@
+	@echo "← generated `date '+%m/%d %H:%M'` from [[file:$<][$<]]" >> $@
+	@echo "by [[https://github.com/chalaev/lisp-goodies/blob/master/packaged/version.el][version.el]]" >> $@
+	-@chgrp tmp $@
+
+generated/from/%.org: %.org generated/from/ generated/headers/ tests/
+	@echo "\nNow emacs is probably waiting for your responce..."
+	emacsclient -e "(progn (require 'version) (printangle \"$<\"))" | sed 's/"//g' > $@
 	-@chgrp tmp $@ `cat $@`
 	-@chmod a-x `cat $@`
 
@@ -56,7 +46,7 @@ README.md: README.org
 	-@chgrp tmp $@
 
 clean:
-	-rm -r generated version.org
+	-rm -r tests generated version.org packaged
 
 .PHONY: clean all
 

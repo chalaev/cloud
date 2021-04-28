@@ -22,6 +22,9 @@
 (mapcar #'require '(cl-lib dired-aux timezone diary-lib subr-x shalaev))
 (let((localhost (system-name))
 file-DB added-files clouded-hosts remote-actions); actions to be saved in the cloud
+(debug-set* ~ localhost *config-directory*)
+(defun debug-clouded-hosts(&optional x) (if x(setf clouded-hosts x) clouded-hosts)); for watching local variable from the outer world
+(defun debug-remote-actions(&optional x) (if x(setf remote-actions x) remote-actions)); for watching local variable from the outer world
 
 (let*(
  (local-dir (need-dir *config-directory* "cloud"))

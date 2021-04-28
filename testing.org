@@ -19,159 +19,339 @@ For me code testing resembles testing an apple before deciding if I want to eat 
 All kinds of tests are equally important: sometimes an open-source program is reliable, but user-unfriendly;
 or proprietary software may have fancy design but contain back doors.
 
-Microscopic tests are written in [[file:generated/tests/micro.el][micro.el]],
+Microscopic tests are written in [[file:tests/tests/micro.el][micro.el]],
 mesoscopic ones – in [[file:generated/tests/meso.el][meso.el]], and
 macroscopic ones can be found in [[file:generated/tests/macro.el][macro.el]].
 
-* Testing on different scales
-** Preamble
-#+BEGIN_SRC emacs-lisp :tangle generated/headers/tests.el :shebang ";; -*- lexical-binding: t; -*-"=
-(require 'ert)
+* Helper code
+We will define =ert/on-success= in test macros for cleaning up.
+Cleaning up when the test is passed:
+#+BEGIN_SRC emacs-lisp :tangle tests/ert.el :shebang ";; ert.el"
+(defun ert/on-success()
+  "cleaning temporary directories"
+  (ifn root-test-dir (clog :error "root-test-dir unset in ert/on-success")
+    (if(string= root-test-dir (file-name-as-directory(getenv "HOME"))) (clog :error "WTF? Home directory is used in the test!")
+#+END_SRC
+← a necessary precaution.
+#+BEGIN_SRC emacs-lisp :tangle tests/ert.el
+    (clog :info "erasing %s" root-test-dir)
+    (delete-directory root-test-dir t))))
 (defun ert/when-passed()
   (when(functionp 'ert/on-success) (funcall #'ert/on-success)))
 (add-function :before (symbol-function 'ert-pass) #'ert/when-passed)
 #+END_SRC
-← we will define =ert/on-success= in test macros for cleaning up.
 
+* Preparing test environment
+For testing we need to use some kind of poor man's "virtual environment":
+- all test-related files are localized to =root-test-dir= which is erased in case when all tests are successful
+- host is defined via variables in =environment= macro which is going to be overwritten in debug session
+
+#+BEGIN_SRC emacs-lisp :tangle tests/prepare.el :shebang ";; prepare.el"
+(require 'shalaev)
+(defvar root-test-dir (file-name-as-directory(make-temp-file "cloud.test." t)) "root directory for all tests")
+#+END_SRC
+Now let us create two virtual hosts named "hostA" and "hostB":
+#+BEGIN_SRC emacs-lisp :tangle tests/prepare.el
+(let(
+(hostnames '("hostA" "hostB")); values of the localhost variable
+(remote-directory (need-dir root-test-dir "mnt/remote")); remote directory is mounted differently on different hosts
+(remote/files "AbC")
+(password "12345"))
+(write-conf(untilde (FN debug-make-dir "tests" "common.conf"))
+ (make-conf root-test-dir hostnames remote-directory remote/files password))
+#+END_SRC
+← creates =tests.conf= file in the [[file:tests][test directory]].
+
+Each host has a set of parameters:
+#+BEGIN_SRC emacs-lisp :tangle tests/prepare.el
+(dolist(localhost hostnames)
+(let*((signature localhost); [was (rand-str 3)] distinguishes files having the same name, but residing on different hosts
+(s(format "
+%s
+" signature))
+(~ (need-dir root-test-dir localhost))
+(emacs-d (tilde(need-dir ~ ".emacs.d")))
+(*config-directory* (tilde(need-dir emacs-d "conf"))); overwrites the definition in ~/.emacs.d/local-packages/shalaev.el
+(local-dir (need-dir *config-directory* "cloud"))
+(local/host/conf (concat local-dir localhost ".conf"))
+(dot-dir (tilde(need-dir ~ (concat ".config-dir." signature)))); an example of hidden directory – all files inside =dot-dir= are blacklisted
+(dir-1   (tilde(need-dir ~ (concat "dir-1." signature))))
+(dir-1a  (tilde(need-dir ~ "dir-1a")))
+(dot-file  (tilde(echo-to-file (concat "~/.bash-config." signature) (concat "(blacklisted) dot-file" s))))
+(conf-file (tilde(echo-to-file (concat dot-dir "file." signature) "any non-whitelisted file inside blacklisted directory is blacklisted")))
+(tmp-file  (tilde(echo-to-file (concat "~/tmp-1." signature) "blacklisted")))
+(file-1    (tilde(echo-to-file (concat "~/file-1." signature) (concat "an ordinary file (missing on another host)" s))))
+(file-1a   (tilde(echo-to-file "~/file-1a.dat" (concat "an ordinary file; there is a file with the same name (but different content) on another host)" s))))
+(file-2 (tilde(echo-to-file (concat  "~/tmp-2." signature) (concat "blacklisted " signature)))); blacklisted
+(black-root-dirs(mapcar #'(lambda(DN)(concat root-test-dir signature DN)) (split-string "/mnt/ /tmp/ /etc/ /ssh:")))
+(black-matches (split-string "tmp /old /log /Downloads /.git/")); the same for both hosts
+(black-extensions (split-string "aux idx ilg ind bak bbl blg brf bst dvi log out ps wav")))
+#+END_SRC
+
+For each host we create config-files.
+Defining the host:
+#+BEGIN_SRC emacs-lisp :tangle tests/prepare.el
+(write-conf (untilde (FN root-test-dir (concat localhost ".conf")))
+  (make-conf localhost ~ emacs-d *config-directory* local-dir local/host/conf dot-dir dir-1 dir-1a dot-file conf-file tmp-file file-1 file-1a file-2))
+#+END_SRC
+Defining parameters read by [[file:packaged/cloud.el][cloud.el]]:
+#+BEGIN_SRC emacs-lisp :tangle tests/prepare.el
+(write-conf (untilde local/host/conf)
+  (make-conf remote-directory remote/files password)))))
+#+END_SRC
+← these =.conf= files will be loaded inside =(defun hostA() …)= defining =let-conf= environment that wraps [[file:generated/main.el][main.el]].
+
+* Setup (load) test environment
+[[file:tests/common.el][tests/common.el]] is used in all tests and is loaded the first:
+#+BEGIN_SRC emacs-lisp :tangle tests/common.el :shebang ";; -*-  lexical-binding: t; -*-"
+
+;; common.el – *first* file to be loaded
+;; (require 'shalaev)
+
+(require 'el-debug); debug-make-dir must be defined in Makefile
+(load(FN debug-make-dir "tests" "ert.el")); debug-make-dir must be defined in Makefile
+
+(if(and(boundp 'debug-make-dir) debug-make-dir)
+  (setf debug-make-dir(file-name-as-directory debug-make-dir))
+  (clog :error "debug-make-dir is either undefined or nil"))
+#+END_SRC
+
+Let us read configuration files prepared in [[file:tests/prepare.el][prepare.el]] only once and store them in global variables:
+#+BEGIN_SRC emacs-lisp :tangle tests/common.el
+(defvar debug-main-conf (read-conf-file (FN debug-make-dir "tests" "common.conf")) "prepared in tests/prepare.el")
+(defvar root-test-dir nil "temporary directory for all virtual hosts")
+(debug-set debug-main-conf root-test-dir)
+
+(defmacro debug-environment(&rest body)
+"sets most common variables"
+`(letc debug-main-conf; global test configuration (common for all hosts)
+(remote-directory remote/files password root-test-dir ((:string) hostnames))
+(clean-RD remote-directory)
+,@body))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle tests/common.el
+(defvar debug-host-confs
+  (mapcar #'(lambda(HN)(cons HN (read-conf-file (FN root-test-dir (concat HN ".conf")))))
+    (letc debug-main-conf (((:string) hostnames)) hostnames)))
+#+END_SRC
+The following =defvar= is a subtle issue:
+#+BEGIN_SRC emacs-lisp :tangle tests/common.el
+(defvar debug-host-conf nil "this global definition needed for loaded main file"); 
+(defmacro host>(HN &rest body); HN = "host name"
+"to be called inside debug-environment"
+`(ifn-let((debug-host-conf(cdr(assoc ,HN debug-host-confs))))
+(clog :error "host %s is unconfigured" ,HN)
+(load(FN debug-make-dir "tests" "cloud.el")); ← loading main file
+(letc debug-host-conf (localhost ~ emacs-d *config-directory* local-dir local/host/conf dot-dir dir-1 dir-1a dot-file conf-file tmp-file file-1 file-1a file-2)
+,@body
+(clog :debug "leaving %s with these files in %s:
+%s" ,HN remote-directory (together(directory-files remote-directory nil))))))
+
+(defmacro debug-set*(&rest var-names)
+`(debug-set (append debug-main-conf debug-host-conf) ,@var-names))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle tests/common.el
+(defmacro clean-RD(dir)
+"cleans remote directory by deleting and re-creating it"
+`(ifn(string-prefix-p "/tmp/" ,dir) (clog :error "test cloud-init> remote-directory= %s must be inside tmp!")
+(delete-directory ,dir t)
+(need-dir ,dir)))
+#+END_SRC
+
+* Testing on different scales
 ** Micro scale
-The (micro-testing) code for testing single functions is written after their definitions in [[file:cloud.org][cloud.org]];
-in [[file:Makefile][Makefile]] this testing code is exported to [[file:generated/tests/micro.el][micro.el]].
+Locally redefining =make-temp-file= to eliminate randomness:
+#+BEGIN_SRC emacs-lisp :tangle tests/micro.el  :shebang ";; -*-  lexical-binding: t; -*-"
+;; tests/micro.el
+(mapcar #'(lambda(FN)(load(FN debug-make-dir "tests" FN))) (split-string "common.el"))
+
+(defun make-temp-file (FN &optional dir-flag suffix text)
+"locally redefining standard function"
+ (concat "/tmp/" FN "bZIZVA"))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle tests/micro.el
+(ert-deftest enc-make-stanza()
+(skip-unless (eql system-type 'gnu/linux))
+;; (setf lexical-binding t) ← does not help
+(debug-environment (host> (car hostnames)
+(let((general-FR ["~/pam.d/xscreensaver" "shalaev" "shalaev" (24506 18567 0 0) 41 416 "qwe"]); +
+     (gzipped ["~/shalaev.1.obsolete.gz" "shalaev" "shalaev" (21621 47298 0 0) 41 416 "4R6" ])
+     (encrypted ["~/big-secret.gpg" "shalaev" "shalaev" (21621 47298 0 0) 41 416  "sDF"])
+     (image ["~/photo.jpeg" "shalaev" "shalaev" (21621 47298 0 0) 41 416 "rd2"]))
+#+END_SRC
+For non-special files:
+#+BEGIN_SRC emacs-lisp :tangle tests/micro.el
+(should (string= (enc-make-stanza general-FR)
+"
+$(cloud)qwe.gpg: $(HD)pam.d/xscreensaver
+\t@$(enc) $@ $<
+\t-@echo \"$$(date): uploaded $<\" >> $(localLog)
+"))
+#+END_SRC
+
+Gzipped filles will be gunzipped before encoding:
+#+BEGIN_SRC emacs-lisp :tangle tests/micro.el
+(should (string= (enc-make-stanza gzipped)
+"
+/tmp/emacs-cloud.bZIZVA: $(HD)shalaev.1.obsolete.gz
+	zcat $< > $@
+
+$(cloud)4R6.gpg: /tmp/emacs-cloud.bZIZVA
+\t@$(enc) $@ $<
+	rm $<
+\t-@echo \"$$(date): uploaded $<\" >> $(localLog)
+"))
+#+END_SRC
+
+Encrypted files will be just copied to the cloud without additional encryption:
+#+BEGIN_SRC emacs-lisp :tangle tests/micro.el
+(should (string= (enc-make-stanza encrypted)
+"
+$(cloud)sDF.gpg: $(HD)big-secret.gpg
+\tcp $< $@
+\t-@echo \"$$(date): uploaded $<\" >> $(localLog)
+"))
+#+END_SRC
+
+For images:
+#+BEGIN_SRC emacs-lisp :tangle tests/micro.el
+(should (string= (enc-make-stanza image)
+"
+$(cloud)rd2.png: $(HD)photo.jpeg $(HD).emacs.d/conf/cloud/pass.d/updated
+\tconvert $< -encipher $(HD).emacs.d/conf/cloud/pass.d/rd2 $@
+\t-@echo \"$$(date): uploaded $<\" >> $(localLog)
+"))))))
+#+END_SRC
 
 ** Meso scale
-=one-virgin-host= creates an environment emulating one host.
-
-The main part of the meso-testing code also resides in [[file:cloud.org][cloud.org]]; in [[file:Makefile][Makefile]] it is exported to [[file:generated/meso.el][generated/meso.el]].
-
-In case the test passed we clean up after the test:
-#+BEGIN_SRC emacs-lisp :tangle generated/headers/meso.el
-(defun delete-dirs (&rest dirs)
- (mapcar #'(lambda(DN) (delete-directory DN t)) dirs))
-(let (tmp-dirs)
-(defun ert/home(&rest dirs)
-"setting list of temporary directories"
-(if(member (to-dir(getenv "HOME")) dirs) (clog :error "WTF? Home directory is used in the test!")
- (setf tmp-dirs dirs)))
-(defun ert/on-success()
-"cleaning temporary directories"
-(ifn tmp-dirs (clog :error "tmp-dirs unset in ert/on-success")
-(let ((CDs (together tmp-dirs)))
- (clog :info "cleaning up %s" CDs)
-(if(member (to-dir(getenv "HOME")) tmp-dirs) (clog :error "STOP: home directory is used in the test!");  YES, I need this precaution!!!
- (clog :info "erasing %s" CDs)
- (apply #'delete-dirs tmp-dirs))))))
+#+BEGIN_SRC emacs-lisp :tangle tests/meso.el :shebang ";; -*-  lexical-binding: t; -*-"
+;; tests/meso.el
+(ert-deftest read-write-conf()
+   "testing cloud-init, read-conf, and write-conf"
+(debug-environment (host> (car hostnames)
+(let((tmp-conf(concat local/host/conf ".tmp")))
+(copy-file local/host/conf tmp-conf)
+(debug-log-var file-1)
+;;(cloud-init)
+(clog :info "read-write-conf: tmp-conf => %s" tmp-conf)
+(clog :info "
+Here is the generated config file: ==>")
+(with-temp-buffer(insert-file-contents tmp-conf)
+(while-let (str) (< 0 (length (setf str (read-line)))) (clog :info "%s" str)))
+(clog :info "<== end of config file
+")
+(letc nil
+((remote-directory remote-directory); do not change this value
+ (black-extensions '("abc" "def"))
+ (black-root-dirs '("/trash/"))
+ (remote/files  "XYZ")
+ (password "myDogsName"))
+(write-conf tmp-conf
+  (make-conf remote-directory black-extensions black-root-dirs remote/files password)))
+(clog :info "
+Here is my artificial config file: ==>")
+(with-temp-buffer (insert-file-contents tmp-conf)
+  (while-let (str) (< 0 (length (setf str (read-line)))) (clog :info "%s" str)))
+(clog :info "<== end of config file
+")
+(letc(read-conf-file tmp-conf)
+(((:string) black-extensions) ((:string) black-root-dirs)
+(:string remote/files) (:integer number-of-CPU-cores)
+(:string password) (:string remote-directory))
+(clog :debug "test read-write-conf> remote-directory=> %s, black-extensions=> %s" remote-directory black-extensions)
+(should (equal black-extensions '("abc" "def")))
+(should (equal black-root-dirs '("/trash/")))
+(should (string= remote/files "XYZ"))
+(should (string= password "myDogsName")))))))
 #+END_SRC
 
-Together with the following code (simulating a virtual host) it is merged into [[file:generated/tests/meso.el][meso.el]]:
-#+BEGIN_SRC emacs-lisp :tangle generated/headers/meso.el
-(defvar host-par-names '(localhost file-DB ~ HOME emacs-d password remote/files removed-files important-msgs gpg-process cloud-was-connected all Makefile uploaded stanze
-   remote-directory dot-file dot-dir conf-file dir-1 file-1 file-1a dir-1a file-2 file-3 file-4 file-5))
-(eval (cons 'progn (mapcar #'(lambda(VD) `(defvar ,VD nil)) host-par-names)))
-;;(define-vars (dot-file dot-dir conf-file dir-1 file-1 file-2 file-3 file-4 file-5))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp :tangle generated/headers/meso.el
-(defvar localhost-counter 0)
-(defmacro one-virgin-host(LH dirs &rest body)
-"simulating first run on a new host -- in order to test config file creation;
-dirs is a list (root-dir remote-dir), might be nil,
-root-dir is (optional, might be nil) root directory for this host"
-(let ((ds (s-gensym "ds")))
-`(let* ((,ds ,dirs)
-   (localhost (or ,LH (format "%s-%d" localhost (incf localhost-counter))))
-   (root-dir (to-dir (or (car ,ds) (make-temp-file "cloud-test.root." t))))
-   (~ (need-dir root-dir "user")) (HOME (directory-file-name ~))
-   (/tmp/cloud-test/ (need-dir (make-temp-file "cloud." t)))
-   (remote-directory (or
-      (and (cdr ,ds) (cadr ,ds))
-      (to-dir root-dir "remote")))
-(emacs-d (to-dir ~ ".emacs.d"))
-(signature (format "
-%s" (rand-str 3))); distinguishes files having the same name, but residing on different hosts
-#+END_SRC
-Creating blacklisted files:
-#+BEGIN_SRC emacs-lisp :tangle generated/headers/meso.el
-(dot-file (make-temp-file (concat ~ ".bash-config.") nil nil (concat "dot-file; it is blacklisted" signature)))
-(dot-dir (to-dir (make-temp-file (concat ~ ".config-dir.") t))); all files inside =dot-dir= are blacklisted
-(conf-file (make-temp-file (concat dot-dir "file.") nil nil "conf-file; it is blacklisted"))
-#+END_SRC
-The usual files (supposed to be automatically clouded) are
-#+BEGIN_SRC emacs-lisp :tangle generated/headers/meso.el
-(file-1 (tilde(make-temp-file (concat ~ "file-1.") nil nil (concat "file-1 " signature))))
-(file-1a (concat ~ "file-1a.dat")); let us fix its name 
-(dir-1 (to-dir(make-temp-file (concat ~ "dir-1.") t)))
-(dir-1a (concat ~ "dir-1a")); let us fix its name 
-(file-2 (make-temp-file (concat dir-1 "tmp-2.") nil nil (concat "file-2 " signature))); blacklisted
-(file-3 (make-temp-file (concat dir-1 "file-3.") nil nil (concat "file-3 " signature)))
-(file-4 (make-temp-file (concat dir-1 "file-4.") nil nil (concat "file-4 " signature))); to be encrypted
-(file-5 (make-temp-file (concat dir-1 "file-5.") nil nil (concat "file-5 " signature))); to be gzipped
-(host-conf (make-hash-table)))
-(write-region (rand-str 3) nil file-1a)
-(make-directory (untilde dir-1a) t)
-(ert/home root-dir)
-(clog :info "home directory(~)= %s, remote-directory= %s, local-dir= %s" ~ remote-directory (local-dir))
-(ensure-dir-exists (local-dir))
-(ensure-dir-exists (local/host/))
-(setf password "12345"); comment this string to get random password
-(cloud-init)
-(dolist (CP host-par-names) (puthash CP (eval(intern(symbol-name CP))) host-conf))
- ,@body)))
+See [[file:testing.org][testing.org]] about multi-scale testing:
+#+BEGIN_SRC emacs-lisp :tangle tests/meso.el
+(ert-deftest cloud-init()
+   "just check that a non-empty config file is created during the first run"
+(debug-environment (host> (car hostnames)
+(let((dir(untilde remote-directory)))
+(should(string-prefix-p "/tmp/" dir))
+;;(cloud-init)
+(indices
+(when-let((FR (cloud-get-file-properties local/host/conf))
+          (FSize (aref (get-file-properties* local/host/conf) size)))
+    (clog :info "deftest cloud-init: config file size = %d bytes,
+and its content is
+%s" FSize (cat-file local/host/conf))
+  (should (< 50 FSize))))))))
 #+END_SRC
 
 *** uploading newly clouded file
-#+BEGIN_SRC emacs-lisp :tangle generated/meso-0.el
+#+BEGIN_SRC emacs-lisp :tangle tests/meso.el
 (ert-deftest cloud-and-upload()
-"clouding a file and uploading it to remote directory"
-(one-virgin-host nil nil
-(should (file-exists-p(untilde file-1)))
-(cloud-add file-1)
-(let((remote-files-1(directory-files remote-directory nil "...\...." t)))
-(clog :info "before syncying there are %d files in the remote diredtory: %s" (length remote-files-1) (together remote-files-1))
-(cloud-sync)
-(let((remote-files-2(directory-files remote-directory nil "...\...." t)))
-(clog :info "after syncying there are %d files in the remote diredtory: %s" (length remote-files-2) (together remote-files-2))
-(should (< (length remote-files-1) (length remote-files-2)))
-(clog :info "will now cloud %s and sync" file-2)
-(should (file-exists-p(untilde file-2)))
-(cloud-add file-2)
-(cloud-sync)
+  "clouding a file and uploading it to remote directory"
+(debug-environment (host> (car hostnames)
+  ;;(cloud-init)
+  (should(file-exists-p(untilde file-1)))
+  (cloud-add file-1)
+  (let((remote-files-1(directory-files remote-directory nil "...\...." t)))
+    (clog :info "before syncying there are %d files in the remote directory: %s" (length remote-files-1) (together remote-files-1)); before syncying there are 0 files in the remote directory
+    (cloud-sync)
+    (let((remote-files-2(directory-files remote-directory nil "...\...." t)))
+      (clog :info "after syncying there are %d files in the remote directory: %s" (length remote-files-2) (together remote-files-2))
+      (should(< (length remote-files-1) (length remote-files-2)))
+      (clog :info "will now cloud %s and sync" file-2)
+      (should(file-exists-p(untilde file-2)))
+      (cloud-add file-2)
+      (cloud-sync)
 (let((remote-files-3(directory-files remote-directory nil "...\...." t)))
-(clog :info "after syncying there are %d files in the remote diredtory: %s" (length remote-files-3) (together remote-files-3))
-(should (< (length remote-files-2) (length remote-files-3))))))))
+  (clog :info "after syncying there are %d files in the remote directory: %s" (length remote-files-3) (together remote-files-3))
+  (should(< (length remote-files-2) (length remote-files-3)))))))))
 #+END_SRC
 
 *** uploading previously clouded and later changed file
-#+BEGIN_SRC emacs-lisp :tangle generated/meso-0.el
+#+BEGIN_SRC emacs-lisp :tangle tests/meso.el
 (defun file-mtime(FN &optional t0)
 (when(file-exists-p FN)
-  (round(float-time(time-subtract(aref(get-file-properties* FN) mtime) (or t0 '(0 0)))))))
-
+(indices
+  (round(float-time(time-subtract(aref(get-file-properties* FN) mtime) (or t0 '(0 0))))))))
+#+END_SRC
+The following test should be either rewritten or skipped:
+#+BEGIN_SRC emacs-lisp :tangle tests/meso.el
 (ert-deftest save-then-upload()
-"uploading previously updated file that was clouded before"
-(one-virgin-host nil nil
-(should(file-exists-p(untilde file-1a)))
-(cloud-add file-1a)
-(let((FR(cloud-locate-FN file-1a)))
-(should FR)
-(let((t0(aref FR mtime)) (CN(aref FR cipher)))
-(should CN)
-(let((gpg-FN (concat(remote-directory) CN ".gpg")))
-(should(not(file-exists-p gpg-FN)))
-(sleep-for 1) (cloud-sync)
-(should(file-exists-p gpg-FN))
-(let((t1 (file-mtime gpg-FN t0))); all times are relative to t0
-(should(< 0 t1))
-(clog :info "touch 'now + 5 sec' %s" file-1a) (set-file-times (untilde file-1a) (time-add (current-time) 5))
-(sleep-for 1)
-(cloud-touch (untilde file-1a)); as if we saved the changes to file-1a in emacs
-(let((t2 (file-mtime file-1a t0)))
-(should(< t1 t2)); 12/28 fails
-(cloud-sync)
-(let((t3 (file-mtime gpg-FN t0)))
-(should(< t1 t3))))))))))
+  "uploading previously updated file that was clouded before"
+(skip-unless nil)
+(debug-environment (host> (car hostnames)
+;;(cloud-init)
+(indices
+(load (FN debug-make-dir "generated/functions.el"))
+  (should(file-exists-p(untilde file-1a)))
+  (cloud-add file-1a)
+  (let((FR(cloud-locate-FN file-1a)))
+    (should FR)
+    (let((t0(aref FR mtime)) (CN(aref FR cipher)))
+;;(clog :debug "t0= %d" t0)
+      (should CN)
+      (let((gpg-FN (concat remote-directory CN ".gpg")))
+	(should(not(file-exists-p gpg-FN)))
+	(sleep-for 1) (cloud-sync)
+	(should(file-exists-p gpg-FN))
+	(let((t1 (file-mtime gpg-FN t0))); all times are counted from t0
+;;(clog :debug "t1= %d" t1)
+	  (should(< 0 t1))
+	  (clog :info "touch 'now + 5 sec' %s" file-1a) (set-file-times (untilde file-1a) (time-add (current-time) 5))
+	  (sleep-for 1)
+	  (cloud-touch (untilde file-1a)); as if we saved the changes to file-1a in emacs
+	  (let((t2 (file-mtime file-1a t0)))
+;;(clog :debug "t2= %d" t2)
+	    (should(< t1 t2))
+	    (cloud-sync)
+	    (let((t3(file-mtime gpg-FN t0)))
+;;(clog :debug "t3= %d" t3)
+	      (should(< t1 t3))))))))))))
 #+END_SRC
 
 ** Other meso-scale tests (to be written)
-*** when ~/.emacs.d/cloud/`hostname`/ is empty
+*** when ~/.emacs.d/conf/cloud/`hostname`/ is empty
 ... to be written ...
 Generalize it: one of config files is missing.
 
@@ -183,136 +363,121 @@ Then it must not be left empty, but downloaded from the cloud.
 ... to be written ...
 
 ** Macro scale
-=two-virgin-hosts= creates an environment emulating two hosts exchanging files with each other.
-(It can probably be generalized to arbitrary number of hosts, but I do not need that for now.)
-#+BEGIN_SRC emacs-lisp :tangle generated/macro.el
-(defmacro two-virgin-hosts(&rest body)
-"simulating first run on two hosts"
-`(let (hostA hostB cloud-hosts
-(root   (to-dir(make-temp-file "cloud-test.PAIR-root." t)))
-(remote (to-dir(make-temp-file "cloud-test.PAIR-remote." t))))
-(one-virgin-host "testA" (list (concat root "A") remote)
-(unless (member localhost cloud-hosts) (push localhost cloud-hosts))
-(setf hostA host-conf)
-(one-virgin-host "testB" (list (concat root "B") remote)
-(unless (member localhost cloud-hosts) (push localhost cloud-hosts))
-(setf hostB host-conf)
-#+END_SRC
-Almost all parameters for ~hostA~ and ~hostB~ will be different,
-except for =password= and =remote-directory=:
-#+BEGIN_SRC emacs-lisp :tangle generated/macro.el
-(dolist (CP '(password remote-directory remote/files))
-  (set (intern(symbol-name CP)) (gethash CP hostA))
-  (setf (gethash CP hostB)  (gethash CP hostA)))
-(write-conf)
-,@body))))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp  :tangle generated/macro.el
-(defmacro on-hostA(&rest body)
-`(let ,host-par-names
-(dolist (CP (quote (list ,@host-par-names)))
-    (set (intern(symbol-name CP)) (gethash CP hostA)))
-(clog :info "host A= %s> remote/files= %s, password= %s, HOME= %s" localhost remote/files password HOME)
-,@body))
-(defmacro on-hostB(&rest body)
-`(let ,host-par-names
-(dolist (CP (quote (list ,@host-par-names)))
-    (set (intern(symbol-name CP)) (gethash CP hostB)))
-(clog :info "host B= %s> remote/files= %s, password= %s, HOME= %s" localhost remote/files password HOME)
-,@body))
-#+END_SRC
-
 *** Manually clouding a file
 Copying from hostA to hostB file that did not exist on hostB:
-#+BEGIN_SRC emacs-lisp :tangle generated/macro.el
+#+BEGIN_SRC emacs-lisp :tangle tests/macro-0.el
 (ert-deftest cloud-sync-1()
 "copying one file from hostA to hostB"
-(two-virgin-hosts
-(let (FN CF)
-(on-hostA
-  (setf FN (tilde file-1) CF (cat-file (untilde file-1)))
-  (cloud-start)
-  (cloud-add file-1)
-  (cloud-sync))
-(on-hostB
-  (should (not (file-exists-p (untilde FN))))
-  (cloud-start); cloud-start calls cloud-sync that has downloaded file-1 from remote directory
-  (should (file-exists-p (untilde file-1))); so now file-1 exists on-hostB
-  (should (string= CF (cat-file (untilde FN))))))))
+(debug-environment; ← defines variables: hostnames remote-directory remote/files password
+(let(FN file-content)
+(host> (car hostnames)
+;;(cloud-init)
+(clog :debug "checking that %s exists on host A:" (setf FN file-1))
+(should (file-exists-p (untilde FN)))
+(setf file-content (cat-file(untilde file-1)))
+(cloud-start)
+(cloud-add file-1)
+(cloud-sync))
+(clog :info "finished with host %s, switching to %s" (car hostnames) (cadr hostnames))
+(host> (cadr hostnames)
+;;(cloud-init)
+(clog :debug "checking that %s DOES NOT exist on %s BEFORE SYNCING:" FN (cadr hostnames))
+(should(not (file-exists-p (untilde FN))))
+(cloud-start)
+(should(file-exists-p (untilde FN))); so now file-1 exists on-hostB
+(should(string= file-content (cat-file (untilde FN))))))))
 #+END_SRC
 Copying from hostA to hostB file that did exist on hostB:
-#+BEGIN_SRC emacs-lisp :tangle generated/macro.el
+#+BEGIN_SRC emacs-lisp :tangle tests/macro-0.el
 (ert-deftest cloud-sync-2()
 "copying one file from hostA to hostB"
-(two-virgin-hosts
-(let (CF)
-(on-hostA
-  (setf CF (cat-file (untilde file-1a)))
+(debug-environment
+(let(file-content)
+(host> (car hostnames)
+  (setf file-content (cat-file (untilde file-1a)))
   (cloud-start)
   (clog :info "touch 'now + 5 sec' %s" file-1a) 
   (set-file-times (untilde file-1a) (time-add (current-time) 5))
   (cloud-add file-1a)
   (cloud-sync))
-(on-hostB
-  (should (file-exists-p file-1a)))
-  (should(not(string= CF (cat-file (untilde file-1a))))); files file-1a on two hosts have the same name, but different content
+(host> (cadr hostnames)
+  (should(file-exists-p (untilde file-1a)))
+  (should(not(string= file-content (cat-file (untilde file-1a))))); files file-1a on two hostnames have the same name, but different content
   (cloud-start); cloud-start calls cloud-sync that has downloaded file-1a from remote directory
-  (should (string= CF (cat-file (untilde file-1a)))))))
+  (should(string= file-content (cat-file (untilde file-1a))))))))
 #+END_SRC
 
 *** Renaming
-#+BEGIN_SRC emacs-lisp :tangle generated/macro.el
+#+BEGIN_SRC emacs-lisp :tangle tests/macro-1.el
 (require 'dired-aux)
 (ert-deftest rename-file()
 "renaming file on hostA leads to the same action on hostB"
 (let(FN1 BN1 DN1 FN2)
-(two-virgin-hosts
-(clog :info "cloud-hosts= %s" (together cloud-hosts))
-(on-hostA
-(setf FN1 (tilde file-1a))
-(setf DN1 (file-name-directory FN1))
-(setf BN1 (file-name-nondirectory FN1))
-(should (file-exists-p (untilde file-1)))
-(setf FN2 (tilde (concat DN1 "new-" BN1)))
-(clog :info "FN1= %s BN1= %s, DN1= %s, FN2= %s" FN1 BN1 DN1 FN2)
-(should(= 0 (length remote-actions)))
-(dired-rename-file (tilde FN1) (tilde FN2) t)
-(should(= 1 (length remote-actions)))
-(clog :info "rename action: %s" (format-action(car remote-actions)))
-(cloud-sync))
-(on-hostB
-(clog :info "file1= %s" file-1a)
-(should(file-exists-p (untilde file-1a)))
-(should(file-exists-p (untilde FN1)))
-(should(not(file-exists-p (untilde FN2))))
-(cloud-start)
-(should(file-exists-p (untilde FN2)))))))
+(debug-environment
+;; (clean-RD remote-directory) it is already in =debug-environment=!
+(host> (car hostnames)
+    (clog :info "initializing host %s before mirroring files and actions" localhost)
+    (cloud-start))
+(host> (cadr hostnames)
+    (clog :info "initializing host %s before mirroring files and actions" localhost)
+    (cloud-start))
+(host> (car hostnames)
+(debug-clouded-hosts hostnames); our (rename) action will only be performed on already clouded hosts
+    (setf FN1 (tilde file-1a))
+    (setf DN1 (file-name-directory FN1))
+    (setf BN1 (file-name-nondirectory FN1))
+    (should(file-exists-p (untilde file-1)))
+    (setf FN2 (tilde (concat DN1 "new-" BN1)))
+    (clog :info "FN1= %s BN1= %s, DN1= %s, FN2= %s" FN1 BN1 DN1 FN2)
+;; :info 19:38:12 FN1= ~/dir-1a/ BN1= dir-1a/, DN1= ~/, FN2= ~/new-dir-1a/
+    (should(= 0 (length (debug-remote-actions))))
+    (dired-rename-file (tilde FN1) (tilde FN2) t)
+    (should(= 1 (length (debug-remote-actions))))
+    (clog :info "rename action: %s" (format-action(car(debug-remote-actions))))
+    ;; → raw rename action: ...
+    (cloud-sync))
+(clog :info "finished with host %s, switching to %s" (car hostnames) (cadr hostnames))
+(host> (cadr hostnames)
+    (clog :info "file1= %s" file-1a)
+    (should(file-exists-p (untilde file-1a)))
+    (should(file-exists-p (untilde FN1)))
+    (should(not(file-exists-p (untilde FN2))))
+    (cloud-start)
+    (should(file-exists-p (untilde FN2)))))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle generated/macro.el
+#+BEGIN_SRC emacs-lisp :tangle tests/macro-2.el
 (ert-deftest rename-directory()
-"same as rename-file, but for directories"
+  "same as rename-file, but for directories"
 (let(FN1 BN1 DN1 FN2)
-(two-virgin-hosts
-(on-hostA
-(setf FN1 (file-name-as-directory(tilde dir-1a)))
-(setf DN1 (file-name-directory(directory-file-name FN1)))
-(setf BN1 (file-name-as-directory(file-name-nondirectory(directory-file-name FN1))))
-(should (file-exists-p (untilde dir-1)))
-(setf FN2 (tilde(file-name-as-directory(concat DN1 "new-" BN1))))
-(clog :info "FN1= %s BN1= %s, DN1= %s, FN2= %s" FN1 BN1 DN1 FN2)
-(should(= 0 (length remote-actions)))
-(clog :debug "dired-rename-file %s --> %s" (directory-file-name(tilde FN1)) (directory-file-name(tilde FN2)))
-(dired-rename-file (directory-file-name(tilde FN1)) (directory-file-name(tilde FN2)) t)
-(should(= 1 (length remote-actions)))
-(clog :info "rename action: %s" (format-action(car remote-actions)))
-(cloud-sync))
-(on-hostB
-(clog :info "file1= %s" dir-1a)
-(should(file-exists-p (untilde dir-1a)))
-(should(file-exists-p (untilde FN1)))
-(should(not(file-exists-p (untilde FN2))))
-(cloud-start)
-(should(file-exists-p (untilde FN2)))))))
+(debug-environment 
+;; (clean-RD remote-directory) it is already in =debug-environment=!
+(host> (car hostnames)
+    (clog :info "initializing host %s before mirroring files and actions" localhost)
+    (cloud-start))
+(host> (cadr hostnames)
+    (clog :info "initializing host %s before mirroring files and actions" localhost)
+    (cloud-start))
+(host> (car hostnames)
+(debug-clouded-hosts hostnames); our (rename) action will only be performed on already clouded hosts
+    (setf FN1 (file-name-as-directory(tilde dir-1a)))
+    (setf DN1 (file-name-directory(directory-file-name FN1)))
+    (setf BN1 (file-name-as-directory(file-name-nondirectory(directory-file-name FN1))))
+    (should(file-exists-p (untilde dir-1)))
+    (setf FN2 (tilde(file-name-as-directory(concat DN1 "new-" BN1))))
+    (clog :info "FN1= %s BN1= %s, DN1= %s, FN2= %s" FN1 BN1 DN1 FN2)
+    (should(= 0 (length (debug-remote-actions))))
+    (clog :debug "dired-rename-file %s --> %s" (directory-file-name(tilde FN1)) (directory-file-name(tilde FN2)))
+    (dired-rename-file (directory-file-name(tilde FN1)) (directory-file-name(tilde FN2)) t)
+    (should(= 1 (length (debug-remote-actions))))
+    (clog :info "rename action: %s" (format-action(car(debug-remote-actions))))
+    (cloud-sync))
+(clog :info "finished with host %s, switching to %s" (car hostnames) (cadr hostnames))
+(host> (cadr hostnames)
+    (clog :info "file1= %s" dir-1a)
+    (should(file-exists-p (untilde dir-1a)))
+    (should(file-exists-p (untilde FN1)))
+    (should(not(file-exists-p (untilde FN2))))
+    (cloud-start)
+    (should(file-exists-p (untilde FN2)))))))
 #+END_SRC

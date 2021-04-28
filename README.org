@@ -18,7 +18,8 @@ Encrypted files saved in the cloud have *random names* to minimize the amount of
 We need
 1. ~emacs~, GNU ~make~, ~ImageMagick~, ~gpg~, ~sed~, and ~gawk~; in Debian these can be installed as follows:\\
    =aptitude install emacs make imagemagick gpg sed gawk=
-2. [[https://github.com/chalaev/lisp-goodies][lisp-goodies]]: [[https://github.com/chalaev/lisp-goodies/blob/master/packaged/batch-start.el][batch-start.el]] (used by [[file:Makefile][Makefile]]), and [[https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el][shalaev.el]]
+2. [[https://github.com/chalaev/lisp-goodies][lisp-goodies]]: [[https://github.com/chalaev/lisp-goodies/blob/master/packaged/start.el][start.el]] (used by [[file:Makefile][Makefile]]), and [[https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el][shalaev.el]]
+3. (for testing only) [[https://github.com/chalaev/el-debug/blob/master/packaged/el-debug.el][el-debug.el]]
 
 * Quick start
 I am running ~emacs~ in daemon mode (in text console) using the following line in [[https://github.com/chalaev/lisp-goodies/blob/master/.login][~/.login]]:
@@ -30,13 +31,14 @@ Once ~emacs~ was started in the daemon mode, I can use =emacsclient -c= to open 
 ** Initial setup
 1. =mkdir ~/.emacs.d/local-packages/=
 2. Place [[https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el][shalaev.el]] and [[file:packaged/cloud.el][cloud.el]] to =~/.emacs.d/local-packages/=
-3. Load [[file:goodies/batch-start.el][batch-start.el]] in your [[file:.emacs][~/.emacs]]
+3. Load [[file:goodies/start.el][start.el]] in your [[file:.emacs][~/.emacs]]
 4. Evaluate ~cloud.el~ in ~emacs~ at start by placing the following lines
    #+BEGIN_SRC emacs-lisp
    (require 'cloud)
    (cloud-start)
    #+END_SRC
-   into your [[file:.emacs][~/.emacs]] file. Update some files in emacs, then =M-x cloud-sync=.
+   into your [[file:.emacs][~/.emacs]] file. 
+   In emacs, update some of the files , then =M-x cloud-sync=.
    During the very first =(cloud-start)= run, configuration file [[file:config][~/.emacs.d/cloud/`hostname`/config]] will be created.
 5. Mount remote directory. The mounting point may be arbitrary (specified as =cloud-directory= in [[file:config][~/.emacs.d/cloud/`hostname`/config]]), the default one is ~/mnt/cloud/~.
 

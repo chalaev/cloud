@@ -1,0 +1,40 @@
+Loading /home/shalaev/Private/work/cloud/tests/ert.el (source)...
+:debug 17:53:47 debug-set:old values -->
+:debug 17:53:47 root-test-dir= nil
+:debug 17:53:47 updated values -->
+:debug 17:53:47 root-test-dir = /tmp/cloud.test.HV2nQu/
+Loading /home/shalaev/Private/work/cloud/tests/common.el (source)...
+Loading /home/shalaev/Private/work/cloud/tests/ert.el (source)...
+:debug 17:53:47 debug-set:old values -->
+:debug 17:53:47 root-test-dir= /tmp/cloud.test.HV2nQu/
+:debug 17:53:47 updated values -->
+:debug 17:53:47 root-test-dir = /tmp/cloud.test.HV2nQu/
+Running 1 tests (2021-04-28 17:53:47-0400)
+Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
+:debug 17:53:47 debug-set:old values -->
+:debug 17:53:47 ~= /home/shalaev/
+:debug 17:53:47 localhost= kalinin
+:debug 17:53:47 *config-directory*= /home/shalaev/.emacs.d/conf/
+:debug 17:53:47 updated values -->
+:debug 17:53:47 ~ = /tmp/cloud.test.HV2nQu/hostA/
+:debug 17:53:47 localhost = hostA
+:debug 17:53:47 *config-directory* = ~/.emacs.d/conf/
+entering make-temp-file
+leaving make-temp-file
+entering enc-make-stanza
+leaving enc-make-stanza
+entering enc-make-stanza
+ entering make-temp-file
+ leaving make-temp-file
+leaving enc-make-stanza
+entering enc-make-stanza
+leaving enc-make-stanza
+entering enc-make-stanza
+leaving enc-make-stanza
+:debug 17:53:47 leaving hostA with these files in /tmp/cloud.test.HV2nQu/mnt/remote/:
+. ..
+   passed  1/1  enc-make-stanza
+
+Ran 1 tests, 1 results as expected (2021-04-28 17:53:47-0400)
+
+:debug 17:53:47 flushing comments before quiting emacs

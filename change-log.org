@@ -1,10 +1,22 @@
 Change log for the [[https://github.com/chalaev/cloud][cloud synchronizer]].
 
+* Localizing variables
+** code optimization
+*** 04/28
+1. Following [[https://github.com/chalaev/lisp-goodies/blob/master/change-log.org][lisp-goodies' change log]], replaced =update-conf= → =letc=.
+2. Removed file =generated/variables.el=
+3. Localized most variables; most functions remain global for now (this will hopefully be changed soon).
+4. Mostly rewrote [[file:testing.org][testing code]].
+
 * Freezing the code
 No more fountainng with ideas; just making the existing code more reliable.
 Mostly fixing the errors; the ideas are either implemented or postponed for (probably remote) future.
 
 ** improving reliability
+*** 02/17
+1. renamed =cloud-sed-i= → =csed-i=.
+2. removed  =helpers/derive-version.el=
+
 *** 02/15
 1. corrected =cloud-rm=
 2. updated [[file:helpers/derive-version.el][derive-version.el]] might have abruptly changed the [[file:version.org][version number]].

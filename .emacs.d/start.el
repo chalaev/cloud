@@ -1,7 +1,5 @@
 ;; -*- lexical-binding: t; -*-
 
-;; This file is a part of https://github.com/chalaev/lisp-goodies
-
 ;; I load this file at startup
 
 (unless (functionp 'caddr) (defun caddr(x) (car(cddr x)))); for emacs versions <26
@@ -20,11 +18,16 @@
 (add-function :around (symbol-function 'make-temp-file) #'upgrade-make-temp-file))
 
 ;; -*-  lexical-binding: t; -*-
-(defvar HOME (getenv "HOME"))
-(defvar ~ (file-name-as-directory HOME))
-(defun ~() (file-name-as-directory HOME))
-(defun   tilde(x) (replace-regexp-in-string (concat "^" ~) "~/" x))
-(defun untilde(x) (replace-regexp-in-string "^~/" ~ x))
+(defvar ~ (file-name-as-directory (getenv "HOME")))
+(defun ~() (file-name-as-directory ~)); do I really need it?
+(defun tilde(x &optional HOME)
+(let((H(or HOME ~)))
+
+(replace-regexp-in-string (concat "^" H) "~/" x)))
+(defun untilde(x &optional home-dir)
+ (replace-regexp-in-string "^~/" 
+   (or home-dir ~); do not use =file-name-as-directory= here as =home-dir= might be an *arbitrary* string (expression)
+ x))
 (defvar emacs-d (concat "~/" (file-name-as-directory ".emacs.d")))
 
 (require 'package)
@@ -33,8 +36,8 @@
 	package-archives))
 (make-directory (cdr (assoc "local-packages" package-archives)) t)
 
-(unless (member (cdr (assoc "local-packages" package-archives)) load-path)
-  (add-to-list 'load-path (cdr (assoc "local-packages" package-archives))))
+(unless(member(cdr(assoc "local-packages" package-archives)) load-path)
+  (add-to-list 'load-path (cdr(assoc "local-packages" package-archives))))
 (require 'shalaev) ; ← needed for perms-from-str unless you have loaded it in another way
 (defun after-tangle()
   "mark tangled files as non-backupable (chgrp tmp files) and non-excecutable"
@@ -48,6 +51,19 @@
   "to be used in Makefile instead of org-babel-tangle-file"
   (let ((l (length default-directory)))
     (apply #'concat (mapcar #'(lambda(x) (substring (format "%s " x) l)) (org-babel-tangle-file FN)))))
+
+(defvar eval-on-save nil "list of block names to be updated")
+(defun push-new(where &rest what)
+"to limit CL usage"
+  (dolist(w what)
+    (unless(member w where)
+      (setf where(cons w where))))
+  where)
+(add-hook 'before-save-hook
+(lambda()(save-excursion
+ (dolist(BN eval-on-save)
+  (unless(org-babel-goto-named-src-block BN)
+    (org-babel-execute-src-block))))))
 
 (defun run-init-block ()
 "runs code block labeled 'init' when an org-file is opened in emacs"
