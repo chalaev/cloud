@@ -1,56 +1,96 @@
 Loading /home/shalaev/Private/work/cloud/tests/ert.el (source)...
-:debug 17:54:05 debug-set:old values -->
-:debug 17:54:05 root-test-dir= nil
-:debug 17:54:05 updated values -->
-:debug 17:54:05 root-test-dir = /tmp/cloud.test.HV2nQu/
-Running 1 tests (2021-04-28 17:54:05-0400)
+:debug 18:03:37 str= root-test-dir=/tmp/cloud.test.4tdXU4/
+:debug 18:03:37 str= hostnames=hostA hostB
+:debug 18:03:37 str= remote-directory=/tmp/cloud.test.4tdXU4/mnt/remote/
+:debug 18:03:37 str= remote/files=AbC
+:debug 18:03:37 str= password=12345
+:debug 18:03:37 str= 
+:debug 18:03:37 debug-set:old values -->
+:debug 18:03:37 root-test-dir= nil
+:debug 18:03:37 updated values -->
+:debug 18:03:37 root-test-dir = /tmp/cloud.test.4tdXU4/
+:debug 18:03:37 str= localhost=hostA
+:debug 18:03:37 str= ~=/tmp/cloud.test.4tdXU4/hostA/
+:debug 18:03:37 str= emacs-d=~/.emacs.d/
+:debug 18:03:37 str= *config-directory*=~/.emacs.d/conf/
+:debug 18:03:37 str= local-dir=/tmp/cloud.test.4tdXU4/hostA/.emacs.d/conf/cloud/
+:debug 18:03:37 str= local/host/conf=/tmp/cloud.test.4tdXU4/hostA/.emacs.d/conf/cloud/hostA.conf
+:debug 18:03:37 str= dot-dir=~/.config-dir.hostA/
+:debug 18:03:37 str= dir-1=~/dir-1.hostA/
+:debug 18:03:37 str= dir-1a=~/dir-1a/
+:debug 18:03:37 str= dot-file=~/.bash-config.hostA
+:debug 18:03:37 str= conf-file=~/.config-dir.hostA/file.hostA
+:debug 18:03:37 str= tmp-file=~/tmp-1.hostA
+:debug 18:03:37 str= file-1=~/file-1.hostA
+:debug 18:03:37 str= file-1a=~/file-1a.dat
+:debug 18:03:37 str= file-2=~/tmp-2.hostA
+:debug 18:03:37 str= 
+:debug 18:03:37 str= localhost=hostB
+:debug 18:03:37 str= ~=/tmp/cloud.test.4tdXU4/hostB/
+:debug 18:03:37 str= emacs-d=~/.emacs.d/
+:debug 18:03:37 str= *config-directory*=~/.emacs.d/conf/
+:debug 18:03:37 str= local-dir=/tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/
+:debug 18:03:37 str= local/host/conf=/tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/hostB.conf
+:debug 18:03:37 str= dot-dir=~/.config-dir.hostB/
+:debug 18:03:37 str= dir-1=~/dir-1.hostB/
+:debug 18:03:37 str= dir-1a=~/dir-1a/
+:debug 18:03:37 str= dot-file=~/.bash-config.hostB
+:debug 18:03:37 str= conf-file=~/.config-dir.hostB/file.hostB
+:debug 18:03:37 str= tmp-file=~/tmp-1.hostB
+:debug 18:03:37 str= file-1=~/file-1.hostB
+:debug 18:03:37 str= file-1a=~/file-1a.dat
+:debug 18:03:37 str= file-2=~/tmp-2.hostB
+:debug 18:03:37 str= 
+Running 1 tests (2021-04-30 18:03:37-0400)
 Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
-:debug 17:54:05 debug-set:old values -->
-:debug 17:54:05 ~= /home/shalaev/
-:debug 17:54:05 localhost= kalinin
-:debug 17:54:05 *config-directory*= /home/shalaev/.emacs.d/conf/
-:debug 17:54:05 updated values -->
-:debug 17:54:05 ~ = /tmp/cloud.test.HV2nQu/hostA/
-:debug 17:54:05 localhost = hostA
-:debug 17:54:05 *config-directory* = ~/.emacs.d/conf/
-:info 17:54:05 initializing host hostA before mirroring files and actions
+:debug 18:03:37 debug-set:old values -->
+:debug 18:03:37 ~= /home/shalaev/
+:debug 18:03:37 localhost= kalinin
+:debug 18:03:37 *config-directory*= /home/shalaev/.emacs.d/conf/
+:debug 18:03:37 updated values -->
+:debug 18:03:37 ~ = /tmp/cloud.test.4tdXU4/hostA/
+:debug 18:03:37 localhost = hostA
+:debug 18:03:37 *config-directory* = ~/.emacs.d/conf/
+:debug 18:03:37 str= configured=yes
+:debug 18:03:37 str= remote-directory=/tmp/cloud.test.4tdXU4/mnt/remote/
+:debug 18:03:37 str= remote/files=AbC
+:debug 18:03:37 str= password=12345
+:debug 18:03:37 str= 
+:debug 18:03:37 1 local/host/conf= /tmp/cloud.test.4tdXU4/hostA/.emacs.d/conf/cloud/hostA.conf
+:debug 18:03:37 1 configured= yes
+:debug 18:03:37 2 configured= yes
+:info 18:03:37 initializing host hostA before mirroring files and actions
 entering cloud-start
+:debug 18:03:37 4 configured= yes
 
- entering cloud-init
-  entering reset-Makefile
-  leaving reset-Makefile
-:warning 17:54:05 will not overwrite existing /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA.conf
-:warning 17:54:05 please examine your config file /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA.conf
-:debug 17:54:05 cloud-init: clouding ~/.emacs.d/conf/cloud/individual.passes
-  entering add-file
-   entering cloud-locate-FN
-   leaving cloud-locate-FN
-   entering cloud-get-file-properties
-   leaving cloud-get-file-properties
-   entering new-file-in
-   leaving new-file-in
-:info 17:54:05 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
-   entering upload
-    entering enc-make-stanza
-    leaving enc-make-stanza
-    entering make-cloud-older
-     entering cip-ext
-     leaving cip-ext
-     entering cloud-get-file-properties
-     leaving cloud-get-file-properties
-    leaving make-cloud-older
+ entering add-file
+  entering cloud-locate-FN
+  leaving cloud-locate-FN
+  entering cloud-get-file-properties
+  leaving cloud-get-file-properties
+  entering new-file-in
+  leaving new-file-in
+:info 18:03:37 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
+  entering upload
+   entering enc-make-stanza
+   leaving enc-make-stanza
+   entering make-cloud-older
     entering cip-ext
     leaving cip-ext
-   leaving upload
-  leaving add-file
- leaving cloud-init
+    entering cloud-get-file-properties
+    leaving cloud-get-file-properties
+   leaving make-cloud-older
+   entering cip-ext
+   leaving cip-ext
+  leaving upload
+ leaving add-file
  entering reset-Makefile
  leaving reset-Makefile
  entering read-all
-:error 17:54:05 (o.k. if this is the very first run) Invalid first line in the remote file DB /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA/all
-:debug 17:54:05 action string= "2021-04-28 17:54:02 EDT" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"  "hostB" 
+:debug 18:03:37 DBname= /tmp/cloud.test.4tdXU4/hostA/.emacs.d/conf/cloud/hostA/all
+:debug 18:03:37 action string= "2021-04-30 18:03:34 EDT" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"  "hostB" 
   entering parse-action
-:debug 17:54:05 parse-action("2021-04-28 17:54:02 EDT" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"  "hostB" ) that ...
+:debug 18:03:37 parse-action("2021-04-30 18:03:34 EDT" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"  "hostB" ) that ...
    entering begins-with
     entering begins-with*
     leaving begins-with*
@@ -79,12 +119,12 @@ entering cloud-start
     entering begins-with*
     leaving begins-with*
    leaving begins-with
-:info 17:54:05 ... will later be referenced as 04/28 17:54:02
+:info 18:03:37 ... will later be referenced as 04/30 18:03:34
   leaving parse-action
-:info 17:54:05 this host is unaffected by action 04/28 17:54:02
-:debug 17:54:05 action string= "2021-04-28 17:53:53 EDT" 3 1 "hostB"  "hostB" 
+:info 18:03:37 this host is unaffected by action 04/30 18:03:34
+:debug 18:03:37 action string= "2021-04-30 18:03:26 EDT" 3 1 "hostB"  "hostB" 
   entering parse-action
-:debug 17:54:05 parse-action("2021-04-28 17:53:53 EDT" 3 1 "hostB"  "hostB" ) that ...
+:debug 18:03:37 parse-action("2021-04-30 18:03:26 EDT" 3 1 "hostB"  "hostB" ) that ...
    entering begins-with
     entering begins-with*
     leaving begins-with*
@@ -109,12 +149,12 @@ entering cloud-start
     entering begins-with*
     leaving begins-with*
    leaving begins-with
-:info 17:54:05 ... will later be referenced as 04/28 17:53:53
+:info 18:03:37 ... will later be referenced as 04/30 18:03:26
   leaving parse-action
-:info 17:54:05 this host is unaffected by action 04/28 17:53:53
-:debug 17:54:05 action string= "2021-04-28 17:53:58 EDT" 3 1 "hostB"  "hostB" 
+:info 18:03:37 this host is unaffected by action 04/30 18:03:26
+:debug 18:03:37 action string= "2021-04-30 18:03:30 EDT" 3 1 "hostB"  "hostB" 
   entering parse-action
-:debug 17:54:05 parse-action("2021-04-28 17:53:58 EDT" 3 1 "hostB"  "hostB" ) that ...
+:debug 18:03:37 parse-action("2021-04-30 18:03:30 EDT" 3 1 "hostB"  "hostB" ) that ...
    entering begins-with
     entering begins-with*
     leaving begins-with*
@@ -139,12 +179,12 @@ entering cloud-start
     entering begins-with*
     leaving begins-with*
    leaving begins-with
-:info 17:54:05 ... will later be referenced as 04/28 17:53:58
+:info 18:03:37 ... will later be referenced as 04/30 18:03:30
   leaving parse-action
-:info 17:54:05 this host is unaffected by action 04/28 17:53:58
-:debug 17:54:05 action string= "2021-04-28 17:54:01 EDT" 3 1 "hostB"  "hostB" 
+:info 18:03:37 this host is unaffected by action 04/30 18:03:30
+:debug 18:03:37 action string= "2021-04-30 18:03:33 EDT" 3 1 "hostB"  "hostB" 
   entering parse-action
-:debug 17:54:05 parse-action("2021-04-28 17:54:01 EDT" 3 1 "hostB"  "hostB" ) that ...
+:debug 18:03:37 parse-action("2021-04-30 18:03:33 EDT" 3 1 "hostB"  "hostB" ) that ...
    entering begins-with
     entering begins-with*
     leaving begins-with*
@@ -169,19 +209,17 @@ entering cloud-start
     entering begins-with*
     leaving begins-with*
    leaving begins-with
-:info 17:54:05 ... will later be referenced as 04/28 17:54:01
+:info 18:03:37 ... will later be referenced as 04/30 18:03:33
   leaving parse-action
-:info 17:54:05 this host is unaffected by action 04/28 17:54:01
-:warning 17:54:05 did not find any gpg-files in /tmp/cloud.test.HV2nQu/mnt/remote/; is this the very first run?
+:info 18:03:37 this host is unaffected by action 04/30 18:03:33
+:warning 18:03:37 did not find any gpg-files in /tmp/cloud.test.4tdXU4/mnt/remote/; is this the very first run?
  leaving read-all
  entering cloud-sync
   entering cloud-connected-p
   leaving cloud-connected-p
   entering TS
   leaving TS
-:debug 17:54:05 contents-FN= /tmp/cloud.test.HV2nQu/mnt/remote/AbC.gpg
-:debug 17:54:05 local/all= /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA/all
-:debug 17:54:05 (or added-files upload-queue removed-files remote-actions)
+:debug 18:03:37 (or added-files upload-queue removed-files remote-actions)
   entering write-all
    entering print-hosts
     entering backspace
@@ -199,63 +237,64 @@ entering cloud-start
    entering reset-Makefile
    leaving reset-Makefile
   leaving save-Makefile
-:debug 17:54:06 Makefile is /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/cloud.mk
+:debug 18:03:38 Makefile is /tmp/cloud.test.4tdXU4/hostA/.emacs.d/conf/cloud/cloud.mk
 (Shell command succeeded with no output)
-:info 17:54:06 done syncing
+:info 18:03:38 done syncing
   entering TS
   leaving TS
  leaving cloud-sync
 leaving cloud-start
-:debug 17:54:06 leaving hostA with these files in /tmp/cloud.test.HV2nQu/mnt/remote/:
+:debug 18:03:38 leaving hostA with these files in /tmp/cloud.test.4tdXU4/mnt/remote/:
 . .. AbC.gpg history
 Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
-:debug 17:54:06 debug-set:old values -->
-:debug 17:54:06 ~= /tmp/cloud.test.HV2nQu/hostA/
-:debug 17:54:06 localhost= kalinin
-:debug 17:54:06 *config-directory*= ~/.emacs.d/conf/
-:debug 17:54:06 updated values -->
-:debug 17:54:06 ~ = /tmp/cloud.test.HV2nQu/hostB/
-:debug 17:54:06 localhost = hostB
-:debug 17:54:06 *config-directory* = ~/.emacs.d/conf/
-:info 17:54:06 initializing host hostB before mirroring files and actions
+:debug 18:03:38 debug-set:old values -->
+:debug 18:03:38 ~= /tmp/cloud.test.4tdXU4/hostA/
+:debug 18:03:38 localhost= kalinin
+:debug 18:03:38 *config-directory*= ~/.emacs.d/conf/
+:debug 18:03:38 updated values -->
+:debug 18:03:38 ~ = /tmp/cloud.test.4tdXU4/hostB/
+:debug 18:03:38 localhost = hostB
+:debug 18:03:38 *config-directory* = ~/.emacs.d/conf/
+:debug 18:03:38 str= configured=yes
+:debug 18:03:38 str= remote-directory=/tmp/cloud.test.4tdXU4/mnt/remote/
+:debug 18:03:38 str= remote/files=AbC
+:debug 18:03:38 str= password=12345
+:debug 18:03:38 str= 
+:debug 18:03:38 1 local/host/conf= /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/hostB.conf
+:debug 18:03:38 1 configured= yes
+:debug 18:03:38 2 configured= yes
+:info 18:03:38 initializing host hostB before mirroring files and actions
 entering cloud-start
+:debug 18:03:38 4 configured= yes
 
- entering cloud-init
-:warning 17:54:06 I am not the first one who uses remote directory /tmp/cloud.test.HV2nQu/mnt/remote/ 
-  entering reset-Makefile
-  leaving reset-Makefile
-:warning 17:54:06 will not overwrite existing /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB.conf
-:warning 17:54:06 please examine your config file /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB.conf
-:debug 17:54:06 cloud-init: clouding ~/.emacs.d/conf/cloud/individual.passes
-  entering add-file
-   entering cloud-locate-FN
-   leaving cloud-locate-FN
-   entering cloud-get-file-properties
-   leaving cloud-get-file-properties
-   entering new-file-in
-   leaving new-file-in
-:info 17:54:06 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
-   entering upload
-    entering enc-make-stanza
-    leaving enc-make-stanza
-    entering make-cloud-older
-     entering cip-ext
-     leaving cip-ext
-     entering cloud-get-file-properties
-     leaving cloud-get-file-properties
-    leaving make-cloud-older
+ entering add-file
+  entering cloud-locate-FN
+  leaving cloud-locate-FN
+  entering cloud-get-file-properties
+  leaving cloud-get-file-properties
+  entering new-file-in
+  leaving new-file-in
+:info 18:03:38 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
+  entering upload
+   entering enc-make-stanza
+   leaving enc-make-stanza
+   entering make-cloud-older
     entering cip-ext
     leaving cip-ext
-   leaving upload
-  leaving add-file
- leaving cloud-init
+    entering cloud-get-file-properties
+    leaving cloud-get-file-properties
+   leaving make-cloud-older
+   entering cip-ext
+   leaving cip-ext
+  leaving upload
+ leaving add-file
  entering reset-Makefile
  leaving reset-Makefile
  entering read-all
-:error 17:54:06 (o.k. if this is the very first run) Invalid first line in the remote file DB /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB/all
-:debug 17:54:06 action string= "2021-04-28 17:53:53 EDT" 3 1 "hostB"  "hostA" 
+:debug 18:03:38 DBname= /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/hostB/all
+:debug 18:03:38 action string= "2021-04-30 18:03:26 EDT" 3 1 "hostB"  "hostA" 
   entering parse-action
-:debug 17:54:06 parse-action("2021-04-28 17:53:53 EDT" 3 1 "hostB"  "hostA" ) that ...
+:debug 18:03:38 parse-action("2021-04-30 18:03:26 EDT" 3 1 "hostB"  "hostA" ) that ...
    entering begins-with
     entering begins-with*
     leaving begins-with*
@@ -280,12 +319,12 @@ entering cloud-start
     entering begins-with*
     leaving begins-with*
    leaving begins-with
-:info 17:54:06 ... will later be referenced as 04/28 17:53:53
+:info 18:03:38 ... will later be referenced as 04/30 18:03:26
   leaving parse-action
-:info 17:54:06 this host is unaffected by action 04/28 17:53:53
-:debug 17:54:06 action string= "2021-04-28 17:53:58 EDT" 3 1 "hostB"  "hostA" 
+:info 18:03:38 this host is unaffected by action 04/30 18:03:26
+:debug 18:03:38 action string= "2021-04-30 18:03:30 EDT" 3 1 "hostB"  "hostA" 
   entering parse-action
-:debug 17:54:06 parse-action("2021-04-28 17:53:58 EDT" 3 1 "hostB"  "hostA" ) that ...
+:debug 18:03:38 parse-action("2021-04-30 18:03:30 EDT" 3 1 "hostB"  "hostA" ) that ...
    entering begins-with
     entering begins-with*
     leaving begins-with*
@@ -310,12 +349,12 @@ entering cloud-start
     entering begins-with*
     leaving begins-with*
    leaving begins-with
-:info 17:54:06 ... will later be referenced as 04/28 17:53:58
+:info 18:03:38 ... will later be referenced as 04/30 18:03:30
   leaving parse-action
-:info 17:54:06 this host is unaffected by action 04/28 17:53:58
-:debug 17:54:06 action string= "2021-04-28 17:54:01 EDT" 3 1 "hostB"  "hostA" 
+:info 18:03:38 this host is unaffected by action 04/30 18:03:30
+:debug 18:03:38 action string= "2021-04-30 18:03:33 EDT" 3 1 "hostB"  "hostA" 
   entering parse-action
-:debug 17:54:06 parse-action("2021-04-28 17:54:01 EDT" 3 1 "hostB"  "hostA" ) that ...
+:debug 18:03:38 parse-action("2021-04-30 18:03:33 EDT" 3 1 "hostB"  "hostA" ) that ...
    entering begins-with
     entering begins-with*
     leaving begins-with*
@@ -340,9 +379,9 @@ entering cloud-start
     entering begins-with*
     leaving begins-with*
    leaving begins-with
-:info 17:54:06 ... will later be referenced as 04/28 17:54:01
+:info 18:03:38 ... will later be referenced as 04/30 18:03:33
   leaving parse-action
-:info 17:54:06 this host is unaffected by action 04/28 17:54:01
+:info 18:03:38 this host is unaffected by action 04/30 18:03:33
   entering str-to-DBrec
    entering parse-time
    leaving parse-time
@@ -389,13 +428,11 @@ entering cloud-start
   leaving cloud-connected-p
   entering TS
   leaving TS
-:debug 17:54:06 contents-FN= /tmp/cloud.test.HV2nQu/mnt/remote/AbC.gpg
-:debug 17:54:06 local/all= /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB/all
-:debug 17:54:06 updating /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB/all obsoleted by /tmp/cloud.test.HV2nQu/mnt/remote/AbC.gpg
+:debug 18:03:38 updating /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/hostB/all obsoleted by /tmp/cloud.test.4tdXU4/mnt/remote/AbC.gpg
   entering gpg-decrypt
   leaving gpg-decrypt
   entering read-all
-:error 17:54:06 (o.k. if this is the very first run) Invalid first line in the remote file DB /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB/all
+:debug 18:03:39 DBname= /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/hostB/all
    entering str-to-DBrec
     entering parse-time
     leaving parse-time
@@ -411,7 +448,7 @@ entering cloud-start
     leaving plain-name
    leaving cloud-locate-FN
   leaving read-all
-:debug 17:54:06 (or added-files upload-queue removed-files remote-actions)
+:debug 18:03:39 (or added-files upload-queue removed-files remote-actions)
   entering write-all
    entering print-hosts
     entering backspace
@@ -433,44 +470,50 @@ entering cloud-start
    entering reset-Makefile
    leaving reset-Makefile
   leaving save-Makefile
-:debug 17:54:07 Makefile is /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/cloud.mk
+:debug 18:03:40 Makefile is /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/cloud.mk
 (Shell command succeeded with no output)
-:info 17:54:07 done syncing
+:info 18:03:40 done syncing
   entering TS
   leaving TS
  leaving cloud-sync
 leaving cloud-start
-:debug 17:54:07 leaving hostB with these files in /tmp/cloud.test.HV2nQu/mnt/remote/:
+:debug 18:03:40 leaving hostB with these files in /tmp/cloud.test.4tdXU4/mnt/remote/:
 . .. AbC.gpg history
 Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
-:debug 17:54:07 debug-set:old values -->
-:debug 17:54:07 ~= /tmp/cloud.test.HV2nQu/hostB/
-:debug 17:54:07 localhost= kalinin
-:debug 17:54:07 *config-directory*= ~/.emacs.d/conf/
-:debug 17:54:07 updated values -->
-:debug 17:54:07 ~ = /tmp/cloud.test.HV2nQu/hostA/
-:debug 17:54:07 localhost = hostA
-:debug 17:54:07 *config-directory* = ~/.emacs.d/conf/
+:debug 18:03:40 debug-set:old values -->
+:debug 18:03:40 ~= /tmp/cloud.test.4tdXU4/hostB/
+:debug 18:03:40 localhost= kalinin
+:debug 18:03:40 *config-directory*= ~/.emacs.d/conf/
+:debug 18:03:40 updated values -->
+:debug 18:03:40 ~ = /tmp/cloud.test.4tdXU4/hostA/
+:debug 18:03:40 localhost = hostA
+:debug 18:03:40 *config-directory* = ~/.emacs.d/conf/
+:debug 18:03:40 str= configured=yes
+:debug 18:03:40 str= remote-directory=/tmp/cloud.test.4tdXU4/mnt/remote/
+:debug 18:03:40 str= remote/files=AbC
+:debug 18:03:40 str= password=12345
+:debug 18:03:40 str= 
+:debug 18:03:40 1 local/host/conf= /tmp/cloud.test.4tdXU4/hostA/.emacs.d/conf/cloud/hostA.conf
+:debug 18:03:40 1 configured= yes
+:debug 18:03:40 2 configured= yes
 entering debug-clouded-hosts
 leaving debug-clouded-hosts
-:info 17:54:07 FN1= ~/dir-1a/ BN1= dir-1a/, DN1= ~/, FN2= ~/new-dir-1a/
+:info 18:03:40 FN1= ~/dir-1a/ BN1= dir-1a/, DN1= ~/, FN2= ~/new-dir-1a/
 entering debug-remote-actions
 leaving debug-remote-actions
-:debug 17:54:07 dired-rename-file ~/dir-1a --> ~/new-dir-1a
+:debug 18:03:40 dired-rename-file ~/dir-1a --> ~/new-dir-1a
 entering DRF
-:debug 17:54:07 cloud-rename-file ~/dir-1a --> ~/new-dir-1a
+:debug 18:03:40 cloud-rename-file ~/dir-1a --> ~/new-dir-1a
  entering cloud-rename-file
   entering cloud-locate-FN
   leaving cloud-locate-FN
   entering cloud-locate-FN
   leaving cloud-locate-FN
-:debug 17:54:07 cloud-rename-file> mv ~/dir-1a ~/new-dir-1a
+:debug 18:03:40 cloud-rename-file> mv ~/dir-1a ~/new-dir-1a
  leaving cloud-rename-file
  entering BRDp
  leaving BRDp
  entering new-action
-:debug 17:54:07 new-action> clouded-hosts= hostA hostB
-:debug 17:54:07 new-action(2 ~/dir-1a ~/new-dir-1a)
  leaving new-action
 leaving DRF
 entering debug-remote-actions
@@ -481,19 +524,17 @@ entering format-action
  entering full-TS
  leaving full-TS
 leaving format-action
-:info 17:54:07 rename action: "2021-04-28 17:54:07 EDT" 2 2 "~/dir-1a" "~/new-dir-1a"  "hostB" 
+:info 18:03:40 rename action: "2021-04-30 18:03:40 EDT" 2 2 "~/dir-1a" "~/new-dir-1a"  "hostB" 
 entering cloud-sync
  entering cloud-connected-p
  leaving cloud-connected-p
  entering TS
  leaving TS
-:debug 17:54:07 contents-FN= /tmp/cloud.test.HV2nQu/mnt/remote/AbC.gpg
-:debug 17:54:07 local/all= /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA/all
-:debug 17:54:07 updating /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA/all obsoleted by /tmp/cloud.test.HV2nQu/mnt/remote/AbC.gpg
+:debug 18:03:40 updating /tmp/cloud.test.4tdXU4/hostA/.emacs.d/conf/cloud/hostA/all obsoleted by /tmp/cloud.test.4tdXU4/mnt/remote/AbC.gpg
  entering gpg-decrypt
  leaving gpg-decrypt
  entering read-all
-:error 17:54:08 (o.k. if this is the very first run) Invalid first line in the remote file DB /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/hostA/all
+:debug 18:03:40 DBname= /tmp/cloud.test.4tdXU4/hostA/.emacs.d/conf/cloud/hostA/all
   entering str-to-DBrec
    entering parse-time
    leaving parse-time
@@ -531,7 +572,7 @@ entering cloud-sync
   entering cloud-get-file-properties
   leaving cloud-get-file-properties
  leaving read-all
-:debug 17:54:08 (or added-files upload-queue removed-files remote-actions)
+:debug 18:03:40 (or added-files upload-queue removed-files remote-actions)
  entering write-all
   entering print-hosts
    entering backspace
@@ -557,60 +598,61 @@ entering cloud-sync
   entering reset-Makefile
   leaving reset-Makefile
  leaving save-Makefile
-:debug 17:54:09 Makefile is /tmp/cloud.test.HV2nQu/hostA/.emacs.d/conf/cloud/cloud.mk
+:debug 18:03:41 Makefile is /tmp/cloud.test.4tdXU4/hostA/.emacs.d/conf/cloud/cloud.mk
 (Shell command succeeded with no output)
-:info 17:54:09 done syncing
+:info 18:03:41 done syncing
  entering TS
  leaving TS
 leaving cloud-sync
-:debug 17:54:09 leaving hostA with these files in /tmp/cloud.test.HV2nQu/mnt/remote/:
+:debug 18:03:41 leaving hostA with these files in /tmp/cloud.test.4tdXU4/mnt/remote/:
 . .. AbC.gpg history
-:info 17:54:09 finished with host hostA, switching to hostB
+:info 18:03:41 finished with host hostA, switching to hostB
 Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
-:debug 17:54:09 debug-set:old values -->
-:debug 17:54:09 ~= /tmp/cloud.test.HV2nQu/hostA/
-:debug 17:54:09 localhost= kalinin
-:debug 17:54:09 *config-directory*= ~/.emacs.d/conf/
-:debug 17:54:09 updated values -->
-:debug 17:54:09 ~ = /tmp/cloud.test.HV2nQu/hostB/
-:debug 17:54:09 localhost = hostB
-:debug 17:54:09 *config-directory* = ~/.emacs.d/conf/
-:info 17:54:09 file1= ~/dir-1a/
+:debug 18:03:41 debug-set:old values -->
+:debug 18:03:41 ~= /tmp/cloud.test.4tdXU4/hostA/
+:debug 18:03:41 localhost= kalinin
+:debug 18:03:41 *config-directory*= ~/.emacs.d/conf/
+:debug 18:03:41 updated values -->
+:debug 18:03:41 ~ = /tmp/cloud.test.4tdXU4/hostB/
+:debug 18:03:41 localhost = hostB
+:debug 18:03:41 *config-directory* = ~/.emacs.d/conf/
+:debug 18:03:41 str= configured=yes
+:debug 18:03:41 str= remote-directory=/tmp/cloud.test.4tdXU4/mnt/remote/
+:debug 18:03:41 str= remote/files=AbC
+:debug 18:03:41 str= password=12345
+:debug 18:03:41 str= 
+:debug 18:03:41 1 local/host/conf= /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/hostB.conf
+:debug 18:03:41 1 configured= yes
+:debug 18:03:41 2 configured= yes
+:info 18:03:41 file1= ~/dir-1a/
 entering cloud-start
+:debug 18:03:41 4 configured= yes
 
- entering cloud-init
-:warning 17:54:09 I am not the first one who uses remote directory /tmp/cloud.test.HV2nQu/mnt/remote/ 
-  entering reset-Makefile
-  leaving reset-Makefile
-:warning 17:54:09 will not overwrite existing /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB.conf
-:warning 17:54:09 please examine your config file /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB.conf
-:debug 17:54:09 cloud-init: clouding ~/.emacs.d/conf/cloud/individual.passes
-  entering add-file
-   entering cloud-locate-FN
-   leaving cloud-locate-FN
-   entering cloud-get-file-properties
-   leaving cloud-get-file-properties
-   entering new-file-in
-   leaving new-file-in
-:info 17:54:09 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
-   entering upload
-    entering enc-make-stanza
-    leaving enc-make-stanza
-    entering make-cloud-older
-     entering cip-ext
-     leaving cip-ext
-     entering cloud-get-file-properties
-     leaving cloud-get-file-properties
-    leaving make-cloud-older
+ entering add-file
+  entering cloud-locate-FN
+  leaving cloud-locate-FN
+  entering cloud-get-file-properties
+  leaving cloud-get-file-properties
+  entering new-file-in
+  leaving new-file-in
+:info 18:03:41 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
+  entering upload
+   entering enc-make-stanza
+   leaving enc-make-stanza
+   entering make-cloud-older
     entering cip-ext
     leaving cip-ext
-   leaving upload
-  leaving add-file
- leaving cloud-init
+    entering cloud-get-file-properties
+    leaving cloud-get-file-properties
+   leaving make-cloud-older
+   entering cip-ext
+   leaving cip-ext
+  leaving upload
+ leaving add-file
  entering reset-Makefile
  leaving reset-Makefile
  entering read-all
-:error 17:54:09 (o.k. if this is the very first run) Invalid first line in the remote file DB /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB/all
+:debug 18:03:41 DBname= /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/hostB/all
   entering str-to-DBrec
    entering parse-time
    leaving parse-time
@@ -657,16 +699,14 @@ entering cloud-start
   leaving cloud-connected-p
   entering TS
   leaving TS
-:debug 17:54:09 contents-FN= /tmp/cloud.test.HV2nQu/mnt/remote/AbC.gpg
-:debug 17:54:09 local/all= /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB/all
-:debug 17:54:09 updating /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB/all obsoleted by /tmp/cloud.test.HV2nQu/mnt/remote/AbC.gpg
+:debug 18:03:41 updating /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/hostB/all obsoleted by /tmp/cloud.test.4tdXU4/mnt/remote/AbC.gpg
   entering gpg-decrypt
   leaving gpg-decrypt
   entering read-all
-:error 17:54:09 (o.k. if this is the very first run) Invalid first line in the remote file DB /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB/all
-:debug 17:54:09 action string= "2021-04-28 17:54:07 EDT" 2 2 "~/dir-1a" "~/new-dir-1a"  "hostB" 
+:debug 18:03:42 DBname= /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/hostB/all
+:debug 18:03:42 action string= "2021-04-30 18:03:40 EDT" 2 2 "~/dir-1a" "~/new-dir-1a"  "hostB" 
    entering parse-action
-:debug 17:54:09 parse-action("2021-04-28 17:54:07 EDT" 2 2 "~/dir-1a" "~/new-dir-1a"  "hostB" ) that ...
+:debug 18:03:42 parse-action("2021-04-30 18:03:40 EDT" 2 2 "~/dir-1a" "~/new-dir-1a"  "hostB" ) that ...
     entering begins-with
      entering begins-with*
      leaving begins-with*
@@ -695,7 +735,7 @@ entering cloud-start
      entering begins-with*
      leaving begins-with*
     leaving begins-with
-:info 17:54:09 ... will later be referenced as 04/28 17:54:07
+:info 18:03:42 ... will later be referenced as 04/30 18:03:40
    leaving parse-action
    entering perform
     entering TS
@@ -721,10 +761,10 @@ entering cloud-start
       entering plain-name
       leaving plain-name
      leaving cloud-locate-FN
-:debug 17:54:09 cloud-rename-file> mv /tmp/cloud.test.HV2nQu/hostB/dir-1a /tmp/cloud.test.HV2nQu/hostB/new-dir-1a
+:debug 18:03:42 cloud-rename-file> mv /tmp/cloud.test.4tdXU4/hostB/dir-1a /tmp/cloud.test.4tdXU4/hostB/new-dir-1a
     leaving cloud-rename-file
    leaving perform
-:info 17:54:09 sucessfully performed action 04/28 17:54:07
+:info 18:03:42 sucessfully performed action 04/30 18:03:40
    entering str-to-DBrec
     entering parse-time
     leaving parse-time
@@ -762,7 +802,7 @@ entering cloud-start
     leaving plain-name
    leaving cloud-locate-FN
   leaving read-all
-:debug 17:54:09 (or added-files upload-queue removed-files remote-actions)
+:debug 18:03:42 (or added-files upload-queue removed-files remote-actions)
   entering write-all
    entering print-hosts
     entering backspace
@@ -784,18 +824,18 @@ entering cloud-start
    entering reset-Makefile
    leaving reset-Makefile
   leaving save-Makefile
-:debug 17:54:10 Makefile is /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/cloud.mk
+:debug 18:03:43 Makefile is /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/cloud.mk
 (Shell command succeeded with no output)
-:info 17:54:10 done syncing
+:info 18:03:43 done syncing
   entering TS
   leaving TS
  leaving cloud-sync
 leaving cloud-start
-:debug 17:54:10 leaving hostB with these files in /tmp/cloud.test.HV2nQu/mnt/remote/:
+:debug 18:03:43 leaving hostB with these files in /tmp/cloud.test.4tdXU4/mnt/remote/:
 . .. AbC.gpg history
    passed  1/1  rename-directory
 
-Ran 1 tests, 1 results as expected (2021-04-28 17:54:10-0400)
+Ran 1 tests, 1 results as expected (2021-04-30 18:03:43-0400)
 
 entering before-exit
  entering cloud-sync
@@ -803,17 +843,15 @@ entering before-exit
   leaving cloud-connected-p
   entering TS
   leaving TS
-:debug 17:54:10 contents-FN= /tmp/cloud.test.HV2nQu/mnt/remote/AbC.gpg
-:debug 17:54:10 local/all= /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/hostB/all
   entering save-Makefile
    entering reset-Makefile
    leaving reset-Makefile
   leaving save-Makefile
-:debug 17:54:10 Makefile is /tmp/cloud.test.HV2nQu/hostB/.emacs.d/conf/cloud/cloud.mk
+:debug 18:03:43 Makefile is /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/cloud.mk
 (Shell command succeeded with no output)
-:info 17:54:10 done syncing
+:info 18:03:43 done syncing
   entering TS
   leaving TS
  leaving cloud-sync
 leaving before-exit
-:debug 17:54:10 flushing comments before quiting emacs
+:debug 18:03:43 flushing comments before quiting emacs

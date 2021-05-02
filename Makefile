@@ -2,14 +2,18 @@ OFNs = cloud 2
 ORGs = $(addsuffix .org, $(OFNs))
 export EMACS = emacs -q --no-site-file --batch
 
-packaged/cloud.el: version.org packaged/ generated/cloud.el generated/from/cloud.org generated/from/2.org tests/micro.log tests/meso.log tests/macro-0.log tests/macro-1.log tests/macro-2.log
+packaged/cloud.el: version.org packaged/ generated/cloud.el generated/from/cloud.org generated/from/2.org tests/micro.log tests/meso.log tests/macro-0.log tests/macro-1.log tests/macro-2.log shell/indices.sh
 	sed '/^;;test>;;/d' generated/cloud.el > $@
 	emacsclient -e '(untilde (cdr (assoc "local-packages" package-archives)))' | xargs cp $@
 	-@chgrp tmp $@
 
+shell/indices.sh: generated/from/cloud.org
+	echo "# auto-generated from cloud.org"  > $@
+	sed -e 's/"//g' -e "s/-//g" -e "s/ /\n/g" generated/indices.sh >> $@
+
 generated/cloud.el: version.org packaged/ generated/from/cloud.org generated/from/2.org
 	sed "s/the-version/`head -n1 $<`/" header.el > $@
-	cat generated/main-0.el generated/indices.el generated/main-1.el 0.el 1.el generated/2.el generated/main-2.el >> $@
+	cat generated/main-0.el generated/indices.el generated/main-1.el 0.el 1.el generated/2.el generated/3.el generated/main-2.el >> $@
 	echo "(provide 'cloud)" >> $@
 	echo ";; cloud.el ends here" >> $@
 	-@chgrp tmp $@

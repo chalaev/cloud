@@ -3,7 +3,6 @@
 (debug-environment; ← defines variables: hostnames remote-directory remote/files password
 (let(FN file-content)
 (host> (car hostnames)
-;;(cloud-init)
 (clog :debug "checking that %s exists on host A:" (setf FN file-1))
 (should (file-exists-p (untilde FN)))
 (setf file-content (cat-file(untilde file-1)))
@@ -12,7 +11,6 @@
 (cloud-sync))
 (clog :info "finished with host %s, switching to %s" (car hostnames) (cadr hostnames))
 (host> (cadr hostnames)
-;;(cloud-init)
 (clog :debug "checking that %s DOES NOT exist on %s BEFORE SYNCING:" FN (cadr hostnames))
 (should(not (file-exists-p (untilde FN))))
 (cloud-start)

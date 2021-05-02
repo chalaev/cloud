@@ -8,6 +8,12 @@ Change log for the [[https://github.com/chalaev/cloud][cloud synchronizer]].
 3. Localized most variables; most functions remain global for now (this will hopefully be changed soon).
 4. Mostly rewrote [[file:testing.org][testing code]].
 
+*** 05/02
+1. Fixed behavior when config file is missing or incorrect.
+2. Fixed .png encryption.
+3. Fixed =read-all=.
+4. Fixed [[file:shell/cloud-git][shell/cloud-git]] by adding new (auto-generated from [[file:cloud.org][cloud.org]]) file [[file:shell/indices.sh][shell/indices.sh]].
+
 * Freezing the code
 No more fountainng with ideas; just making the existing code more reliable.
 Mostly fixing the errors; the ideas are either implemented or postponed for (probably remote) future.

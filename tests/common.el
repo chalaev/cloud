@@ -40,6 +40,6 @@
 
 (defmacro clean-RD(dir)
 "cleans remote directory by deleting and re-creating it"
-`(ifn(string-prefix-p "/tmp/" ,dir) (clog :error "test cloud-init> remote-directory= %s must be inside tmp!")
+`(ifn(string-prefix-p "/tmp/" ,dir) (clog :error "test cloud-init> remote-directory= %s must be inside tmp!" remote-directory)
 (delete-directory ,dir t)
 (need-dir ,dir)))

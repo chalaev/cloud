@@ -4,16 +4,15 @@
    "testing cloud-init, read-conf, and write-conf"
 (debug-environment (host> (car hostnames)
 (let((tmp-conf(concat local/host/conf ".tmp")))
+(debug-log-var tmp-conf)
 (copy-file local/host/conf tmp-conf)
-(debug-log-var file-1)
-;;(cloud-init)
+(debug-log-var file-1); file-1= ~/file-1.hostA
 (clog :info "read-write-conf: tmp-conf => %s" tmp-conf)
-(clog :info "
-Here is the generated config file: ==>")
 (with-temp-buffer(insert-file-contents tmp-conf)
-(while-let (str) (< 0 (length (setf str (read-line)))) (clog :info "%s" str)))
-(clog :info "<== end of config file
-")
+(clog :info "
+Here is the auto-generated (by cloud.el) config file: ==>
+%s <== end of config file
+" (buffer-string)))
 (letc nil
 ((remote-directory remote-directory); do not change this value
  (black-extensions '("abc" "def"))
@@ -22,12 +21,11 @@ Here is the generated config file: ==>")
  (password "myDogsName"))
 (write-conf tmp-conf
   (make-conf remote-directory black-extensions black-root-dirs remote/files password)))
+(with-temp-buffer(insert-file-contents tmp-conf)
 (clog :info "
-Here is my artificial config file: ==>")
-(with-temp-buffer (insert-file-contents tmp-conf)
-  (while-let (str) (< 0 (length (setf str (read-line)))) (clog :info "%s" str)))
-(clog :info "<== end of config file
-")
+Here is my artificial config file: ==>
+%s <== end of config file
+" (buffer-string)))
 (letc(read-conf-file tmp-conf)
 (((:string) black-extensions) ((:string) black-root-dirs)
 (:string remote/files) (:integer number-of-CPU-cores)

@@ -15,6 +15,7 @@
 (s(format "
 %s
 " signature))
+(configured "yes")
 (~ (need-dir root-test-dir localhost))
 (emacs-d (tilde(need-dir ~ ".emacs.d")))
 (*config-directory* (tilde(need-dir emacs-d "conf"))); overwrites the definition in ~/.emacs.d/local-packages/shalaev.el
@@ -37,4 +38,4 @@
   (make-conf localhost ~ emacs-d *config-directory* local-dir local/host/conf dot-dir dir-1 dir-1a dot-file conf-file tmp-file file-1 file-1a file-2))
 
 (write-conf (untilde local/host/conf)
-  (make-conf remote-directory remote/files password)))))
+  (make-conf configured remote-directory remote/files password)))))

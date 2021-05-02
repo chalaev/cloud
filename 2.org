@@ -10,6 +10,7 @@
 (case* (file-name-extension FN) string=
        ("jpeg" ".png")
        ("jpg" ".png")
+       ("png" ".png")
        (otherwise ".gpg")))
 #+END_SRC
 
@@ -36,11 +37,11 @@
 #+BEGIN_SRC emacs-lisp :tangle generated/2.el
 (defun gpg-encrypt(FN XYZ)
 (= 0 (shell-command
-  (format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --symmetric %s" password (concat remote-directory XYZ ".gpg") (untilde FN)))))
+  (format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --symmetric %s" password (FN remote-directory (concat XYZ ".gpg")) (untilde FN)))))
 
 (defun gpg-decrypt(FN XYZ)
 (= 0 (shell-command 
-(format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --decrypt %s" password (untilde FN) (concat remote-directory XYZ ".gpg")))))
+(format "gpg --batch --yes --pinentry-mode loopback --passphrase %S -o %s --decrypt %s" password (untilde FN) (FN remote-directory (concat XYZ ".gpg"))))))
 #+END_SRC
 ← foreground (en/de)cryption. Probably I should have merged it with the =Makefile= and make background.
 ← returns usual (standard for me) structure =(successP . more-details)=

@@ -29,9 +29,9 @@ emacs --daemon
 Once ~emacs~ was started in the daemon mode, I can use =emacsclient -c= to open a new (gui) emacs window.
 
 ** Initial setup
-1. =mkdir ~/.emacs.d/local-packages/=
+1. =mkdir ~/.emacs.d/local-packages/=.
 2. Place [[https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el][shalaev.el]] and [[file:packaged/cloud.el][cloud.el]] to =~/.emacs.d/local-packages/=
-3. Load [[file:goodies/start.el][start.el]] in your [[file:.emacs][~/.emacs]]
+3. Load [[https://github.com/chalaev/lisp-goodies/blob/master/packaged/start.el][start.el]] in your [[file:.emacs][~/.emacs]]
 4. Evaluate ~cloud.el~ in ~emacs~ at start by placing the following lines
    #+BEGIN_SRC emacs-lisp
    (require 'cloud)

@@ -1,4 +1,9 @@
 * Errors
+** 04/29 (occurs when adding/clouding multiple files) member: Wrong type argument: arrayp, nil
+The problem is that it is not reproducible...
+
+M-x cloud-add ~/learn/html
+
 ** 02/19 check if directories can sometimes be clouded
 ** 02/01 cloud-add allows unexisting files
 (might be fixed on 02/01 by adding =-k= option to =make=)

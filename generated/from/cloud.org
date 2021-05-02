@@ -1,1 +1,1 @@
-generated/main-2.el generated/main-1.el generated/indices.el generated/main-0.el 
+generated/3.el generated/main-2.el generated/main-1.el generated/indices.sh generated/indices.el generated/main-0.el 
