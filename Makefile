@@ -2,7 +2,7 @@ OFNs = cloud 2
 ORGs = $(addsuffix .org, $(OFNs))
 export EMACS = emacs -q --no-site-file --batch
 
-packaged/cloud.el: version.org packaged/ generated/cloud.el generated/from/cloud.org generated/from/2.org tests/micro.log tests/meso.log tests/macro-0.log tests/macro-1.log tests/macro-2.log shell/indices.sh
+packaged/cloud.el: version.org README.md packaged/ generated/cloud.el generated/from/cloud.org generated/from/2.org tests/micro.log tests/meso.log tests/macro-0.log tests/macro-1.log tests/macro-2.log tests/macro-3.log tests/macro-4.log shell/indices.sh
 	sed '/^;;test>;;/d' generated/cloud.el > $@
 	emacsclient -e '(untilde (cdr (assoc "local-packages" package-archives)))' | xargs cp $@
 	-@chgrp tmp $@
@@ -10,6 +10,7 @@ packaged/cloud.el: version.org packaged/ generated/cloud.el generated/from/cloud
 shell/indices.sh: generated/from/cloud.org
 	echo "# auto-generated from cloud.org"  > $@
 	sed -e 's/"//g' -e "s/-//g" -e "s/ /\n/g" generated/indices.sh >> $@
+	-@chgrp tmp $@
 
 generated/cloud.el: version.org packaged/ generated/from/cloud.org generated/from/2.org
 	sed "s/the-version/`head -n1 $<`/" header.el > $@
@@ -22,15 +23,12 @@ tests/cloud.el: generated/cloud.el
 	sed 's/^;;test>;;//' $< > $@
 	-@chgrp tmp $@
 
-tests/%.log: generated/from/testing.org generated/from/debug.org tests/cloud.el tests/common.conf
+tests/%.log: generated/from/testing.org generated/from/debug.org tests/cloud.el
+	$(EMACS) --eval '(defvar debug-make-dir "$(CURDIR)")' -l ~/.emacs.d/start.el -l tests/prepare.el 2> tests/prepare.log
 	@echo "\n-= Testing at $(patsubst %.log,%,$@) scale =-\n"
 	$(EMACS) --eval '(defvar debug-make-dir "$(CURDIR)")' -l ~/.emacs.d/start.el -l tests/common.el -l $(patsubst %.log,%.el,$@) -f ert-run-tests-batch-and-exit 2> $@
 	@echo "\n`date '+%m/%d %H:%M'` TEST PASSED :) -- see $@\n"
-	-@chgrp tmp $@
-
-tests/common.conf: generated/from/testing.org
-	$(EMACS) --eval '(defvar debug-make-dir "$(CURDIR)")' -l ~/.emacs.d/start.el -l tests/prepare.el 2> tests/prepare.log
-	-@chgrp tmp tests/prepare.log
+	-@chgrp tmp $@ tests/common.conf tests/prepare.log
 
 version.org: change-log.org
 	emacsclient -e "(progn (require 'version) (format-version \"$<\"))" | sed 's/"//g' > $@

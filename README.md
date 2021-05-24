@@ -1,19 +1,19 @@
 
 # Table of Contents
 
-1.  [Description](#org303df28)
-2.  [Prerequisites](#orgbb56543)
-3.  [Quick start](#org60c3e33)
-    1.  [Initial setup](#orgb91174e)
-    2.  [Uploading and downloading files](#org3798290)
-4.  [Commands](#org554c5d0)
-5.  [Limitations](#org83cdc5f)
-6.  [License](#org0c712ac)
+1.  [Description](#org8ed9452)
+2.  [Prerequisites](#org478c272)
+3.  [Quick start](#orgf62cfac)
+    1.  [Initial setup](#orga6777d7)
+    2.  [Uploading and downloading files](#org436992c)
+4.  [Commands](#orgc7778f9)
+5.  [Limitations](#orgba11a1c)
+6.  [License](#org6d35307)
 
 Intended for linux users who have [emacs](https://www.gnu.org/software/emacs/) always open.
 
 
-<a id="org303df28"></a>
+<a id="org8ed9452"></a>
 
 # Description
 
@@ -32,7 +32,7 @@ Synchronizing important files on two or more computers using
 Encrypted files saved in the cloud have **random names** to minimize the amount of information cloud owners can extract by monitoring our cloud directory.
 
 
-<a id="orgbb56543"></a>
+<a id="org478c272"></a>
 
 # Prerequisites
 
@@ -40,10 +40,11 @@ We need
 
 1.  `emacs`, GNU `make`, `ImageMagick`, `gpg`, `sed`, and `gawk`; in Debian these can be installed as follows:  
     `aptitude install emacs make imagemagick gpg sed gawk`
-2.  [lisp-goodies](https://github.com/chalaev/lisp-goodies): [batch-start.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/batch-start.el) (used by [Makefile](Makefile)), and [shalaev.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el)
+2.  [lisp-goodies](https://github.com/chalaev/lisp-goodies): [start.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/start.el) (used by [Makefile](Makefile)), and [shalaev.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el)
+3.  (for testing only) [el-debug.el](https://github.com/chalaev/el-debug/blob/master/packaged/el-debug.el)
 
 
-<a id="org60c3e33"></a>
+<a id="orgf62cfac"></a>
 
 # Quick start
 
@@ -54,24 +55,25 @@ I am running `emacs` in daemon mode (in text console) using the following line i
 Once `emacs` was started in the daemon mode, I can use `emacsclient -c` to open a new (gui) emacs window.
 
 
-<a id="orgb91174e"></a>
+<a id="orga6777d7"></a>
 
 ## Initial setup
 
-1.  `mkdir ~/.emacs.d/local-packages/`
+1.  `mkdir ~/.emacs.d/local-packages/`.
 2.  Place [shalaev.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/shalaev.el) and [cloud.el](packaged/cloud.el) to `~/.emacs.d/local-packages/`
-3.  Load [batch-start.el](goodies/batch-start.el) in your [~/.emacs](.emacs)
+3.  Load [start.el](https://github.com/chalaev/lisp-goodies/blob/master/packaged/start.el) in your [~/.emacs](.emacs)
 4.  Evaluate `cloud.el` in `emacs` at start by placing the following lines
     
         (require 'cloud)
         (cloud-start)
     
-    into your [~/.emacs](.emacs) file. Update some files in emacs, then `M-x cloud-sync`.
+    into your [~/.emacs](.emacs) file. 
+    In emacs, update some of the files , then `M-x cloud-sync`.
     During the very first `(cloud-start)` run, configuration file [~/.emacs.d/cloud/\`hostname\`/config](config) will be created.
 5.  Mount remote directory. The mounting point may be arbitrary (specified as `cloud-directory` in [~/.emacs.d/cloud/\`hostname\`/config](config)), the default one is `/mnt/cloud/`.
 
 
-<a id="org3798290"></a>
+<a id="org436992c"></a>
 
 ## Uploading and downloading files
 
@@ -90,7 +92,7 @@ For this purpose I have a line in my `crontab`:
 `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="org554c5d0"></a>
+<a id="orgc7778f9"></a>
 
 # Commands
 
@@ -107,7 +109,7 @@ Except for `M-x cloud-sync`, commands are barely used:
     `43 9-21 * * * emacsclient -e "(cloud-sync)" &> /dev/null`
 
 
-<a id="org83cdc5f"></a>
+<a id="orgba11a1c"></a>
 
 # Limitations
 
@@ -119,7 +121,7 @@ Except for `M-x cloud-sync`, commands are barely used:
     After encrypting an image file and then decrypting it back, we get the same, but not identical picture (file size is changed).
 
 
-<a id="org0c712ac"></a>
+<a id="org6d35307"></a>
 
 # License
 

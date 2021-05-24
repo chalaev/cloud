@@ -1,67 +1,23 @@
 Loading /home/shalaev/Private/work/cloud/tests/ert.el (source)...
-:debug 18:03:32 str= root-test-dir=/tmp/cloud.test.4tdXU4/
-:debug 18:03:32 str= hostnames=hostA hostB
-:debug 18:03:32 str= remote-directory=/tmp/cloud.test.4tdXU4/mnt/remote/
-:debug 18:03:32 str= remote/files=AbC
-:debug 18:03:32 str= password=12345
-:debug 18:03:32 str= 
-:debug 18:03:32 debug-set:old values -->
-:debug 18:03:32 root-test-dir= nil
-:debug 18:03:32 updated values -->
-:debug 18:03:32 root-test-dir = /tmp/cloud.test.4tdXU4/
-:debug 18:03:32 str= localhost=hostA
-:debug 18:03:32 str= ~=/tmp/cloud.test.4tdXU4/hostA/
-:debug 18:03:32 str= emacs-d=~/.emacs.d/
-:debug 18:03:32 str= *config-directory*=~/.emacs.d/conf/
-:debug 18:03:32 str= local-dir=/tmp/cloud.test.4tdXU4/hostA/.emacs.d/conf/cloud/
-:debug 18:03:32 str= local/host/conf=/tmp/cloud.test.4tdXU4/hostA/.emacs.d/conf/cloud/hostA.conf
-:debug 18:03:32 str= dot-dir=~/.config-dir.hostA/
-:debug 18:03:32 str= dir-1=~/dir-1.hostA/
-:debug 18:03:32 str= dir-1a=~/dir-1a/
-:debug 18:03:32 str= dot-file=~/.bash-config.hostA
-:debug 18:03:32 str= conf-file=~/.config-dir.hostA/file.hostA
-:debug 18:03:32 str= tmp-file=~/tmp-1.hostA
-:debug 18:03:32 str= file-1=~/file-1.hostA
-:debug 18:03:32 str= file-1a=~/file-1a.dat
-:debug 18:03:32 str= file-2=~/tmp-2.hostA
-:debug 18:03:32 str= 
-:debug 18:03:32 str= localhost=hostB
-:debug 18:03:32 str= ~=/tmp/cloud.test.4tdXU4/hostB/
-:debug 18:03:32 str= emacs-d=~/.emacs.d/
-:debug 18:03:32 str= *config-directory*=~/.emacs.d/conf/
-:debug 18:03:32 str= local-dir=/tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/
-:debug 18:03:32 str= local/host/conf=/tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/hostB.conf
-:debug 18:03:32 str= dot-dir=~/.config-dir.hostB/
-:debug 18:03:32 str= dir-1=~/dir-1.hostB/
-:debug 18:03:32 str= dir-1a=~/dir-1a/
-:debug 18:03:32 str= dot-file=~/.bash-config.hostB
-:debug 18:03:32 str= conf-file=~/.config-dir.hostB/file.hostB
-:debug 18:03:32 str= tmp-file=~/tmp-1.hostB
-:debug 18:03:32 str= file-1=~/file-1.hostB
-:debug 18:03:32 str= file-1a=~/file-1a.dat
-:debug 18:03:32 str= file-2=~/tmp-2.hostB
-:debug 18:03:32 str= 
-Running 1 tests (2021-04-30 18:03:32-0400)
+:debug 19:30:22.000 debug-set:old values -->
+:debug 19:30:22.000 root-test-dir= nil
+:debug 19:30:22.000 updated values -->
+:debug 19:30:22.000 root-test-dir = /tmp/cloud.test.vPfmQ6/
+Running 1 tests (2021-05-24 19:30:22-0400)
 Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
-:debug 18:03:32 debug-set:old values -->
-:debug 18:03:32 ~= /home/shalaev/
-:debug 18:03:32 localhost= kalinin
-:debug 18:03:32 *config-directory*= /home/shalaev/.emacs.d/conf/
-:debug 18:03:32 updated values -->
-:debug 18:03:32 ~ = /tmp/cloud.test.4tdXU4/hostA/
-:debug 18:03:32 localhost = hostA
-:debug 18:03:32 *config-directory* = ~/.emacs.d/conf/
-:debug 18:03:32 str= configured=yes
-:debug 18:03:32 str= remote-directory=/tmp/cloud.test.4tdXU4/mnt/remote/
-:debug 18:03:32 str= remote/files=AbC
-:debug 18:03:32 str= password=12345
-:debug 18:03:32 str= 
-:debug 18:03:32 1 local/host/conf= /tmp/cloud.test.4tdXU4/hostA/.emacs.d/conf/cloud/hostA.conf
-:debug 18:03:32 1 configured= yes
-:debug 18:03:32 2 configured= yes
-:info 18:03:32 initializing host hostA before mirroring files and actions
+:debug 19:30:22.000 debug-set:old values -->
+:debug 19:30:22.000 ~= /home/shalaev/
+:debug 19:30:22.000 localhost= kalinin
+:debug 19:30:22.000 *config-directory*= /home/shalaev/.emacs.d/conf/
+:debug 19:30:22.000 updated values -->
+:debug 19:30:22.000 ~ = /tmp/cloud.test.vPfmQ6/hostA/
+:debug 19:30:22.000 localhost = hostA
+:debug 19:30:22.000 *config-directory* = ~/.emacs.d/conf/
+:debug 19:30:22.000 1 local/host/conf= /tmp/cloud.test.vPfmQ6/hostA/.emacs.d/conf/cloud/hostA.conf
+:debug 19:30:22.000 1 configured= yes
+:debug 19:30:22.000 2 configured= yes
 entering cloud-start
-:debug 18:03:32 4 configured= yes
+:debug 19:30:22.000 4 configured= yes
 
  entering add-file
   entering cloud-locate-FN
@@ -70,7 +26,7 @@ entering cloud-start
   leaving cloud-get-file-properties
   entering new-file-in
   leaving new-file-in
-:info 18:03:32 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
+:info 19:30:22.000 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
   entering upload
    entering enc-make-stanza
    leaving enc-make-stanza
@@ -86,16 +42,14 @@ entering cloud-start
  leaving add-file
  entering reset-Makefile
  leaving reset-Makefile
- entering read-all
-:debug 18:03:32 DBname= /tmp/cloud.test.4tdXU4/hostA/.emacs.d/conf/cloud/hostA/all
-:warning 18:03:32 did not find any gpg-files in /tmp/cloud.test.4tdXU4/mnt/remote/; is this the very first run?
- leaving read-all
  entering cloud-sync
   entering cloud-connected-p
   leaving cloud-connected-p
   entering TS
   leaving TS
-:debug 18:03:32 (or added-files upload-queue removed-files remote-actions)
+:info 19:30:22.000 first run: creating /tmp/cloud.test.vPfmQ6/hostA/.emacs.d/conf/cloud/hostA/all and AbC
+  entering reset-Makefile
+  leaving reset-Makefile
   entering write-all
    entering print-hosts
     entering backspace
@@ -113,35 +67,34 @@ entering cloud-start
    entering reset-Makefile
    leaving reset-Makefile
   leaving save-Makefile
-:debug 18:03:33 Makefile is /tmp/cloud.test.4tdXU4/hostA/.emacs.d/conf/cloud/cloud.mk
+:debug 19:30:22.000 Makefile is /tmp/cloud.test.vPfmQ6/hostA/.emacs.d/conf/cloud/cloud.mk
+:info 19:30:22.000 make started on 19:30:22.890
 (Shell command succeeded with no output)
-:info 18:03:33 done syncing
+:info 19:30:22.000 make finished on 19:30:22.901
+:info 19:30:22.000 done syncing
   entering TS
   leaving TS
  leaving cloud-sync
 leaving cloud-start
-:debug 18:03:33 leaving hostA with these files in /tmp/cloud.test.4tdXU4/mnt/remote/:
+entering debug-clouded-hosts
+leaving debug-clouded-hosts
+:info 19:30:22.000 test rename-file 1> clouded-hosts =hostA
+:debug 19:30:22.000 leaving hostA with these files in /tmp/cloud.test.vPfmQ6/mnt/remote/:
 . .. AbC.gpg history
 Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
-:debug 18:03:33 debug-set:old values -->
-:debug 18:03:33 ~= /tmp/cloud.test.4tdXU4/hostA/
-:debug 18:03:33 localhost= kalinin
-:debug 18:03:33 *config-directory*= ~/.emacs.d/conf/
-:debug 18:03:33 updated values -->
-:debug 18:03:33 ~ = /tmp/cloud.test.4tdXU4/hostB/
-:debug 18:03:33 localhost = hostB
-:debug 18:03:33 *config-directory* = ~/.emacs.d/conf/
-:debug 18:03:33 str= configured=yes
-:debug 18:03:33 str= remote-directory=/tmp/cloud.test.4tdXU4/mnt/remote/
-:debug 18:03:33 str= remote/files=AbC
-:debug 18:03:33 str= password=12345
-:debug 18:03:33 str= 
-:debug 18:03:33 1 local/host/conf= /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/hostB.conf
-:debug 18:03:33 1 configured= yes
-:debug 18:03:33 2 configured= yes
-:info 18:03:33 initializing host hostB before mirroring files and actions
+:debug 19:30:22.000 debug-set:old values -->
+:debug 19:30:22.000 ~= /tmp/cloud.test.vPfmQ6/hostA/
+:debug 19:30:22.000 localhost= kalinin
+:debug 19:30:22.000 *config-directory*= ~/.emacs.d/conf/
+:debug 19:30:22.000 updated values -->
+:debug 19:30:22.000 ~ = /tmp/cloud.test.vPfmQ6/hostB/
+:debug 19:30:22.000 localhost = hostB
+:debug 19:30:22.000 *config-directory* = ~/.emacs.d/conf/
+:debug 19:30:22.000 1 local/host/conf= /tmp/cloud.test.vPfmQ6/hostB/.emacs.d/conf/cloud/hostB.conf
+:debug 19:30:22.000 1 configured= yes
+:debug 19:30:22.000 2 configured= yes
 entering cloud-start
-:debug 18:03:33 4 configured= yes
+:debug 19:30:22.000 4 configured= yes
 
  entering add-file
   entering cloud-locate-FN
@@ -150,7 +103,7 @@ entering cloud-start
   leaving cloud-get-file-properties
   entering new-file-in
   leaving new-file-in
-:info 18:03:33 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
+:info 19:30:22.000 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
   entering upload
    entering enc-make-stanza
    leaving enc-make-stanza
@@ -166,141 +119,23 @@ entering cloud-start
  leaving add-file
  entering reset-Makefile
  leaving reset-Makefile
- entering read-all
-:debug 18:03:33 DBname= /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/hostB/all
-:debug 18:03:33 action string= "2021-04-30 18:03:26 EDT" 3 1 "hostB"  "hostB" "hostA" 
-  entering parse-action
-:debug 18:03:33 parse-action("2021-04-30 18:03:26 EDT" 3 1 "hostB"  "hostB" "hostA" ) that ...
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with
-     entering begins-with*
-     leaving begins-with*
-    leaving begins-with
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-    entering begins-with*
-    leaving begins-with*
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-:info 18:03:33 ... will later be referenced as 04/30 18:03:26
-  leaving parse-action
-  entering perform
-   entering TS
-   leaving TS
-   entering format-action
-    entering full-TS
-    leaving full-TS
-   leaving format-action
-  leaving perform
-:info 18:03:33 sucessfully performed action 04/30 18:03:26
-:debug 18:03:33 action string= "2021-04-30 18:03:30 EDT" 3 1 "hostB"  "hostB" "hostA" 
-  entering parse-action
-:debug 18:03:33 parse-action("2021-04-30 18:03:30 EDT" 3 1 "hostB"  "hostB" "hostA" ) that ...
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with
-     entering begins-with*
-     leaving begins-with*
-    leaving begins-with
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-    entering begins-with*
-    leaving begins-with*
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-:info 18:03:33 ... will later be referenced as 04/30 18:03:30
-  leaving parse-action
-  entering perform
-   entering TS
-   leaving TS
-   entering format-action
-    entering full-TS
-    leaving full-TS
-   leaving format-action
-  leaving perform
-:info 18:03:33 sucessfully performed action 04/30 18:03:30
-  entering str-to-DBrec
-   entering parse-time
-   leaving parse-time
-  leaving str-to-DBrec
-  entering plain-name
-  leaving plain-name
-  entering cloud-locate-FN
-   entering plain-name
-   leaving plain-name
-  leaving cloud-locate-FN
-  entering cloud-get-file-properties
-  leaving cloud-get-file-properties
-  entering str-to-DBrec
-   entering parse-time
-   leaving parse-time
-  leaving str-to-DBrec
-  entering plain-name
-  leaving plain-name
-  entering cloud-locate-FN
-   entering plain-name
-   leaving plain-name
-   entering plain-name
-   leaving plain-name
-  leaving cloud-locate-FN
-  entering cloud-get-file-properties
-  leaving cloud-get-file-properties
-  entering str-to-DBrec
-   entering parse-time
-   leaving parse-time
-  leaving str-to-DBrec
-  entering plain-name
-  leaving plain-name
-  entering cloud-locate-FN
-   entering plain-name
-   leaving plain-name
-   entering plain-name
-   leaving plain-name
-   entering plain-name
-   leaving plain-name
-  leaving cloud-locate-FN
- leaving read-all
  entering cloud-sync
   entering cloud-connected-p
   leaving cloud-connected-p
   entering TS
   leaving TS
-:debug 18:03:33 updating /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/hostB/all obsoleted by /tmp/cloud.test.4tdXU4/mnt/remote/AbC.gpg
+:debug 19:30:22.000 updating /tmp/cloud.test.vPfmQ6/hostB/.emacs.d/conf/cloud/hostB/all obsoleted by /tmp/cloud.test.vPfmQ6/mnt/remote/AbC.gpg
   entering gpg-decrypt
   leaving gpg-decrypt
   entering read-all
-:debug 18:03:33 DBname= /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/hostB/all
    entering cloud-host-add
     entering new-action
+:debug 19:30:23.000 new-action> clouded-hosts= hostB hostA
+     entering format-action
+      entering full-TS
+      leaving full-TS
+     leaving format-action
+:debug 19:30:23.000 new-action> "2021-05-24 19:30:23 EDT" 3 1 "hostB"  hostA
     leaving new-action
     entering add-to-actions
     leaving add-to-actions
@@ -314,13 +149,8 @@ entering cloud-start
    entering cloud-locate-FN
     entering plain-name
     leaving plain-name
-    entering plain-name
-    leaving plain-name
-    entering plain-name
-    leaving plain-name
    leaving cloud-locate-FN
   leaving read-all
-:debug 18:03:33 (or added-files upload-queue removed-files remote-actions)
   entering write-all
    entering print-hosts
     entering backspace
@@ -331,19 +161,7 @@ entering cloud-start
      entering full-TS
      leaving full-TS
     leaving format-action
-    entering format-action
-     entering full-TS
-     leaving full-TS
-    leaving format-action
-    entering format-action
-     entering full-TS
-     leaving full-TS
-    leaving format-action
    leaving print-actions
-   entering format-file
-   leaving format-file
-   entering format-file
-   leaving format-file
    entering format-file
    leaving format-file
   leaving write-all
@@ -354,291 +172,34 @@ entering cloud-start
    entering reset-Makefile
    leaving reset-Makefile
   leaving save-Makefile
-:debug 18:03:34 Makefile is /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/cloud.mk
+:debug 19:30:24.000 Makefile is /tmp/cloud.test.vPfmQ6/hostB/.emacs.d/conf/cloud/cloud.mk
+:info 19:30:24.000 make started on 19:30:24.327
 (Shell command succeeded with no output)
-:info 18:03:34 done syncing
+:info 19:30:24.000 make finished on 19:30:24.338
+:info 19:30:24.000 done syncing
   entering TS
   leaving TS
  leaving cloud-sync
 leaving cloud-start
-:debug 18:03:34 leaving hostB with these files in /tmp/cloud.test.4tdXU4/mnt/remote/:
-. .. AbC.gpg history
-Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
-:debug 18:03:34 debug-set:old values -->
-:debug 18:03:34 ~= /tmp/cloud.test.4tdXU4/hostB/
-:debug 18:03:34 localhost= kalinin
-:debug 18:03:34 *config-directory*= ~/.emacs.d/conf/
-:debug 18:03:34 updated values -->
-:debug 18:03:34 ~ = /tmp/cloud.test.4tdXU4/hostA/
-:debug 18:03:34 localhost = hostA
-:debug 18:03:34 *config-directory* = ~/.emacs.d/conf/
-:debug 18:03:34 str= configured=yes
-:debug 18:03:34 str= remote-directory=/tmp/cloud.test.4tdXU4/mnt/remote/
-:debug 18:03:34 str= remote/files=AbC
-:debug 18:03:34 str= password=12345
-:debug 18:03:34 str= 
-:debug 18:03:34 1 local/host/conf= /tmp/cloud.test.4tdXU4/hostA/.emacs.d/conf/cloud/hostA.conf
-:debug 18:03:34 1 configured= yes
-:debug 18:03:34 2 configured= yes
 entering debug-clouded-hosts
 leaving debug-clouded-hosts
-:info 18:03:34 FN1= ~/file-1a.dat BN1= file-1a.dat, DN1= ~/, FN2= ~/new-file-1a.dat
-entering debug-remote-actions
-leaving debug-remote-actions
-entering DRF
-:debug 18:03:34 cloud-rename-file ~/file-1a.dat --> ~/new-file-1a.dat
- entering cloud-rename-file
-  entering cloud-locate-FN
-  leaving cloud-locate-FN
-  entering cloud-locate-FN
-  leaving cloud-locate-FN
-:debug 18:03:34 cloud-rename-file> mv ~/file-1a.dat ~/new-file-1a.dat
- leaving cloud-rename-file
- entering BRDp
- leaving BRDp
- entering new-action
- leaving new-action
-leaving DRF
-entering debug-remote-actions
-leaving debug-remote-actions
-entering debug-remote-actions
-leaving debug-remote-actions
-entering format-action
- entering full-TS
- leaving full-TS
-leaving format-action
-:info 18:03:34 rename action: "2021-04-30 18:03:34 EDT" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"  "hostB" 
-entering cloud-sync
- entering cloud-connected-p
- leaving cloud-connected-p
- entering TS
- leaving TS
-:debug 18:03:34 updating /tmp/cloud.test.4tdXU4/hostA/.emacs.d/conf/cloud/hostA/all obsoleted by /tmp/cloud.test.4tdXU4/mnt/remote/AbC.gpg
- entering gpg-decrypt
- leaving gpg-decrypt
- entering read-all
-:debug 18:03:35 DBname= /tmp/cloud.test.4tdXU4/hostA/.emacs.d/conf/cloud/hostA/all
-:debug 18:03:35 action string= "2021-04-30 18:03:26 EDT" 3 1 "hostB"  "hostB" "hostA" 
-  entering parse-action
-:debug 18:03:35 parse-action("2021-04-30 18:03:26 EDT" 3 1 "hostB"  "hostB" "hostA" ) that ...
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with
-     entering begins-with*
-     leaving begins-with*
-    leaving begins-with
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-    entering begins-with*
-    leaving begins-with*
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-:info 18:03:35 ... will later be referenced as 04/30 18:03:26
-  leaving parse-action
-  entering perform
-   entering TS
-   leaving TS
-   entering format-action
-    entering full-TS
-    leaving full-TS
-   leaving format-action
-  leaving perform
-:info 18:03:35 sucessfully performed action 04/30 18:03:26
-:debug 18:03:35 action string= "2021-04-30 18:03:30 EDT" 3 1 "hostB"  "hostB" "hostA" 
-  entering parse-action
-:debug 18:03:35 parse-action("2021-04-30 18:03:30 EDT" 3 1 "hostB"  "hostB" "hostA" ) that ...
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with
-     entering begins-with*
-     leaving begins-with*
-    leaving begins-with
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-    entering begins-with*
-    leaving begins-with*
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-:info 18:03:35 ... will later be referenced as 04/30 18:03:30
-  leaving parse-action
-  entering perform
-   entering TS
-   leaving TS
-   entering format-action
-    entering full-TS
-    leaving full-TS
-   leaving format-action
-  leaving perform
-:info 18:03:35 sucessfully performed action 04/30 18:03:30
-:debug 18:03:35 action string= "2021-04-30 18:03:33 EDT" 3 1 "hostB"  "hostB" "hostA" 
-  entering parse-action
-:debug 18:03:35 parse-action("2021-04-30 18:03:33 EDT" 3 1 "hostB"  "hostB" "hostA" ) that ...
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with
-     entering begins-with*
-     leaving begins-with*
-    leaving begins-with
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-    entering begins-with*
-    leaving begins-with*
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-:info 18:03:35 ... will later be referenced as 04/30 18:03:33
-  leaving parse-action
-  entering perform
-   entering TS
-   leaving TS
-   entering format-action
-    entering full-TS
-    leaving full-TS
-   leaving format-action
-  leaving perform
-:info 18:03:35 sucessfully performed action 04/30 18:03:33
-  entering str-to-DBrec
-   entering parse-time
-   leaving parse-time
-  leaving str-to-DBrec
-  entering plain-name
-  leaving plain-name
-  entering cloud-locate-FN
-  leaving cloud-locate-FN
-  entering cloud-get-file-properties
-  leaving cloud-get-file-properties
-  entering str-to-DBrec
-   entering parse-time
-   leaving parse-time
-  leaving str-to-DBrec
-  entering plain-name
-  leaving plain-name
-  entering cloud-locate-FN
-   entering plain-name
-   leaving plain-name
-  leaving cloud-locate-FN
-  entering cloud-get-file-properties
-  leaving cloud-get-file-properties
-:error 18:03:35 forgetting file /tmp/cloud.test.4tdXU4/hostA/file-1a.dat which is marked as clouded but is neither on local disk nor in the cloud
-  entering str-to-DBrec
-   entering parse-time
-   leaving parse-time
-  leaving str-to-DBrec
-  entering plain-name
-  leaving plain-name
-  entering cloud-locate-FN
-   entering plain-name
-   leaving plain-name
-  leaving cloud-locate-FN
-  entering cloud-get-file-properties
-  leaving cloud-get-file-properties
- leaving read-all
-:debug 18:03:35 (or added-files upload-queue removed-files remote-actions)
- entering write-all
-  entering print-hosts
-   entering backspace
-   leaving backspace
-  leaving print-hosts
-  entering print-actions
-   entering format-action
-    entering full-TS
-    leaving full-TS
-   leaving format-action
-   entering format-action
-    entering full-TS
-    leaving full-TS
-   leaving format-action
-   entering format-action
-    entering full-TS
-    leaving full-TS
-   leaving format-action
-   entering format-action
-    entering full-TS
-    leaving full-TS
-   leaving format-action
-  leaving print-actions
-  entering format-file
-  leaving format-file
-  entering format-file
-  leaving format-file
- leaving write-all
- entering gpg-encrypt
-(Shell command succeeded with no output)
- leaving gpg-encrypt
- entering save-Makefile
-  entering reset-Makefile
-  leaving reset-Makefile
- leaving save-Makefile
-:debug 18:03:36 Makefile is /tmp/cloud.test.4tdXU4/hostA/.emacs.d/conf/cloud/cloud.mk
-(Shell command succeeded with no output)
-:info 18:03:36 done syncing
- entering TS
- leaving TS
-leaving cloud-sync
-:debug 18:03:36 leaving hostA with these files in /tmp/cloud.test.4tdXU4/mnt/remote/:
+:info 19:30:24.000 test rename-file 2> clouded-hosts =hostB hostA
+:debug 19:30:24.000 leaving hostB with these files in /tmp/cloud.test.vPfmQ6/mnt/remote/:
 . .. AbC.gpg history
-:info 18:03:36 finished with host hostA, switching to hostB
 Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
-:debug 18:03:36 debug-set:old values -->
-:debug 18:03:36 ~= /tmp/cloud.test.4tdXU4/hostA/
-:debug 18:03:36 localhost= kalinin
-:debug 18:03:36 *config-directory*= ~/.emacs.d/conf/
-:debug 18:03:36 updated values -->
-:debug 18:03:36 ~ = /tmp/cloud.test.4tdXU4/hostB/
-:debug 18:03:36 localhost = hostB
-:debug 18:03:36 *config-directory* = ~/.emacs.d/conf/
-:debug 18:03:36 str= configured=yes
-:debug 18:03:36 str= remote-directory=/tmp/cloud.test.4tdXU4/mnt/remote/
-:debug 18:03:36 str= remote/files=AbC
-:debug 18:03:36 str= password=12345
-:debug 18:03:36 str= 
-:debug 18:03:36 1 local/host/conf= /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/hostB.conf
-:debug 18:03:36 1 configured= yes
-:debug 18:03:36 2 configured= yes
-:info 18:03:36 file1= ~/file-1a.dat
+:debug 19:30:24.000 debug-set:old values -->
+:debug 19:30:24.000 ~= /tmp/cloud.test.vPfmQ6/hostB/
+:debug 19:30:24.000 localhost= kalinin
+:debug 19:30:24.000 *config-directory*= ~/.emacs.d/conf/
+:debug 19:30:24.000 updated values -->
+:debug 19:30:24.000 ~ = /tmp/cloud.test.vPfmQ6/hostA/
+:debug 19:30:24.000 localhost = hostA
+:debug 19:30:24.000 *config-directory* = ~/.emacs.d/conf/
+:debug 19:30:24.000 1 local/host/conf= /tmp/cloud.test.vPfmQ6/hostA/.emacs.d/conf/cloud/hostA.conf
+:debug 19:30:24.000 1 configured= yes
+:debug 19:30:24.000 2 configured= yes
 entering cloud-start
-:debug 18:03:36 4 configured= yes
+:debug 19:30:24.000 4 configured= yes
 
  entering add-file
   entering cloud-locate-FN
@@ -647,7 +208,7 @@ entering cloud-start
   leaving cloud-get-file-properties
   entering new-file-in
   leaving new-file-in
-:info 18:03:36 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
+:info 19:30:24.000 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
   entering upload
    entering enc-make-stanza
    leaving enc-make-stanza
@@ -664,127 +225,6 @@ entering cloud-start
  entering reset-Makefile
  leaving reset-Makefile
  entering read-all
-:debug 18:03:36 DBname= /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/hostB/all
-:debug 18:03:36 action string= "2021-04-30 18:03:26 EDT" 3 1 "hostB"  "hostB" "hostA" 
-  entering parse-action
-:debug 18:03:36 parse-action("2021-04-30 18:03:26 EDT" 3 1 "hostB"  "hostB" "hostA" ) that ...
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with
-     entering begins-with*
-     leaving begins-with*
-    leaving begins-with
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-    entering begins-with*
-    leaving begins-with*
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-:info 18:03:36 ... will later be referenced as 04/30 18:03:26
-  leaving parse-action
-  entering perform
-   entering TS
-   leaving TS
-   entering format-action
-    entering full-TS
-    leaving full-TS
-   leaving format-action
-  leaving perform
-:info 18:03:36 sucessfully performed action 04/30 18:03:26
-:debug 18:03:36 action string= "2021-04-30 18:03:30 EDT" 3 1 "hostB"  "hostB" "hostA" 
-  entering parse-action
-:debug 18:03:36 parse-action("2021-04-30 18:03:30 EDT" 3 1 "hostB"  "hostB" "hostA" ) that ...
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with
-     entering begins-with*
-     leaving begins-with*
-    leaving begins-with
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-    entering begins-with*
-    leaving begins-with*
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-:info 18:03:36 ... will later be referenced as 04/30 18:03:30
-  leaving parse-action
-  entering perform
-   entering TS
-   leaving TS
-   entering format-action
-    entering full-TS
-    leaving full-TS
-   leaving format-action
-  leaving perform
-:info 18:03:36 sucessfully performed action 04/30 18:03:30
-:debug 18:03:36 action string= "2021-04-30 18:03:33 EDT" 3 1 "hostB"  "hostB" "hostA" 
-  entering parse-action
-:debug 18:03:36 parse-action("2021-04-30 18:03:33 EDT" 3 1 "hostB"  "hostB" "hostA" ) that ...
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-   entering begins-with
-    entering begins-with
-     entering begins-with*
-     leaving begins-with*
-    leaving begins-with
-   leaving begins-with
-   entering begins-with
-    entering begins-with*
-    leaving begins-with*
-    entering begins-with*
-    leaving begins-with*
-    entering begins-with*
-    leaving begins-with*
-   leaving begins-with
-:info 18:03:36 ... will later be referenced as 04/30 18:03:33
-  leaving parse-action
-  entering perform
-   entering TS
-   leaving TS
-   entering format-action
-    entering full-TS
-    leaving full-TS
-   leaving format-action
-  leaving perform
-:info 18:03:36 sucessfully performed action 04/30 18:03:33
   entering str-to-DBrec
    entering parse-time
    leaving parse-time
@@ -792,36 +232,6 @@ entering cloud-start
   entering plain-name
   leaving plain-name
   entering cloud-locate-FN
-   entering plain-name
-   leaving plain-name
-  leaving cloud-locate-FN
-  entering cloud-get-file-properties
-  leaving cloud-get-file-properties
-  entering str-to-DBrec
-   entering parse-time
-   leaving parse-time
-  leaving str-to-DBrec
-  entering plain-name
-  leaving plain-name
-  entering cloud-locate-FN
-   entering plain-name
-   leaving plain-name
-   entering plain-name
-   leaving plain-name
-  leaving cloud-locate-FN
-  entering cloud-get-file-properties
-  leaving cloud-get-file-properties
-  entering str-to-DBrec
-   entering parse-time
-   leaving parse-time
-  leaving str-to-DBrec
-  entering plain-name
-  leaving plain-name
-  entering cloud-locate-FN
-   entering plain-name
-   leaving plain-name
-   entering plain-name
-   leaving plain-name
    entering plain-name
    leaving plain-name
   leaving cloud-locate-FN
@@ -831,14 +241,12 @@ entering cloud-start
   leaving cloud-connected-p
   entering TS
   leaving TS
-:debug 18:03:36 updating /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/hostB/all obsoleted by /tmp/cloud.test.4tdXU4/mnt/remote/AbC.gpg
+:debug 19:30:24.000 updating /tmp/cloud.test.vPfmQ6/hostA/.emacs.d/conf/cloud/hostA/all obsoleted by /tmp/cloud.test.vPfmQ6/mnt/remote/AbC.gpg
   entering gpg-decrypt
   leaving gpg-decrypt
   entering read-all
-:debug 18:03:36 DBname= /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/hostB/all
-:debug 18:03:36 action string= "2021-04-30 18:03:34 EDT" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"  "hostB" 
+:debug 19:30:25.000 read-all> action string= "2021-05-24 19:30:23 EDT" 3 1 "hostB"  hostB hostA
    entering parse-action
-:debug 18:03:36 parse-action("2021-04-30 18:03:34 EDT" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"  "hostB" ) that ...
     entering begins-with
      entering begins-with*
      leaving begins-with*
@@ -856,19 +264,286 @@ entering cloud-start
       entering begins-with*
       leaving begins-with*
      leaving begins-with
-     entering begins-with
-      entering begins-with*
-      leaving begins-with*
-     leaving begins-with
     leaving begins-with
     entering begins-with
      entering begins-with*
      leaving begins-with*
      entering begins-with*
      leaving begins-with*
+     entering begins-with*
+     leaving begins-with*
     leaving begins-with
-:info 18:03:36 ... will later be referenced as 04/30 18:03:34
+:info 19:30:25.000 ... will later be referenced as 05/24 19:30:23
    leaving parse-action
+   entering format-action
+    entering full-TS
+    leaving full-TS
+   leaving format-action
+:debug 19:30:25.000 read-all> format(parsed action)= "2021-05-24 19:30:23 EDT" 3 1 "hostB"  hostB hostA
+   entering perform
+    entering TS
+    leaving TS
+    entering format-action
+     entering full-TS
+     leaving full-TS
+    leaving format-action
+   leaving perform
+:info 19:30:25.000 sucessfully performed action 05/24 19:30:23
+   entering str-to-DBrec
+    entering parse-time
+    leaving parse-time
+   leaving str-to-DBrec
+   entering plain-name
+   leaving plain-name
+   entering cloud-locate-FN
+    entering plain-name
+    leaving plain-name
+   leaving cloud-locate-FN
+  leaving read-all
+  entering write-all
+   entering print-hosts
+    entering backspace
+    leaving backspace
+   leaving print-hosts
+   entering print-actions
+    entering format-action
+     entering full-TS
+     leaving full-TS
+    leaving format-action
+   leaving print-actions
+   entering format-file
+   leaving format-file
+  leaving write-all
+  entering gpg-encrypt
+(Shell command succeeded with no output)
+  leaving gpg-encrypt
+  entering save-Makefile
+   entering reset-Makefile
+   leaving reset-Makefile
+  leaving save-Makefile
+:debug 19:30:25.000 Makefile is /tmp/cloud.test.vPfmQ6/hostA/.emacs.d/conf/cloud/cloud.mk
+:info 19:30:25.000 make started on 19:30:25.874
+(Shell command succeeded with no output)
+:info 19:30:25.000 make finished on 19:30:25.886
+:info 19:30:25.000 done syncing
+  entering TS
+  leaving TS
+ leaving cloud-sync
+leaving cloud-start
+:info 19:30:25.000 FN1= ~/file-1a.dat BN1= file-1a.dat, FN2= ~/new-file-1a.dat
+entering debug-remote-actions
+leaving debug-remote-actions
+entering DRF
+:debug 19:30:25.000 DRF> /tmp/cloud.test.vPfmQ6/hostA/file-1a.dat --> /tmp/cloud.test.vPfmQ6/hostA/new-file-1a.dat
+ entering cloud-rename-file
+  entering cloud-locate-FN
+   entering plain-name
+   leaving plain-name
+  leaving cloud-locate-FN
+  entering cloud-locate-FN
+   entering plain-name
+   leaving plain-name
+  leaving cloud-locate-FN
+:debug 19:30:25.000 cloud-rename-file> mv /tmp/cloud.test.vPfmQ6/hostA/file-1a.dat /tmp/cloud.test.vPfmQ6/hostA/new-file-1a.dat
+ leaving cloud-rename-file
+ entering BRDp
+ leaving BRDp
+ entering new-action
+:debug 19:30:25.000 new-action> clouded-hosts= hostB hostA
+  entering format-action
+   entering full-TS
+   leaving full-TS
+  leaving format-action
+:debug 19:30:25.000 new-action> "2021-05-24 19:30:25 EDT" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"  hostB
+ leaving new-action
+leaving DRF
+entering debug-remote-actions
+leaving debug-remote-actions
+entering debug-remote-actions
+leaving debug-remote-actions
+entering format-action
+ entering full-TS
+ leaving full-TS
+leaving format-action
+:info 19:30:25.000 rename action: "2021-05-24 19:30:25 EDT" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"  hostB
+entering cloud-sync
+ entering cloud-connected-p
+ leaving cloud-connected-p
+ entering TS
+ leaving TS
+ entering write-all
+  entering print-hosts
+   entering backspace
+   leaving backspace
+  leaving print-hosts
+  entering print-actions
+   entering format-action
+    entering full-TS
+    leaving full-TS
+   leaving format-action
+  leaving print-actions
+  entering format-file
+  leaving format-file
+ leaving write-all
+ entering gpg-encrypt
+(Shell command succeeded with no output)
+ leaving gpg-encrypt
+ entering save-Makefile
+  entering reset-Makefile
+  leaving reset-Makefile
+ leaving save-Makefile
+:debug 19:30:26.000 Makefile is /tmp/cloud.test.vPfmQ6/hostA/.emacs.d/conf/cloud/cloud.mk
+:info 19:30:26.000 make started on 19:30:26.592
+(Shell command succeeded with no output)
+:info 19:30:26.000 make finished on 19:30:26.604
+:info 19:30:26.000 done syncing
+ entering TS
+ leaving TS
+leaving cloud-sync
+:debug 19:30:26.000 leaving hostA with these files in /tmp/cloud.test.vPfmQ6/mnt/remote/:
+. .. AbC.gpg history
+:info 19:30:26.000 finished with host hostA, switching to hostB
+Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
+:debug 19:30:26.000 debug-set:old values -->
+:debug 19:30:26.000 ~= /tmp/cloud.test.vPfmQ6/hostA/
+:debug 19:30:26.000 localhost= kalinin
+:debug 19:30:26.000 *config-directory*= ~/.emacs.d/conf/
+:debug 19:30:26.000 updated values -->
+:debug 19:30:26.000 ~ = /tmp/cloud.test.vPfmQ6/hostB/
+:debug 19:30:26.000 localhost = hostB
+:debug 19:30:26.000 *config-directory* = ~/.emacs.d/conf/
+:debug 19:30:26.000 1 local/host/conf= /tmp/cloud.test.vPfmQ6/hostB/.emacs.d/conf/cloud/hostB.conf
+:debug 19:30:26.000 1 configured= yes
+:debug 19:30:26.000 2 configured= yes
+:info 19:30:26.000 file1= ~/file-1a.dat
+entering cloud-start
+:debug 19:30:26.000 4 configured= yes
+
+ entering add-file
+  entering cloud-locate-FN
+  leaving cloud-locate-FN
+  entering cloud-get-file-properties
+  leaving cloud-get-file-properties
+  entering new-file-in
+  leaving new-file-in
+:info 19:30:26.000 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
+  entering upload
+   entering enc-make-stanza
+   leaving enc-make-stanza
+   entering make-cloud-older
+    entering cip-ext
+    leaving cip-ext
+    entering cloud-get-file-properties
+    leaving cloud-get-file-properties
+   leaving make-cloud-older
+   entering cip-ext
+   leaving cip-ext
+  leaving upload
+ leaving add-file
+ entering reset-Makefile
+ leaving reset-Makefile
+ entering read-all
+:debug 19:30:26.000 read-all> action string= "2021-05-24 19:30:23 EDT" 3 1 "hostB"  hostB hostA
+  entering parse-action
+   entering begins-with
+    entering begins-with*
+    leaving begins-with*
+   leaving begins-with
+   entering begins-with
+    entering begins-with*
+    leaving begins-with*
+   leaving begins-with
+   entering begins-with
+    entering begins-with*
+    leaving begins-with*
+   leaving begins-with
+   entering begins-with
+    entering begins-with
+     entering begins-with*
+     leaving begins-with*
+    leaving begins-with
+   leaving begins-with
+   entering begins-with
+    entering begins-with*
+    leaving begins-with*
+    entering begins-with*
+    leaving begins-with*
+    entering begins-with*
+    leaving begins-with*
+   leaving begins-with
+:info 19:30:26.000 ... will later be referenced as 05/24 19:30:23
+  leaving parse-action
+  entering format-action
+   entering full-TS
+   leaving full-TS
+  leaving format-action
+:debug 19:30:26.000 read-all> format(parsed action)= "2021-05-24 19:30:23 EDT" 3 1 "hostB"  hostB hostA
+  entering perform
+   entering TS
+   leaving TS
+   entering format-action
+    entering full-TS
+    leaving full-TS
+   leaving format-action
+  leaving perform
+:info 19:30:26.000 sucessfully performed action 05/24 19:30:23
+  entering str-to-DBrec
+   entering parse-time
+   leaving parse-time
+  leaving str-to-DBrec
+  entering plain-name
+  leaving plain-name
+  entering cloud-locate-FN
+   entering plain-name
+   leaving plain-name
+  leaving cloud-locate-FN
+ leaving read-all
+ entering cloud-sync
+  entering cloud-connected-p
+  leaving cloud-connected-p
+  entering TS
+  leaving TS
+:debug 19:30:26.000 updating /tmp/cloud.test.vPfmQ6/hostB/.emacs.d/conf/cloud/hostB/all obsoleted by /tmp/cloud.test.vPfmQ6/mnt/remote/AbC.gpg
+  entering gpg-decrypt
+  leaving gpg-decrypt
+  entering read-all
+:debug 19:30:27.000 read-all> action string= "2021-05-24 19:30:25 EDT" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"  hostB
+   entering parse-action
+    entering begins-with
+     entering begins-with*
+     leaving begins-with*
+    leaving begins-with
+    entering begins-with
+     entering begins-with*
+     leaving begins-with*
+    leaving begins-with
+    entering begins-with
+     entering begins-with*
+     leaving begins-with*
+    leaving begins-with
+    entering begins-with
+     entering begins-with
+      entering begins-with*
+      leaving begins-with*
+     leaving begins-with
+     entering begins-with
+      entering begins-with*
+      leaving begins-with*
+     leaving begins-with
+    leaving begins-with
+    entering begins-with
+     entering begins-with*
+     leaving begins-with*
+     entering begins-with*
+     leaving begins-with*
+    leaving begins-with
+:info 19:30:27.000 ... will later be referenced as 05/24 19:30:25
+   leaving parse-action
+   entering format-action
+    entering full-TS
+    leaving full-TS
+   leaving format-action
+:debug 19:30:27.000 read-all> format(parsed action)= "2021-05-24 19:30:25 EDT" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"  hostB
    entering perform
     entering TS
     leaving TS
@@ -884,129 +559,11 @@ entering cloud-start
      entering cloud-locate-FN
       entering plain-name
       leaving plain-name
-      entering plain-name
-      leaving plain-name
-      entering plain-name
-      leaving plain-name
      leaving cloud-locate-FN
-:debug 18:03:36 cloud-rename-file> mv /tmp/cloud.test.4tdXU4/hostB/file-1a.dat /tmp/cloud.test.4tdXU4/hostB/new-file-1a.dat
+:debug 19:30:27.000 cloud-rename-file> mv /tmp/cloud.test.vPfmQ6/hostB/file-1a.dat /tmp/cloud.test.vPfmQ6/hostB/new-file-1a.dat
     leaving cloud-rename-file
    leaving perform
-:info 18:03:36 sucessfully performed action 04/30 18:03:34
-:debug 18:03:36 action string= "2021-04-30 18:03:26 EDT" 3 1 "hostB"  "hostB" 
-   entering parse-action
-:debug 18:03:36 parse-action("2021-04-30 18:03:26 EDT" 3 1 "hostB"  "hostB" ) that ...
-    entering begins-with
-     entering begins-with*
-     leaving begins-with*
-    leaving begins-with
-    entering begins-with
-     entering begins-with*
-     leaving begins-with*
-    leaving begins-with
-    entering begins-with
-     entering begins-with*
-     leaving begins-with*
-    leaving begins-with
-    entering begins-with
-     entering begins-with
-      entering begins-with*
-      leaving begins-with*
-     leaving begins-with
-    leaving begins-with
-    entering begins-with
-     entering begins-with*
-     leaving begins-with*
-     entering begins-with*
-     leaving begins-with*
-    leaving begins-with
-:info 18:03:36 ... will later be referenced as 04/30 18:03:26
-   leaving parse-action
-   entering perform
-    entering TS
-    leaving TS
-    entering format-action
-     entering full-TS
-     leaving full-TS
-    leaving format-action
-   leaving perform
-:info 18:03:36 sucessfully performed action 04/30 18:03:26
-:debug 18:03:36 action string= "2021-04-30 18:03:30 EDT" 3 1 "hostB"  "hostB" 
-   entering parse-action
-:debug 18:03:36 parse-action("2021-04-30 18:03:30 EDT" 3 1 "hostB"  "hostB" ) that ...
-    entering begins-with
-     entering begins-with*
-     leaving begins-with*
-    leaving begins-with
-    entering begins-with
-     entering begins-with*
-     leaving begins-with*
-    leaving begins-with
-    entering begins-with
-     entering begins-with*
-     leaving begins-with*
-    leaving begins-with
-    entering begins-with
-     entering begins-with
-      entering begins-with*
-      leaving begins-with*
-     leaving begins-with
-    leaving begins-with
-    entering begins-with
-     entering begins-with*
-     leaving begins-with*
-     entering begins-with*
-     leaving begins-with*
-    leaving begins-with
-:info 18:03:36 ... will later be referenced as 04/30 18:03:30
-   leaving parse-action
-   entering perform
-    entering TS
-    leaving TS
-    entering format-action
-     entering full-TS
-     leaving full-TS
-    leaving format-action
-   leaving perform
-:info 18:03:36 sucessfully performed action 04/30 18:03:30
-:debug 18:03:36 action string= "2021-04-30 18:03:33 EDT" 3 1 "hostB"  "hostB" 
-   entering parse-action
-:debug 18:03:36 parse-action("2021-04-30 18:03:33 EDT" 3 1 "hostB"  "hostB" ) that ...
-    entering begins-with
-     entering begins-with*
-     leaving begins-with*
-    leaving begins-with
-    entering begins-with
-     entering begins-with*
-     leaving begins-with*
-    leaving begins-with
-    entering begins-with
-     entering begins-with*
-     leaving begins-with*
-    leaving begins-with
-    entering begins-with
-     entering begins-with
-      entering begins-with*
-      leaving begins-with*
-     leaving begins-with
-    leaving begins-with
-    entering begins-with
-     entering begins-with*
-     leaving begins-with*
-     entering begins-with*
-     leaving begins-with*
-    leaving begins-with
-:info 18:03:36 ... will later be referenced as 04/30 18:03:33
-   leaving parse-action
-   entering perform
-    entering TS
-    leaving TS
-    entering format-action
-     entering full-TS
-     leaving full-TS
-    leaving format-action
-   leaving perform
-:info 18:03:36 sucessfully performed action 04/30 18:03:33
+:info 19:30:27.000 sucessfully performed action 05/24 19:30:25
    entering str-to-DBrec
     entering parse-time
     leaving parse-time
@@ -1014,27 +571,10 @@ entering cloud-start
    entering plain-name
    leaving plain-name
    entering cloud-locate-FN
-    entering plain-name
-    leaving plain-name
-    entering plain-name
-    leaving plain-name
-    entering plain-name
-    leaving plain-name
-   leaving cloud-locate-FN
-   entering str-to-DBrec
-    entering parse-time
-    leaving parse-time
-   leaving str-to-DBrec
-   entering plain-name
-   leaving plain-name
-   entering cloud-locate-FN
-    entering plain-name
-    leaving plain-name
     entering plain-name
     leaving plain-name
    leaving cloud-locate-FN
   leaving read-all
-:debug 18:03:36 (or added-files upload-queue removed-files remote-actions)
   entering write-all
    entering print-hosts
     entering backspace
@@ -1045,19 +585,7 @@ entering cloud-start
      entering full-TS
      leaving full-TS
     leaving format-action
-    entering format-action
-     entering full-TS
-     leaving full-TS
-    leaving format-action
-    entering format-action
-     entering full-TS
-     leaving full-TS
-    leaving format-action
    leaving print-actions
-   entering format-file
-   leaving format-file
-   entering format-file
-   leaving format-file
    entering format-file
    leaving format-file
   leaving write-all
@@ -1068,18 +596,20 @@ entering cloud-start
    entering reset-Makefile
    leaving reset-Makefile
   leaving save-Makefile
-:debug 18:03:37 Makefile is /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/cloud.mk
+:debug 19:30:28.000 Makefile is /tmp/cloud.test.vPfmQ6/hostB/.emacs.d/conf/cloud/cloud.mk
+:info 19:30:28.000 make started on 19:30:28.055
 (Shell command succeeded with no output)
-:info 18:03:37 done syncing
+:info 19:30:28.000 make finished on 19:30:28.066
+:info 19:30:28.000 done syncing
   entering TS
   leaving TS
  leaving cloud-sync
 leaving cloud-start
-:debug 18:03:37 leaving hostB with these files in /tmp/cloud.test.4tdXU4/mnt/remote/:
+:debug 19:30:28.000 leaving hostB with these files in /tmp/cloud.test.vPfmQ6/mnt/remote/:
 . .. AbC.gpg history
    passed  1/1  rename-file
 
-Ran 1 tests, 1 results as expected (2021-04-30 18:03:37-0400)
+Ran 1 tests, 1 results as expected (2021-05-24 19:30:28-0400)
 
 entering before-exit
  entering cloud-sync
@@ -1091,11 +621,13 @@ entering before-exit
    entering reset-Makefile
    leaving reset-Makefile
   leaving save-Makefile
-:debug 18:03:37 Makefile is /tmp/cloud.test.4tdXU4/hostB/.emacs.d/conf/cloud/cloud.mk
+:debug 19:30:28.000 Makefile is /tmp/cloud.test.vPfmQ6/hostB/.emacs.d/conf/cloud/cloud.mk
+:info 19:30:28.000 make started on 19:30:28.070
 (Shell command succeeded with no output)
-:info 18:03:37 done syncing
+:info 19:30:28.000 make finished on 19:30:28.081
+:info 19:30:28.000 done syncing
   entering TS
   leaving TS
  leaving cloud-sync
 leaving before-exit
-:debug 18:03:37 flushing comments before quiting emacs
+:debug 19:30:28.000 flushing comments before quiting emacs

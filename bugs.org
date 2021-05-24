@@ -1,4 +1,8 @@
 * Errors
+** (easily fixable?) gpg-files are not auto-clouded when opened
+** 05/10 create-save-delete: file remains
+Create a file in emacs, save, then erase it. It will be created on other hosts because action (erase) comes before the file
+is downloaded from the cloud.
 ** 04/29 (occurs when adding/clouding multiple files) member: Wrong type argument: arrayp, nil
 The problem is that it is not reproducible...
 

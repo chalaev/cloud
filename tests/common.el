@@ -18,7 +18,9 @@
 `(letc debug-main-conf; global test configuration (common for all hosts)
 (remote-directory remote/files password root-test-dir ((:string) hostnames))
 (clean-RD remote-directory)
-,@body))
+,@body
+;;(log-flush "tests.log"); somehow this line makes old (25.1.1) emacs unhappy
+))
 
 (defvar debug-host-confs
   (mapcar #'(lambda(HN)(cons HN (read-conf-file (FN root-test-dir (concat HN ".conf")))))
@@ -30,7 +32,7 @@
 `(ifn-let((debug-host-conf(cdr(assoc ,HN debug-host-confs))))
 (clog :error "host %s is unconfigured" ,HN)
 (load(FN debug-make-dir "tests" "cloud.el")); ← loading main file
-(letc debug-host-conf (localhost ~ emacs-d *config-directory* local-dir local/host/conf dot-dir dir-1 dir-1a dot-file conf-file tmp-file file-1 file-1a file-2)
+(letc debug-host-conf (localhost ~ emacs-d *config-directory* local-dir local/host/conf dot-dir dir-1 file-inside-dir dir-1a file-in-dir-1a dot-file conf-file tmp-file file-1 file-1a file-2)
 ,@body
 (clog :debug "leaving %s with these files in %s:
 %s" ,HN remote-directory (together(directory-files remote-directory nil))))))

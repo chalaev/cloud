@@ -14,10 +14,10 @@
 (defun forget-password(XYZ)
   "removes image password from password file"
 (let* ((str (progn
-	     (find-file (image-passes))
+	     (find-file image-passes)
 	     (buffer-string)))
        (BN (buffer-name)))
-  (with-temp-file (image-passes)
+  (with-temp-file image-passes
     (insert (replace-regexp-in-string (format "%s .*
 " XYZ) "" str)))
   (kill-buffer BN)))

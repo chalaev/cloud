@@ -2,13 +2,22 @@
 
 # Problem: recursive `rm -r` won't work!
 
-. indices.sh
+# does not work → . indices.sh
+
+iforget=0
+idelete=1
+irename=2
+ihostadd=3
+ihostforget=4
+ishare=5
+
+
 
 args=($*)
 if [[ $1 == "mv" ]]; then
     if [[ $# -ge 3 ]]; then
 	for file in ${args[@]: 1: ${#args[@]}-2}; do
-	    emacsclient -e "(new-action irename \"`realpath $file`\" \"`realpath ${args[-1]}`\")"
+	    emacsclient -e "(new-action $irename \"`realpath $file`\" \"`realpath ${args[-1]}`\")"
 	done
 	git ${args[@]}
     else
@@ -17,7 +26,7 @@ if [[ $1 == "mv" ]]; then
 elif [[ $1 == "rm" ]]; then
     if [[ $# -ge 2 ]]; then
 	for file in ${args[@]: 1: ${#args[@]}-1}; do
-	    emacsclient -e "(new-action idelete \"`realpath $file`\")"
+	    emacsclient -e "(new-action $idelete \"`realpath $file`\")"
 	done
         git ${args[@]}
     else

@@ -46,7 +46,7 @@ For testing we need to use some kind of poor man's "virtual environment":
 - all test-related files are localized to =root-test-dir= which is erased in case when all tests are successful
 - host is defined via variables in =environment= macro which is going to be overwritten in debug session
 
-#+BEGIN_SRC emacs-lisp :tangle tests/prepare.el :shebang ";; prepare.el"
+#+BEGIN_SRC emacs-lisp :tangle tests/prepare.el :shebang ";; prepare.el  -*-  lexical-binding: t; -*-"
 (require 'shalaev)
 (defvar root-test-dir (file-name-as-directory(make-temp-file "cloud.test." t)) "root directory for all tests")
 #+END_SRC
@@ -57,14 +57,14 @@ Now let us create two virtual hosts named "hostA" and "hostB":
 (remote-directory (need-dir root-test-dir "mnt/remote")); remote directory is mounted differently on different hosts
 (remote/files "AbC")
 (password "12345"))
-(write-conf(untilde (FN debug-make-dir "tests" "common.conf"))
+(write-conf (FN debug-make-dir "tests" "common.conf")
  (make-conf root-test-dir hostnames remote-directory remote/files password))
 #+END_SRC
 ← creates =tests.conf= file in the [[file:tests][test directory]].
 
 Each host has a set of parameters:
 #+BEGIN_SRC emacs-lisp :tangle tests/prepare.el
-(dolist(localhost hostnames)
+(dolist(localhost hostnames) (clog :info "creating files on virtual host %s" localhost)
 (let*((signature localhost); [was (rand-str 3)] distinguishes files having the same name, but residing on different hosts
 (s(format "
 %s
@@ -76,29 +76,35 @@ Each host has a set of parameters:
 (local-dir (need-dir *config-directory* "cloud"))
 (local/host/conf (concat local-dir localhost ".conf"))
 (dot-dir (tilde(need-dir ~ (concat ".config-dir." signature)))); an example of hidden directory – all files inside =dot-dir= are blacklisted
-(dir-1   (tilde(need-dir ~ (concat "dir-1." signature))))
-(dir-1a  (tilde(need-dir ~ "dir-1a")))
-(dot-file  (tilde(echo-to-file (concat "~/.bash-config." signature) (concat "(blacklisted) dot-file" s))))
 (conf-file (tilde(echo-to-file (concat dot-dir "file." signature) "any non-whitelisted file inside blacklisted directory is blacklisted")))
+(dir-1   (tilde(need-dir ~ (concat "dir-1." signature))))
+(file-inside-dir(tilde(echo-to-file (concat dir-1 "file." signature) "USUAL file inside USUAL directory")))
+(dir-1a  (tilde(need-dir ~ "dir-1a")))
+(file-in-dir-1a (tilde(echo-to-file (concat (file-name-as-directory dir-1a) "file-in-dir-1a.dat")
+   (format "an ordinary file inside directory %s; there is a file with the same name (but different content) on another host%s" dir-1a s))))
+(dot-file  (tilde(echo-to-file (concat "~/.bash-config." signature) (concat "(blacklisted) dot-file" s))))
 (tmp-file  (tilde(echo-to-file (concat "~/tmp-1." signature) "blacklisted")))
 (file-1    (tilde(echo-to-file (concat "~/file-1." signature) (concat "an ordinary file (missing on another host)" s))))
 (file-1a   (tilde(echo-to-file "~/file-1a.dat" (concat "an ordinary file; there is a file with the same name (but different content) on another host)" s))))
 (file-2 (tilde(echo-to-file (concat  "~/tmp-2." signature) (concat "blacklisted " signature)))); blacklisted
-(black-root-dirs(mapcar #'(lambda(DN)(concat root-test-dir signature DN)) (split-string "/mnt/ /tmp/ /etc/ /ssh:")))
+(black-root-dirs(mapcar #'(lambda(DN)(concat root-test-dir signature DN)) (split-string "/mnt/ /etc/ /ssh:")));  /tmp/ must not be in this list because all tests are performed inside this directory
 (black-matches (split-string "tmp /old /log /Downloads /.git/")); the same for both hosts
 (black-extensions (split-string "aux idx ilg ind bak bbl blg brf bst dvi log out ps wav")))
 #+END_SRC
-
 For each host we create config-files.
+
 Defining the host:
 #+BEGIN_SRC emacs-lisp :tangle tests/prepare.el
 (write-conf (untilde (FN root-test-dir (concat localhost ".conf")))
-  (make-conf localhost ~ emacs-d *config-directory* local-dir local/host/conf dot-dir dir-1 dir-1a dot-file conf-file tmp-file file-1 file-1a file-2))
+  (make-conf localhost ~ emacs-d *config-directory* local-dir local/host/conf
+ dot-dir dir-1 file-inside-dir dir-1a file-in-dir-1a
+ dot-file conf-file tmp-file file-1 file-1a file-2))
 #+END_SRC
+
 Defining parameters read by [[file:packaged/cloud.el][cloud.el]]:
 #+BEGIN_SRC emacs-lisp :tangle tests/prepare.el
 (write-conf (untilde local/host/conf)
-  (make-conf configured remote-directory remote/files password)))))
+  (make-conf black-root-dirs configured remote-directory remote/files password)))))
 #+END_SRC
 ← these =.conf= files will be loaded inside =(defun hostA() …)= defining =let-conf= environment that wraps [[file:generated/main.el][main.el]].
 
@@ -128,7 +134,9 @@ Let us read configuration files prepared in [[file:tests/prepare.el][prepare.el]
 `(letc debug-main-conf; global test configuration (common for all hosts)
 (remote-directory remote/files password root-test-dir ((:string) hostnames))
 (clean-RD remote-directory)
-,@body))
+,@body
+;;(log-flush "tests.log"); somehow this line makes old (25.1.1) emacs unhappy
+))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle tests/common.el
@@ -144,7 +152,7 @@ The following =defvar= is a subtle issue:
 `(ifn-let((debug-host-conf(cdr(assoc ,HN debug-host-confs))))
 (clog :error "host %s is unconfigured" ,HN)
 (load(FN debug-make-dir "tests" "cloud.el")); ← loading main file
-(letc debug-host-conf (localhost ~ emacs-d *config-directory* local-dir local/host/conf dot-dir dir-1 dir-1a dot-file conf-file tmp-file file-1 file-1a file-2)
+(letc debug-host-conf (localhost ~ emacs-d *config-directory* local-dir local/host/conf dot-dir dir-1 file-inside-dir dir-1a file-in-dir-1a dot-file conf-file tmp-file file-1 file-1a file-2)
 ,@body
 (clog :debug "leaving %s with these files in %s:
 %s" ,HN remote-directory (together(directory-files remote-directory nil))))))
@@ -327,24 +335,20 @@ The following test should be either rewritten or skipped:
   (let((FR(cloud-locate-FN file-1a)))
     (should FR)
     (let((t0(aref FR mtime)) (CN(aref FR cipher)))
-;;(clog :debug "t0= %d" t0)
       (should CN)
       (let((gpg-FN (concat remote-directory CN ".gpg")))
 	(should(not(file-exists-p gpg-FN)))
 	(sleep-for 1) (cloud-sync)
 	(should(file-exists-p gpg-FN))
 	(let((t1 (file-mtime gpg-FN t0))); all times are counted from t0
-;;(clog :debug "t1= %d" t1)
 	  (should(< 0 t1))
 	  (clog :info "touch 'now + 5 sec' %s" file-1a) (set-file-times (untilde file-1a) (time-add (current-time) 5))
 	  (sleep-for 1)
 	  (cloud-touch (untilde file-1a)); as if we saved the changes to file-1a in emacs
 	  (let((t2 (file-mtime file-1a t0)))
-;;(clog :debug "t2= %d" t2)
 	    (should(< t1 t2))
 	    (cloud-sync)
 	    (let((t3(file-mtime gpg-FN t0)))
-;;(clog :debug "t3= %d" t3)
 	      (should(< t1 t3))))))))))))
 #+END_SRC
 
@@ -404,33 +408,26 @@ Copying from hostA to hostB file that did exist on hostB:
 #+END_SRC
 
 *** Renaming
+Простейшее переименование файла:
 #+BEGIN_SRC emacs-lisp :tangle tests/macro-1.el
 (require 'dired-aux)
 (ert-deftest rename-file()
 "renaming file on hostA leads to the same action on hostB"
 (let(FN1 BN1 DN1 FN2)
 (debug-environment
-;; (clean-RD remote-directory) it is already in =debug-environment=!
-(host> (car hostnames)
-    (clog :info "initializing host %s before mirroring files and actions" localhost)
-    (cloud-start))
-(host> (cadr hostnames)
-    (clog :info "initializing host %s before mirroring files and actions" localhost)
-    (cloud-start))
-(host> (car hostnames)
-(debug-clouded-hosts hostnames); our (rename) action will only be performed on already clouded hosts
-    (setf FN1 (tilde file-1a))
-    (setf DN1 (file-name-directory FN1))
-    (setf BN1 (file-name-nondirectory FN1))
+(host> (car  hostnames) (cloud-start) (clog :info "test rename-file 1> clouded-hosts =%s" (together(debug-clouded-hosts))))
+(host> (cadr hostnames) (cloud-start) (clog :info "test rename-file 2> clouded-hosts =%s" (together(debug-clouded-hosts))))
+(host> (car  hostnames) (cloud-start)
     (should(file-exists-p (untilde file-1)))
-    (setf FN2 (tilde (concat DN1 "new-" BN1)))
-    (clog :info "FN1= %s BN1= %s, DN1= %s, FN2= %s" FN1 BN1 DN1 FN2)
-;; :info 19:38:12 FN1= ~/dir-1a/ BN1= dir-1a/, DN1= ~/, FN2= ~/new-dir-1a/
+    (setf FN1 (tilde file-1a)
+          DN1 (file-name-directory FN1)
+          BN1 (file-name-nondirectory FN1)
+          FN2 (tilde (concat DN1 "new-" BN1)))
+    (clog :info "FN1= %s BN1= %s, FN2= %s" FN1 BN1 FN2)
     (should(= 0 (length (debug-remote-actions))))
-    (dired-rename-file (tilde FN1) (tilde FN2) t)
+    (dired-rename-file (untilde FN1) (untilde FN2) t)
     (should(= 1 (length (debug-remote-actions))))
     (clog :info "rename action: %s" (format-action(car(debug-remote-actions))))
-    ;; → raw rename action: ...
     (cloud-sync))
 (clog :info "finished with host %s, switching to %s" (car hostnames) (cadr hostnames))
 (host> (cadr hostnames)
@@ -441,39 +438,118 @@ Copying from hostA to hostB file that did exist on hostB:
     (cloud-start)
     (should(file-exists-p (untilde FN2)))))))
 #+END_SRC
-
+Переименование каталога:
 #+BEGIN_SRC emacs-lisp :tangle tests/macro-2.el
 (ert-deftest rename-directory()
   "same as rename-file, but for directories"
-(let(FN1 BN1 DN1 FN2)
-(debug-environment 
-;; (clean-RD remote-directory) it is already in =debug-environment=!
-(host> (car hostnames)
-    (clog :info "initializing host %s before mirroring files and actions" localhost)
-    (cloud-start))
-(host> (cadr hostnames)
-    (clog :info "initializing host %s before mirroring files and actions" localhost)
-    (cloud-start))
-(host> (car hostnames)
-(debug-clouded-hosts hostnames); our (rename) action will only be performed on already clouded hosts
-    (setf FN1 (file-name-as-directory(tilde dir-1a)))
-    (setf DN1 (file-name-directory(directory-file-name FN1)))
-    (setf BN1 (file-name-as-directory(file-name-nondirectory(directory-file-name FN1))))
-    (should(file-exists-p (untilde dir-1)))
-    (setf FN2 (tilde(file-name-as-directory(concat DN1 "new-" BN1))))
-    (clog :info "FN1= %s BN1= %s, DN1= %s, FN2= %s" FN1 BN1 DN1 FN2)
+(let(FN0 DN1 FN1)
+(debug-environment
+(host> (car  hostnames) (cloud-start))
+(host> (cadr hostnames) (cloud-start))
+(host> (car  hostnames) (cloud-start)
+    (setf FN0 (tilde(directory-file-name dir-1a))); without final slash; dir-1a has the same name on both hosts
+    (should (file-exists-p (untilde FN0)))
+    (setf FN1 (tilde(concat FN0 ".1"))); new directory name
     (should(= 0 (length (debug-remote-actions))))
-    (clog :debug "dired-rename-file %s --> %s" (directory-file-name(tilde FN1)) (directory-file-name(tilde FN2)))
-    (dired-rename-file (directory-file-name(tilde FN1)) (directory-file-name(tilde FN2)) t)
+    (clog :debug "test rename-directory> dired-rename-file %s --> %s" FN0 FN1)
+    (dired-rename-file FN0 FN1 t)
+    (should (file-exists-p (untilde FN1)))
     (should(= 1 (length (debug-remote-actions))))
-    (clog :info "rename action: %s" (format-action(car(debug-remote-actions))))
+    (clog :info "test rename-directory> rename actions: %s"
+(mapconcat #'format-action (debug-remote-actions) "
+"))
     (cloud-sync))
 (clog :info "finished with host %s, switching to %s" (car hostnames) (cadr hostnames))
 (host> (cadr hostnames)
-    (clog :info "file1= %s" dir-1a)
-    (should(file-exists-p (untilde dir-1a)))
+    (should(file-exists-p (untilde FN0)))
+    (should(not(file-exists-p (untilde FN1))))
+    (cloud-start)
+    (should(not(file-exists-p (untilde FN0))))
+    (should(file-exists-p (untilde FN1)))))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle tests/macro-3.el
+(ert-deftest double-rename()
+  "rename the file twice"
+(let(FN0 FN1 FN2)
+(debug-environment
+(host> (car  hostnames) (cloud-start) (clog :info "test rename-file 1> clouded-hosts =%s" (together(debug-clouded-hosts))))
+(host> (cadr hostnames) (cloud-start) (clog :info "test rename-file 2> clouded-hosts =%s" (together(debug-clouded-hosts))))
+(host> (car  hostnames) (cloud-start)
+(setf FN0 file-1a
+      FN1 (concat file-1a "-1")
+      FN2 (concat file-1a "-2"))
+    (should(file-exists-p (untilde FN0)))
+    (should(not(file-exists-p (untilde FN1))))
+    (should(not(file-exists-p (untilde FN2))))
+    (should(= 0 (length (debug-remote-actions))))
+
+    (dired-rename-file (untilde FN0) (untilde FN1) t)
+    (should(not(file-exists-p (untilde FN0))))
     (should(file-exists-p (untilde FN1)))
     (should(not(file-exists-p (untilde FN2))))
+    (should(= 1 (length (debug-remote-actions))))
+
+    (dired-rename-file (untilde FN1) (untilde FN2) t)
+    (should(not(file-exists-p (untilde FN0))))
+    (should(not(file-exists-p (untilde FN1))))
+    (should(file-exists-p (untilde FN2)))
+    (should(= 2 (length (debug-remote-actions))))
+
+    (clog :info "test double-rename> rename actions: %s"
+(mapconcat #'format-action (debug-remote-actions) "
+"))
+    (cloud-sync))
+(host> (cadr hostnames)
+    (should(file-exists-p (untilde FN0)))
+    (should(not(file-exists-p (untilde FN1))))
+    (should(not(file-exists-p (untilde FN2))))
     (cloud-start)
-    (should(file-exists-p (untilde FN2)))))))
+    (should(file-exists-p (untilde FN2)))
+    (should(not(file-exists-p (untilde FN1))))
+    (should(not(file-exists-p (untilde FN0))))))))
 #+END_SRC
+
+Interference between two =rename= operations.
+1. rename the directory
+2. rename file inside the directory
+#+BEGIN_SRC emacs-lisp :tangle tests/macro-4.el
+(ert-deftest rename-directory-and-files()
+  "rename existing directory together with its content"
+(let(DN0 DN1 BN0 BN1)
+(debug-environment
+(host> (car  hostnames) (cloud-start))
+(host> (cadr hostnames) (cloud-start))
+(host> (car  hostnames) (cloud-start)
+    (setf DN0 (tilde(directory-file-name dir-1a))
+          BN0 (file-name-nondirectory file-in-dir-1a)
+          DN1 (tilde(concat DN0 ".1"))
+          BN1 (concat BN0 ".1"))
+    (should(file-exists-p (untilde DN0)))
+    (should(file-exists-p (untilde(untilde(FN DN0 BN0)))))
+    (should(= 0 (length (debug-remote-actions))))
+
+    (clog :debug "test rename-directory-and-files> %s --> %s" DN0 DN1); first we rename the directory
+    (dired-rename-file (untilde DN0) (untilde DN1) t)
+    (should(= 1 (length (debug-remote-actions))))
+    (should(file-exists-p (untilde DN1)))
+    (should(file-exists-p (untilde(FN DN1 BN0))))
+
+    (clog :debug "test rename-directory-and-files> %s --> %s" (FN DN1 BN0) (FN DN1 BN1))
+    (dired-rename-file (untilde(FN DN1 BN0)) (untilde(FN DN1 BN1)) t); and then the file inside it
+    (should(= 2 (length (debug-remote-actions))))
+    (should(file-exists-p (untilde(FN DN1 BN1))))
+
+    (clog :info "test rename-directory-and-files> rename actions: %s"
+(mapconcat #'format-action (debug-remote-actions) "
+"))
+    (cloud-sync))
+(host> (cadr hostnames)
+    (should(file-exists-p(untilde dir-1a)))
+    (should(file-exists-p(untilde file-in-dir-1a)))
+    (cloud-start)
+    (should(file-exists-p(untilde (FN DN1 BN1))))))))
+#+END_SRC
+
+*** Erasing files and directories
+…to be written…

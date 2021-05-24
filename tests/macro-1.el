@@ -3,27 +3,19 @@
 "renaming file on hostA leads to the same action on hostB"
 (let(FN1 BN1 DN1 FN2)
 (debug-environment
-;; (clean-RD remote-directory) it is already in =debug-environment=!
-(host> (car hostnames)
-    (clog :info "initializing host %s before mirroring files and actions" localhost)
-    (cloud-start))
-(host> (cadr hostnames)
-    (clog :info "initializing host %s before mirroring files and actions" localhost)
-    (cloud-start))
-(host> (car hostnames)
-(debug-clouded-hosts hostnames); our (rename) action will only be performed on already clouded hosts
-    (setf FN1 (tilde file-1a))
-    (setf DN1 (file-name-directory FN1))
-    (setf BN1 (file-name-nondirectory FN1))
+(host> (car  hostnames) (cloud-start) (clog :info "test rename-file 1> clouded-hosts =%s" (together(debug-clouded-hosts))))
+(host> (cadr hostnames) (cloud-start) (clog :info "test rename-file 2> clouded-hosts =%s" (together(debug-clouded-hosts))))
+(host> (car  hostnames) (cloud-start)
     (should(file-exists-p (untilde file-1)))
-    (setf FN2 (tilde (concat DN1 "new-" BN1)))
-    (clog :info "FN1= %s BN1= %s, DN1= %s, FN2= %s" FN1 BN1 DN1 FN2)
-;; :info 19:38:12 FN1= ~/dir-1a/ BN1= dir-1a/, DN1= ~/, FN2= ~/new-dir-1a/
+    (setf FN1 (tilde file-1a)
+          DN1 (file-name-directory FN1)
+          BN1 (file-name-nondirectory FN1)
+          FN2 (tilde (concat DN1 "new-" BN1)))
+    (clog :info "FN1= %s BN1= %s, FN2= %s" FN1 BN1 FN2)
     (should(= 0 (length (debug-remote-actions))))
-    (dired-rename-file (tilde FN1) (tilde FN2) t)
+    (dired-rename-file (untilde FN1) (untilde FN2) t)
     (should(= 1 (length (debug-remote-actions))))
     (clog :info "rename action: %s" (format-action(car(debug-remote-actions))))
-    ;; → raw rename action: ...
     (cloud-sync))
 (clog :info "finished with host %s, switching to %s" (car hostnames) (cadr hostnames))
 (host> (cadr hostnames)

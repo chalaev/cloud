@@ -1,33 +1,26 @@
 (ert-deftest rename-directory()
   "same as rename-file, but for directories"
-(let(FN1 BN1 DN1 FN2)
-(debug-environment 
-;; (clean-RD remote-directory) it is already in =debug-environment=!
-(host> (car hostnames)
-    (clog :info "initializing host %s before mirroring files and actions" localhost)
-    (cloud-start))
-(host> (cadr hostnames)
-    (clog :info "initializing host %s before mirroring files and actions" localhost)
-    (cloud-start))
-(host> (car hostnames)
-(debug-clouded-hosts hostnames); our (rename) action will only be performed on already clouded hosts
-    (setf FN1 (file-name-as-directory(tilde dir-1a)))
-    (setf DN1 (file-name-directory(directory-file-name FN1)))
-    (setf BN1 (file-name-as-directory(file-name-nondirectory(directory-file-name FN1))))
-    (should(file-exists-p (untilde dir-1)))
-    (setf FN2 (tilde(file-name-as-directory(concat DN1 "new-" BN1))))
-    (clog :info "FN1= %s BN1= %s, DN1= %s, FN2= %s" FN1 BN1 DN1 FN2)
+(let(FN0 DN1 FN1)
+(debug-environment
+(host> (car  hostnames) (cloud-start))
+(host> (cadr hostnames) (cloud-start))
+(host> (car  hostnames) (cloud-start)
+    (setf FN0 (tilde(directory-file-name dir-1a))); without final slash; dir-1a has the same name on both hosts
+    (should (file-exists-p (untilde FN0)))
+    (setf FN1 (tilde(concat FN0 ".1"))); new directory name
     (should(= 0 (length (debug-remote-actions))))
-    (clog :debug "dired-rename-file %s --> %s" (directory-file-name(tilde FN1)) (directory-file-name(tilde FN2)))
-    (dired-rename-file (directory-file-name(tilde FN1)) (directory-file-name(tilde FN2)) t)
+    (clog :debug "test rename-directory> dired-rename-file %s --> %s" FN0 FN1)
+    (dired-rename-file FN0 FN1 t)
+    (should (file-exists-p (untilde FN1)))
     (should(= 1 (length (debug-remote-actions))))
-    (clog :info "rename action: %s" (format-action(car(debug-remote-actions))))
+    (clog :info "test rename-directory> rename actions: %s"
+(mapconcat #'format-action (debug-remote-actions) "
+"))
     (cloud-sync))
 (clog :info "finished with host %s, switching to %s" (car hostnames) (cadr hostnames))
 (host> (cadr hostnames)
-    (clog :info "file1= %s" dir-1a)
-    (should(file-exists-p (untilde dir-1a)))
-    (should(file-exists-p (untilde FN1)))
-    (should(not(file-exists-p (untilde FN2))))
+    (should(file-exists-p (untilde FN0)))
+    (should(not(file-exists-p (untilde FN1))))
     (cloud-start)
-    (should(file-exists-p (untilde FN2)))))))
+    (should(not(file-exists-p (untilde FN0))))
+    (should(file-exists-p (untilde FN1)))))))

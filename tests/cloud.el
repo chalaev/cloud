@@ -3,7 +3,7 @@
 ;; Copyright (C) 2021 Oleg Shalaev <oleg@chalaev.com>
 
 ;; Author:     Oleg Shalaev <oleg@chalaev.com>
-;; Version:    2.0.1
+;; Version:    2.0.3
 
 ;; Package-Requires: (cl epg dired-aux timezone diary-lib subr-x shalaev)
 ;; Keywords:   syncronization, cloud, gpg, encryption
@@ -123,7 +123,7 @@ important-msgs; these messages will be typically printed at the end of the proce
 
 (defun TS (time)
   (format-time-string "%02m/%02d %H:%M:%S" time))
-;; 1.el – I'll try to get rid of loop and other common-lisp stuff here
+;; 1.el
 
 (defun backspace()
   (if (< (point-min) (point))
@@ -132,20 +132,20 @@ important-msgs; these messages will be typically printed at the end of the proce
 	  (buffer-name)
 	  (if-let ((FN (buffer-file-name))) FN "N/A"))))
 
-(defun new-file-in (cloud-dir)
+(defun new-file-in(cloud-dir)
   (let(new-fname error-exists)
     (cl-loop repeat 10 do (setf new-fname (rand-str 3))
           while (setf error-exists (file-exists-p (concat cloud-dir new-fname))))
     (if error-exists nil new-fname)))
 
-(defun begins-with* (str what)
+(defun begins-with*(str what)
   (let ((ok t))
   (needs ((pattern
 	   (cl-case what; [\s-\|$] matches space or EOL
 	     (:time "\s*\"\\([^\"]+\\)\"[\s-\|$]")
 	     (:int "\s+\\([[:digit:]]+\\)[\s-\|$]")
 	     (:string "[\s-]*\"\\(.+?\\)\"")
-	     (:other "\s+\\([^\s]+\\)[\s-\|$]"))
+	     (:other "\\([^\s-]+\\)"))
 	   (clog :error "invalid type %s in begins-with" what))
 	  (MB (when (string-match pattern str) (match-beginning 1)))
 	  (ME (match-end 1))
@@ -168,7 +168,7 @@ important-msgs; these messages will be typically printed at the end of the proce
 	    (cons (string-trim matched)
 		  (substring-no-properties str ME)))))))
 
-(defun begins-with (str what)
+(defun begins-with(str what)
   (cond
    ((consp what)
     (let (result (ok t))
@@ -179,7 +179,6 @@ important-msgs; these messages will be typically printed at the end of the proce
 	(cons (reverse result) str)))
    ((eql :time-stamp what)
     (let ((res (begins-with* str :string)))
-;;    (cons (apply #'encode-time (parse-time-string (car res))) (cdr res))))
     (cons (apply #'encode-time (parse-date-time (car res))) (cdr res))))
    ((eql :strings what)
     (let (BW result)
@@ -187,30 +186,30 @@ important-msgs; these messages will be typically printed at the end of the proce
 	(push (car BW) result)
 	(setf str (cdr BW)))
       (cons (reverse result) str)))
+   ((eql :others what)
+    (let (BW result)
+      (while (setf BW (begins-with* str :other))
+	(push (car BW) result)
+	(setf str (cdr BW)))
+      (cons (reverse result) str)))
    (t (begins-with* str what))))
 
-(defun cloud-locate-FN (FN)
+(defun cloud-locate-FN(FN)
   "find file by (true) name"
 (when FN  
   (cl-find (file-chase-links FN) file-DB :key #'plain-name
 	:test #'(lambda(x y)(string= (tilde x) (tilde y))))))
 
-(defun cloud-locate-CN (name)
+(defun cloud-locate-CN(name)
   "find file by (ciper) name"
-  (cl-find name file-DB :key #'cipher-name :test #'string=))
+  (cl-find name file-DB :key #'(lambda(x)(aref x cipher)) :test #'string=))
 
 (defun cloud-get-file-properties(FN)
   (when-let((FP(get-file-properties FN)))
     (vconcat FP [nil])))
 
- ;; Note sure if the following 2 functions are necessary, or, may be, they should be declared as macro or "inline":
-(defun plain-name  (df)(aref df plain))
-(defun cipher-name (df)(aref df cipher))
-
-(defmacro report-TF(var-name)
-  "useful for debugging"
-  `(clog :debug (concat ,(symbol-name var-name) "= %s") (if ,var-name "t" "nil")))
-;; example: (report-TF file-DB)
+ ;; Note sure if the following function is necessary, or, may be, it should be declared as macro or "inline":
+(defun plain-name (df)(aref df plain))
 ;; -*-  lexical-binding: t; -*-
 (defun get-file-properties* (FN)
 (when FN
@@ -227,10 +226,10 @@ important-msgs; these messages will be typically printed at the end of the proce
 (defun forget-password(XYZ)
   "removes image password from password file"
 (let* ((str (progn
-	     (find-file (image-passes))
+	     (find-file image-passes)
 	     (buffer-string)))
        (BN (buffer-name)))
-  (with-temp-file (image-passes)
+  (with-temp-file image-passes
     (insert (replace-regexp-in-string (format "%s .*
 " XYZ) "" str)))
   (kill-buffer BN)))
@@ -254,10 +253,10 @@ important-msgs; these messages will be typically printed at the end of the proce
 
 (defun youngest(&rest FNs)
   (car (sort FNs #'file-newer-than-file-p)))
-(defmacro cloud-NL() '(push "
+(cl-macrolet((cloud-NL() '(push "
 " Makefile))
-(defmacro inl(&rest format-pars) `(progn (push (format ,@format-pars) Makefile) (cloud-NL)))
-(defmacro h(FN) `(untilde(tilde ,FN) "$(HD)"))
+(inl(&rest format-pars) `(progn (push (format ,@format-pars) Makefile) (cloud-NL)))
+(h(FN) `(untilde(tilde ,FN) "$(HD)")))
 (defun reset-Makefile()
 "reseting make file"
 (when (or (and (file-exists-p pass-d) (file-directory-p pass-d)) (ensure-dir-exists pass-d))
@@ -302,7 +301,7 @@ important-msgs; these messages will be typically printed at the end of the proce
 
 (defun print-hosts()
   (push-new clouded-hosts localhost)
-  (dolist (hostname clouded-hosts) (insert (format "%s " hostname)))
+  (dolist (hostname(delete-dups clouded-hosts)) (insert (format "%s " hostname)))
   (backspace)
   (newline))
 
@@ -322,7 +321,6 @@ important-msgs; these messages will be typically printed at the end of the proce
     (format-time-string "%F %H:%M:%S %Z" (aref DB-rec mtime))))
 
 (defun parse-action(str)
-(clog :debug "parse-action(%s) that ..." str)
 (let((action (make-vector lafs nil)))
 
 (dolist (column (list
@@ -333,12 +331,11 @@ important-msgs; these messages will be typically printed at the end of the proce
      (aset action (cdr column) (car col-value))
      (setf str (cdr col-value))))
 
-(dolist (column 
-(list
-  (cons (cons  :string  (aref action i-Nargs)) i-args)
-       `(:strings . ,i-hostnames)))
-  (needs ((col-value (begins-with str (car column)) (bad-column "action" (cdr column))))
-     (aset action (cdr column) (car col-value)); was (mapcar #'untilde (car col-value))
+(dolist (column (list
+  (cons (cons :string (aref action i-Nargs)) i-args); e.g., → ((:string . 1) . 2)
+  `(:others . ,i-hostnames)))
+  (needs((col-value(begins-with str (car column)) (bad-column "action" (cdr column)))); → (("hostB") . " hostB hostA")
+     (aset action (cdr column) (car col-value)); → 
      (setf str (cdr col-value))))
 
 (let((AID (format-time-string "%02m/%02d %H:%M:%S" (aref action i-time))))
@@ -347,7 +344,6 @@ important-msgs; these messages will be typically printed at the end of the proce
 
 (defun str-to-DBrec(str)
   "parses one file line from the remote file DB"
-;; (clog :debug "str-to-DBrec> str= %s" str)
 (ifn (string-match "\"\\(.+\\)\"\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([[:digit:]]+\\)\s+\"\\(.+\\)\"" str)
   (clog :error "Ignoring invalid file line %s" str)
 
@@ -403,19 +399,18 @@ CF)))))
 
 (defun read-all(DBname)
   "reads content (text) file into the database file-DB"
-(clog :debug "DBname= %s" DBname)
 (with-temp-buffer (insert-file-contents DBname)
   (let((str(read-line)))
-;;(clog :debug "read-all> str= %s" str)
 (needs-set((clouded-hosts (split-string str)
   (clog :error "(o.k. if this is the very first run) Invalid first line in the remote file DB %s" DBname)))
 (unless (member localhost clouded-hosts) (cloud-host-add))
 
 (while (< 0 (length (setf str (read-line))))
-(clog :debug "action string= %s" str)
-(when-let ((AA (parse-action str)) (AID (car AA)) (action (cdr AA)))
-  (ifn (member localhost (aref action i-hostnames))
-      (clog :info "this host is unaffected by action %s" AID)
+(clog :debug "read-all> action string= %s" str); "2021-05-03 19:39:22 EDT" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"  hostB
+(when-let((AA(parse-action str)) (AID(car AA)) (action(cdr AA))); e.g., AID="05/03 16:59:36"
+(clog :debug "read-all> format(parsed action)= %s" (format-action action)); "2021-05-03 19:39:22 EDT" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"
+  (ifn(member localhost (aref action i-hostnames))
+      (clog :info "this host (= %s) is unaffected by action %s (= %s)" localhost AID (format-action action))
     (if (perform action (aref action i-hostnames))
 	(clog :info "sucessfully performed action %s" AID)
       (clog :error " action %s failed, will NOT retry it" AID))
@@ -429,7 +424,7 @@ CF)))))
       (directory-files remote-directory nil "^...\\.gpg" t)) 
 (clog :warning "did not find any gpg-files in %s; is this the very first run?" remote-directory)))
 (while(< 10 (length (setf str (read-line))))
-(when-let((CF (str-to-DBrec str)))
+(when-let((CF(str-to-DBrec str)))
 
 (let* ((FN (untilde(plain-name CF))); ~/file-1.qieFmS
        (CN (aref CF cipher))
@@ -613,8 +608,6 @@ FN gunzipped)))
 (time-add local-mtime (- -60 (random 6000)))))))
 
 (defun upload(FR)
-;; (log-var FR)
-;; FR= [/tmp/cloud.test.dMo57m/hostA/file-1.5mi shalaev shalaev (24664 49366 0 0) 47 432 OAX]
 (needs ((FN (tilde(aref FR plain)) (clog :error "upload: file lacks plain name"))
 	(CN (aref FR cipher) (clog :error "upload: file %s lacks cipher name" FN))
 	(stanza (enc-make-stanza FR) (clog :error "upload: could not create stanza for %s" FN)))
@@ -638,7 +631,7 @@ password (h cloud-mk) (h cloud-mk))
 (write-region (apply #'concat (reverse Makefile)) nil (untilde cloud-mk))
 
 (setf stanze nil added-files nil upload-queue nil removed-files nil)
-(reset-Makefile))
+(reset-Makefile)))
 
 (defun cloud-sync()
 (interactive) (error-in "cloud-sync"
@@ -649,11 +642,13 @@ password (h cloud-mk) (h cloud-mk))
 (let((make (format "HOME=%s make -j%d -ikf %s all &> %s.log" (directory-file-name ~) number-of-CPU-cores (untilde cloud-mk) (untilde cloud-mk))))
 (clog :debug "Makefile is %s" (untilde cloud-mk))
 
+(clog :info "make started on %s" (format-time-string "%H:%M:%S.%3N" (current-time)))
 (ifn(= 0 (shell-command make)) (clog :error "make file %s containing
 
 %s
 FAILED with error(s): %s" (untilde cloud-mk) (cat-file(untilde cloud-mk)) (cat-file(concat(untilde cloud-mk)".log")))
-(delete-file(untilde cloud-mk))))))
+(delete-file(untilde cloud-mk)))
+(clog :info "make finished on %s" (format-time-string "%H:%M:%S.%3N" (current-time))))))
 
 (ifn(cloud-connected-p) (clog :warning "refuse to sync because remote directory not mounted")
 (directory-lock lock-dir (format "%s
@@ -673,9 +668,8 @@ FAILED with error(s): %s" (untilde cloud-mk) (cat-file(untilde cloud-mk)) (cat-f
 (read-all local/all)))
 
 (when (or added-files upload-queue removed-files remote-actions)
-(clog :debug "(or added-files upload-queue removed-files remote-actions)")
   (ifn(write-all local/all) (error "could not save data to %s" local/all)
-    (unless(gpg-encrypt local/all remote/files) (error "could not ENCRYPT %s TO the cloud" local/all))))
+    (unless(gpg-encrypt local/all remote/files) (error "could not ENCRYPT %s TO the cloud(%s)" local/all remote/files))))
 
 (do-make)))
 
@@ -694,7 +688,9 @@ FAILED with error(s): %s" (untilde cloud-mk) (cat-file(untilde cloud-mk)) (cat-f
     (aset action i-time (current-time))
     (aset action i-args args)
     (aset action i-hostnames (remove localhost clouded-hosts))
-    (end-push action remote-actions)))
+    (end-push action remote-actions)
+(clog :debug "new-action> clouded-hosts= %s" (together clouded-hosts))
+(clog :debug "new-action> %s" (format-action action))))
 
 (defun perform(action &optional HNs)
 "performing an action locally"
@@ -705,7 +701,7 @@ nil local/log t)
   (let ((arguments (aref action i-args)))
     (case* (aref action i-ID) =
       (i-host-forget (dolist (arg arguments) (drop clouded-hosts arg)) t)
-      (i-host-add (dolist (arg arguments) (push arg clouded-hosts)) t)
+      (i-host-add (dolist (arg arguments) (push-new clouded-hosts arg)) t)
       (i-forget (cloud-forget-many arguments) t)
       (i-delete (cloud-rm arguments) t)
       (i-rename (cloud-rename-file (untilde(car arguments)) (untilde(cadr arguments))))
@@ -713,13 +709,13 @@ nil local/log t)
 (i-share (when (= 1 (length HNs)) (cloud-forget-many arguments)))
 (otherwise (clog :error "unknown action %d" (aref action i-ID))))))
 
-(defun format-action (action)
+(defun format-action(action)
   (format "%S %d %d %s %s"
 (full-TS (aref action i-time)); 1. Time stamp,
 (aref action i-ID); 2. (integer) action ID,
 (length (aref action i-args)); 3. (integer) number of arguments for this action (one column),
 (apply #'concat (mapcar #'(lambda(arg) (format "%S " (tilde arg))) (aref action i-args))); 4. [arguments+] (several columns),
-(apply #'concat (mapcar #'(lambda(HN)  (format "%S " HN)) (aref action i-hostnames))))); 5. hostnames, where the action has to be performed (several columns).
+(together (aref action i-hostnames)))); 5. hostnames, where the action has to be performed (several columns).
 
 ;; (require 'nadvice)
 ;; (advice-remove #'dired-delete-file 'dired-delete-file@DDF)
@@ -738,14 +734,12 @@ nil local/log t)
 (defun cloud-forget-many (args)
   (error-in "cloud-forget-many"
     (dolist (arg args)
-(clog :debug "cloud-forget-many> arg= %s" arg)
       (unless(cloud-forget-recursive arg) (error "could not forget %s" arg)))))
 
 (defun contained-in(DN)
   (let* ((dir-name (tilde DN)) res (dir-name (to-dir dir-name)))
     (dolist (DB-rec file-DB)
       (let((FN(tilde(aref DB-rec plain))))
-(clog :debug "contained-in> FN= %s" FN)
         (when(and (< (length dir-name) (length FN))
                   (string=(substring-no-properties FN 0 (length dir-name)) dir-name))
           (push DB-rec res))))
@@ -780,14 +774,14 @@ nil local/log t)
 (if FN (add-file FN)
   (if (string= major-mode "dired-mode")
       (dired-map-over-marks (add-file (dired-get-filename)) nil)
-(if-let ((FN (buffer-file-name))) (add-file FN)
+    (if-let ((FN (buffer-file-name))) (add-file FN)
     (unless
 	(add-file (read-string "file to be clouded=" (if FN FN "")))
       (clog :error "could not cloud this file"))))))
 
 (defun blacklist(FN)
 (when FN
-(let ((FN (tilde FN)))
+(let((FN (tilde FN)))
  (cloud-forget-file FN)
 (unless (member FN file-blacklist)
  (push FN file-blacklist)))))
@@ -843,40 +837,41 @@ nil local/log t)
 (not
 (let ((r (black-p FN FR))) (setf FR (cdr r)) (car r))))
 (add-file FN FR)
-(clog :debug "not auto-clouding %s" FN)))))))))))
+;; (clog :debug "not auto-clouding %s" FN)
+))))))))))
 
 (defun auto-add-file(FN &optional file-rec)
 "when the file is clouded automatically"
  (unless (car(black-p FN file-rec)) (add-file FN file-rec)))
 
 (defun cloud-forget-file(FN)
-  (needs((DB-rec (cloud-locate-FN FN)
- (clog :warning "forget: doing nothing since %s is not clouded" FN))
-          (CEXT (cip-ext FN))
-	  (cloud-FN (FN remote-directory (concat(aref DB-rec cipher) CEXT))))
+  (needs((DB-rec(cloud-locate-FN FN) (clog :warning "forget: doing nothing since %s is not clouded" FN))
+         (CN(aref DB-rec cipher))
+         (CEXT (cip-ext FN))
+	 (cloud-FN (FN remote-directory (concat CN CEXT))))
 (drop stanze (tilde FN) (untilde FN)); cacelling pending upload
 
 (when (string= CEXT ".png")
-  (forget-password (aref DB-rec cipher)))
+  (forget-password CN))
 
 (drop file-DB DB-rec)
 (push FN removed-files)
 (dired-delete-file cloud-FN "always")))
 
 (defun cloud-forget-recursive(FN)
-(clog :info "CFR %s" FN)
+(clog :debug "cloud-forget-recursive> FN= %s" FN)
 (new-action i-forget FN)
 (dolist (sub-FN (mapcar #'plain-name (contained-in FN)))
-(clog :debug "cloud-forget-recursive> sub-FN= %s" sub-FN)
+  (clog :debug "cloud-forget-recursive> sub-FN= %s" sub-FN)
   (cloud-forget-file sub-FN))
-(cloud-forget-file FN))
+(unless(file-directory-p FN) (cloud-forget-file FN)))
 
 (defun cloud-forget (&optional FN)
   (interactive)
 (if FN (cloud-forget-recursive FN)
   (if (string= major-mode "dired-mode")
-      (dired-map-over-marks(cloud-forget-recursive(dired-get-filename))nil)
-(if-let ((FN (buffer-file-name))) (cloud-forget-recursive FN)
+      (dired-map-over-marks(cloud-forget-recursive(dired-get-filename)) nil)
+(if-let((FN (buffer-file-name))) (cloud-forget-recursive FN)
     (unless
 	(cloud-forget-recursive (read-string "file to be forgotten=" (if FN FN "")))
       (clog :error "could not forget this file"))))))
@@ -893,26 +888,29 @@ nil local/log t)
      (target (setf target (cloud-get-file-properties new))))
 (clog :debug "cloud-rename-file> mv %s %s" old new)
 (when(file-exists-p old)
-(unless(file-exists-p(file-name-directory new)) (make-directory(file-name-directory new)))
-(error-in "cloud-rename-file" (rename-file old new t) t))))
+  (unless(file-exists-p(file-name-directory new)) (make-directory(file-name-directory new)))
+  (error-in "cloud-rename-file" (rename-file old new t) t))))
 
 (defun DRF(old-function old-FN new-FN ok-if-already-exists)
-(clog :debug "cloud-rename-file %s --> %s" old-FN new-FN)
+(clog :debug "DRF> %s --> %s" old-FN new-FN)
 (let((isDir (file-directory-p old-FN)))
 (error-in "DRF" (funcall old-function (untilde old-FN) (untilde new-FN) ok-if-already-exists)
 (cloud-rename-file old-FN new-FN)
-(unless(BRDp old-FN) (new-action i-rename old-FN new-FN))
+(if(BRDp old-FN)
+ (clog :debug "(BRDp %s) is t!" old-FN)
+ (new-action i-rename old-FN new-FN))
 
 (when isDir
   (let* ((old-dir (to-dir old-FN)) (LOD (length old-dir))
          (new-dir (to-dir new-FN)))
     (dolist (rec (contained-in old-FN))
-      (let ((FN (aref rec plain)))
+      (let((FN (aref rec plain)))
         (when (and (<= LOD (length FN))
 	     (string= old-FN (substring FN 0 LOD)))
 	  (let ((new-name (concat new-dir (substring FN LOD))))
             (cloud-rename-file FN new-name)
-   (unless(BRDp old-FN)
+   (if(BRDp old-FN)
+ (clog :debug "(BRDp %s) is t!" old-FN)
 	    (new-action i-rename FN new-name)))))))))))
 (advice-add 'dired-rename-file :around #'DRF)
 

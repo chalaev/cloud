@@ -14,6 +14,20 @@ Change log for the [[https://github.com/chalaev/cloud][cloud synchronizer]].
 3. Fixed =read-all=.
 4. Fixed [[file:shell/cloud-git][shell/cloud-git]] by adding new (auto-generated from [[file:cloud.org][cloud.org]]) file [[file:shell/indices.sh][shell/indices.sh]].
 
+*** 05/04
+1. Fixed
+   1. =begins-with*=,
+   2. =begins-with=, and
+   3. =parse-action=.
+2. Updated [[file:Makefile][Makefile]] to make tests from different el-files in [[file:tests/][tests/]] independent.
+
+*** 05/24
+1. updated [[file:shell/cloud-git][shell/cloud-git]]
+2. made most macros local
+3. [[file:testing.org][added]] =double-rename= test
+4. =clouded-hosts= → =(delete-dups clouded-hosts)= in =print-hosts=
+5. added [[file:tests/macro-4.el][new test]]: interference between two =rename= operations
+
 * Freezing the code
 No more fountainng with ideas; just making the existing code more reliable.
 Mostly fixing the errors; the ideas are either implemented or postponed for (probably remote) future.

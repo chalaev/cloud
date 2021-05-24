@@ -1,1 +1,3 @@
-:debug 18:03:19 flushing comments before quiting emacs
+:info 19:30:40.000 creating files on virtual host hostA
+:info 19:30:40.000 creating files on virtual host hostB
+:debug 19:30:40.000 flushing comments before quiting emacs

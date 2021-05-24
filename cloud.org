@@ -251,7 +251,7 @@ even if we've got no images clouded so there are no passwords for them, this fil
 #+BEGIN_SRC emacs-lisp :tangle generated/main-2.el
 (defun print-hosts()
   (push-new clouded-hosts localhost)
-  (dolist (hostname clouded-hosts) (insert (format "%s " hostname)))
+  (dolist (hostname(delete-dups clouded-hosts)) (insert (format "%s " hostname)))
   (backspace)
   (newline))
 
@@ -275,7 +275,6 @@ even if we've got no images clouded so there are no passwords for them, this fil
 **** action lines
 #+BEGIN_SRC emacs-lisp :tangle generated/main-2.el
 (defun parse-action(str)
-(clog :debug "parse-action(%s) that ..." str)
 (let((action (make-vector lafs nil)))
 #+END_SRC
 An action string has unknown number of fields (columns); some of them are quoted and may contain spaces, others are not.
@@ -293,12 +292,11 @@ Let us parse the string =str= and save extracted parameters (values) in the vect
 #+END_SRC
 =(aref action i-Nargs)= must be evaluated _after_ =`(:int . ,i-Nargs)=, but _before_ we proceed with =(cons (cons  :string  (aref action i-Nargs)) i-args)=:
 #+BEGIN_SRC emacs-lisp :tangle generated/main-2.el
-(dolist (column 
-(list
-  (cons (cons  :string  (aref action i-Nargs)) i-args)
-       `(:strings . ,i-hostnames)))
-  (needs ((col-value (begins-with str (car column)) (bad-column "action" (cdr column))))
-     (aset action (cdr column) (car col-value)); was (mapcar #'untilde (car col-value))
+(dolist (column (list
+  (cons (cons :string (aref action i-Nargs)) i-args); e.g., → ((:string . 1) . 2)
+  `(:others . ,i-hostnames)))
+  (needs((col-value(begins-with str (car column)) (bad-column "action" (cdr column)))); → (("hostB") . " hostB hostA")
+     (aset action (cdr column) (car col-value)); → 
      (setf str (cdr col-value))))
 #+END_SRC
 So, we have just got information about pending action.
@@ -310,12 +308,12 @@ In this sigle-user code action's time stamp =AID= may serve as its unique ID:
 (clog :info "... will later be referenced as %s" AID)
 (cons AID action))))
 #+END_SRC
+← 05/03 problem: it does not set =i-hostnames= (= 3) field for an action
 
 **** file lines
 #+BEGIN_SRC emacs-lisp :tangle generated/main-2.el
 (defun str-to-DBrec(str)
   "parses one file line from the remote file DB"
-;; (clog :debug "str-to-DBrec> str= %s" str)
 (ifn (string-match "\"\\(.+\\)\"\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([^\s]+\\)\s+\\([[:digit:]]+\\)\s+\"\\(.+\\)\"" str)
   (clog :error "Ignoring invalid file line %s" str)
 #+END_SRC
@@ -396,7 +394,6 @@ To limit the timeout to 30 seconds, update =~/.ssh/config= as follows:
 ServerAliveInterval 15
 ServerAliveCountMax 2
 #+END_SRC
-
 
 ** WebDav
 =WebDav= is much slower than =ssh=, but it should be ok for file synchronization.
@@ -483,10 +480,8 @@ The function =read-all= (returns =nil=) reads (previously decrypted) [[Host/Acti
 #+BEGIN_SRC emacs-lisp :tangle generated/main-2.el
 (defun read-all(DBname)
   "reads content (text) file into the database file-DB"
-(clog :debug "DBname= %s" DBname)
 (with-temp-buffer (insert-file-contents DBname)
   (let((str(read-line)))
-;;(clog :debug "read-all> str= %s" str)
 (needs-set((clouded-hosts (split-string str)
   (clog :error "(o.k. if this is the very first run) Invalid first line in the remote file DB %s" DBname)))
 #+END_SRC
@@ -503,10 +498,11 @@ The concept of actions is explained in the [[Actions][corresponding section]].
 Keep reading one action after another until we encounter an empty line:
 #+BEGIN_SRC emacs-lisp :tangle generated/main-2.el
 (while (< 0 (length (setf str (read-line))))
-(clog :debug "action string= %s" str)
-(when-let ((AA (parse-action str)) (AID (car AA)) (action (cdr AA)))
-  (ifn (member localhost (aref action i-hostnames))
-      (clog :info "this host is unaffected by action %s" AID)
+(clog :debug "read-all> action string= %s" str); "2021-05-03 19:39:22 EDT" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"  hostB
+(when-let((AA(parse-action str)) (AID(car AA)) (action(cdr AA))); e.g., AID="05/03 16:59:36"
+(clog :debug "read-all> format(parsed action)= %s" (format-action action)); "2021-05-03 19:39:22 EDT" 2 2 "~/file-1a.dat" "~/new-file-1a.dat"
+  (ifn(member localhost (aref action i-hostnames))
+      (clog :info "this host (= %s) is unaffected by action %s (= %s)" localhost AID (format-action action))
     (if (perform action (aref action i-hostnames))
 	(clog :info "sucessfully performed action %s" AID)
       (clog :error " action %s failed, will NOT retry it" AID))
@@ -536,7 +532,7 @@ Our ~.gpg~ files are named as  ~XYZ.gpg~; the next line cuts the extension  ~.gp
       (directory-files remote-directory nil "^...\\.gpg" t)) 
 (clog :warning "did not find any gpg-files in %s; is this the very first run?" remote-directory)))
 (while(< 10 (length (setf str (read-line))))
-(when-let((CF (str-to-DBrec str)))
+(when-let((CF(str-to-DBrec str)))
 #+END_SRC
 Ideally every file mentioned in =file-DB= should exist on a local hard disk.
 In reality either file, the local one, or the remote one, or both, might be absent,
@@ -799,8 +795,6 @@ GNU make won't upload (with encryption) the file to the server if target is youn
 
 #+BEGIN_SRC emacs-lisp :tangle generated/main-2.el
 (defun upload(FR)
-;; (log-var FR)
-;; FR= [/tmp/cloud.test.dMo57m/hostA/file-1.5mi shalaev shalaev (24664 49366 0 0) 47 432 OAX]
 (needs ((FN (tilde(aref FR plain)) (clog :error "upload: file lacks plain name"))
 	(CN (aref FR cipher) (clog :error "upload: file %s lacks cipher name" FN))
 	(stanza (enc-make-stanza FR) (clog :error "upload: could not create stanza for %s" FN)))
@@ -814,10 +808,10 @@ GNU make won't upload (with encryption) the file to the server if target is youn
 
 Use =cl-macrolet= for =(defmacro h...)=:
 #+BEGIN_SRC emacs-lisp :tangle generated/3.el
-(defmacro cloud-NL() '(push "
+(cl-macrolet((cloud-NL() '(push "
 " Makefile))
-(defmacro inl(&rest format-pars) `(progn (push (format ,@format-pars) Makefile) (cloud-NL)))
-(defmacro h(FN) `(untilde(tilde ,FN) "$(HD)"))
+(inl(&rest format-pars) `(progn (push (format ,@format-pars) Makefile) (cloud-NL)))
+(h(FN) `(untilde(tilde ,FN) "$(HD)")))
 (defun reset-Makefile()
 "reseting make file"
 (when (or (and (file-exists-p pass-d) (file-directory-p pass-d)) (ensure-dir-exists pass-d))
@@ -858,7 +852,7 @@ password (h cloud-mk) (h cloud-mk))
 Now let us clean the data that we used to create Makefile:
 #+BEGIN_SRC emacs-lisp :tangle generated/main-2.el
 (setf stanze nil added-files nil upload-queue nil removed-files nil)
-(reset-Makefile))
+(reset-Makefile)))
 #+END_SRC
 
 * cloud-sync
@@ -924,9 +918,8 @@ O.k., now when we've got the most recent version of the file =local/all=, let us
 If we made any changes before =(cloud-sync)=, let us upload the updates to the cloud:
 #+BEGIN_SRC emacs-lisp :tangle generated/main-2.el
 (when (or added-files upload-queue removed-files remote-actions)
-(clog :debug "(or added-files upload-queue removed-files remote-actions)")
   (ifn(write-all local/all) (error "could not save data to %s" local/all)
-    (unless(gpg-encrypt local/all remote/files) (error "could not ENCRYPT %s TO the cloud" local/all))))
+    (unless(gpg-encrypt local/all remote/files) (error "could not ENCRYPT %s TO the cloud(%s)" local/all remote/files))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/main-2.el
@@ -962,7 +955,7 @@ Yesterday my laptop issued an order to erase/rename that file/directory on every
 enumerated in =clouded-hosts=. This order will exist untill all hosts execute it, and then it will be forgotten.
 
 ** Definitions
-Acctions can be applied to both files and directories. An action is a vector.
+Acctions can be applied to both files and directories. An action is a vector with components
 #+NAME: actionFields
 |--------+------+--------+-------------+---------|
 | i-time | i-ID | i-args | i-hostnames | i-Nargs |
@@ -970,6 +963,7 @@ Acctions can be applied to both files and directories. An action is a vector.
 #+TBLFM: @>=$#-1
 where =i-Nargs= is used only when parsing action lines from the remote file DB.
 
+=i-ID= is an integer specifying action type according to the table:
 #+NAME: actionIDs
 |----------+----------+----------+------------+---------------+---------|
 | i-forget | i-delete | i-rename | i-host-add | i-host-forget | i-share |
@@ -984,7 +978,9 @@ where =i-Nargs= is used only when parsing action lines from the remote file DB.
     (aset action i-time (current-time))
     (aset action i-args args)
     (aset action i-hostnames (remove localhost clouded-hosts))
-    (end-push action remote-actions)))
+    (end-push action remote-actions)
+;;test>;;(clog :debug "new-action> clouded-hosts= %s" (together clouded-hosts))
+(clog :debug "new-action> %s" (format-action action))))
 #+END_SRC
 Later more actions will be introduced:
 1. =i-reset-pass= for (gradual – not for all files at once) password renewal
@@ -1001,7 +997,7 @@ nil local/log t)
   (let ((arguments (aref action i-args)))
     (case* (aref action i-ID) =
       (i-host-forget (dolist (arg arguments) (drop clouded-hosts arg)) t)
-      (i-host-add (dolist (arg arguments) (push arg clouded-hosts)) t)
+      (i-host-add (dolist (arg arguments) (push-new clouded-hosts arg)) t)
       (i-forget (cloud-forget-many arguments) t)
       (i-delete (cloud-rm arguments) t)
       (i-rename (cloud-rename-file (untilde(car arguments)) (untilde(cadr arguments))))
@@ -1015,13 +1011,13 @@ When the file(s) are finally shared among /all/ hosts (so that ~localhost~ is th
 We must inform other hosts about actions they have to perform; for that we write list of actions
 to the remote file DB using the function
 #+BEGIN_SRC emacs-lisp :tangle generated/main-2.el
-(defun format-action (action)
+(defun format-action(action)
   (format "%S %d %d %s %s"
 (full-TS (aref action i-time)); 1. Time stamp,
 (aref action i-ID); 2. (integer) action ID,
 (length (aref action i-args)); 3. (integer) number of arguments for this action (one column),
 (apply #'concat (mapcar #'(lambda(arg) (format "%S " (tilde arg))) (aref action i-args))); 4. [arguments+] (several columns),
-(apply #'concat (mapcar #'(lambda(HN)  (format "%S " HN)) (aref action i-hostnames))))); 5. hostnames, where the action has to be performed (several columns).
+(together (aref action i-hostnames)))); 5. hostnames, where the action has to be performed (several columns).
 #+END_SRC
 ← 03/02 somehow can not just replace =(apply #'concat (mapcar...))= with =(mapcan...)=; try =mapconcat= instead.
 
@@ -1074,7 +1070,6 @@ The following function is used to perform pending delete ordered by another host
 (defun cloud-forget-many (args)
   (error-in "cloud-forget-many"
     (dolist (arg args)
-(clog :debug "cloud-forget-many> arg= %s" arg)
       (unless(cloud-forget-recursive arg) (error "could not forget %s" arg)))))
 #+END_SRC
 
@@ -1085,7 +1080,6 @@ The following function helps us finding such files:
   (let* ((dir-name (tilde DN)) res (dir-name (to-dir dir-name)))
     (dolist (DB-rec file-DB)
       (let((FN(tilde(aref DB-rec plain))))
-(clog :debug "contained-in> FN= %s" FN)
         (when(and (< (length dir-name) (length FN))
                   (string=(substring-no-properties FN 0 (length dir-name)) dir-name))
           (push DB-rec res))))
@@ -1130,11 +1124,13 @@ To add (or "cloud") a file I suggest opening a dired buffer, mark the files and 
 (if FN (add-file FN)
   (if (string= major-mode "dired-mode")
       (dired-map-over-marks (add-file (dired-get-filename)) nil)
-(if-let ((FN (buffer-file-name))) (add-file FN)
+    (if-let ((FN (buffer-file-name))) (add-file FN)
     (unless
 	(add-file (read-string "file to be clouded=" (if FN FN "")))
       (clog :error "could not cloud this file"))))))
 #+END_SRC
+← 05/02 =cloud-add= is assumed to be clean from error "member: Wrong type argument: arrayp, nil"
+
 Pending upgrades for =cloud-add=:
 1. =cloud-add= must become more user-friendly: let the user know that file(s) are sucessfully clouded, and
 2. =cloud-add= must work with directories. This is, however, not so straightforward because I almost never want to cloud _all_ files within a directory.
@@ -1142,7 +1138,7 @@ Pending upgrades for =cloud-add=:
 #+BEGIN_SRC emacs-lisp :tangle generated/main-2.el
 (defun blacklist(FN)
 (when FN
-(let ((FN (tilde FN)))
+(let((FN (tilde FN)))
  (cloud-forget-file FN)
 (unless (member FN file-blacklist)
  (push FN file-blacklist)))))
@@ -1215,7 +1211,8 @@ where =FR= is the file record (an array containing file info)
 (not
 (let ((r (black-p FN FR))) (setf FR (cdr r)) (car r))))
 (add-file FN FR)
-(clog :debug "not auto-clouding %s" FN)))))))))))
+;; (clog :debug "not auto-clouding %s" FN)
+))))))))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle generated/main-2.el
@@ -1231,16 +1228,16 @@ If the file is supposed to be deleted as well, =cloud-forget-file= should be
 called *after* the file has already been sucessfully deleted:
 #+BEGIN_SRC emacs-lisp :tangle generated/main-2.el
 (defun cloud-forget-file(FN)
-  (needs((DB-rec (cloud-locate-FN FN)
- (clog :warning "forget: doing nothing since %s is not clouded" FN))
-          (CEXT (cip-ext FN))
-	  (cloud-FN (FN remote-directory (concat(aref DB-rec cipher) CEXT))))
+  (needs((DB-rec(cloud-locate-FN FN) (clog :warning "forget: doing nothing since %s is not clouded" FN))
+         (CN(aref DB-rec cipher))
+         (CEXT (cip-ext FN))
+	 (cloud-FN (FN remote-directory (concat CN CEXT))))
 (drop stanze (tilde FN) (untilde FN)); cacelling pending upload
 #+END_SRC
 Remove image's individual password:
 #+BEGIN_SRC emacs-lisp :tangle generated/main-2.el
 (when (string= CEXT ".png")
-  (forget-password (aref DB-rec cipher)))
+  (forget-password CN))
 #+END_SRC
 Remove file from the database and erase its encrypted copy in the cloud:
 #+BEGIN_SRC emacs-lisp :tangle generated/main-2.el
@@ -1253,12 +1250,12 @@ Remove file from the database and erase its encrypted copy in the cloud:
 =cloud-forget-recursive= should be called *after* the file has already been sucessfully deleted:
 #+BEGIN_SRC emacs-lisp :tangle generated/main-2.el
 (defun cloud-forget-recursive(FN)
-(clog :info "CFR %s" FN)
+(clog :debug "cloud-forget-recursive> FN= %s" FN)
 (new-action i-forget FN)
 (dolist (sub-FN (mapcar #'plain-name (contained-in FN)))
-(clog :debug "cloud-forget-recursive> sub-FN= %s" sub-FN)
+  (clog :debug "cloud-forget-recursive> sub-FN= %s" sub-FN)
   (cloud-forget-file sub-FN))
-(cloud-forget-file FN))
+(unless(file-directory-p FN) (cloud-forget-file FN)))
 #+END_SRC
 
 =cloud-forget= is excecuted either
@@ -1269,8 +1266,8 @@ Remove file from the database and erase its encrypted copy in the cloud:
   (interactive)
 (if FN (cloud-forget-recursive FN)
   (if (string= major-mode "dired-mode")
-      (dired-map-over-marks(cloud-forget-recursive(dired-get-filename))nil)
-(if-let ((FN (buffer-file-name))) (cloud-forget-recursive FN)
+      (dired-map-over-marks(cloud-forget-recursive(dired-get-filename)) nil)
+(if-let((FN (buffer-file-name))) (cloud-forget-recursive FN)
     (unless
 	(cloud-forget-recursive (read-string "file to be forgotten=" (if FN FN "")))
       (clog :error "could not forget this file"))))))
@@ -1291,18 +1288,20 @@ Remove file from the database and erase its encrypted copy in the cloud:
      (target (setf target (cloud-get-file-properties new))))
 (clog :debug "cloud-rename-file> mv %s %s" old new)
 (when(file-exists-p old)
-(unless(file-exists-p(file-name-directory new)) (make-directory(file-name-directory new)))
-(error-in "cloud-rename-file" (rename-file old new t) t))))
+  (unless(file-exists-p(file-name-directory new)) (make-directory(file-name-directory new)))
+  (error-in "cloud-rename-file" (rename-file old new t) t))))
 #+END_SRC
 
 Updating =dired-rename-file=:
 #+BEGIN_SRC emacs-lisp :tangle generated/main-2.el
 (defun DRF(old-function old-FN new-FN ok-if-already-exists)
-(clog :debug "cloud-rename-file %s --> %s" old-FN new-FN)
+(clog :debug "DRF> %s --> %s" old-FN new-FN)
 (let((isDir (file-directory-p old-FN)))
 (error-in "DRF" (funcall old-function (untilde old-FN) (untilde new-FN) ok-if-already-exists)
 (cloud-rename-file old-FN new-FN)
-(unless(BRDp old-FN) (new-action i-rename old-FN new-FN))
+(if(BRDp old-FN)
+ (clog :debug "(BRDp %s) is t!" old-FN)
+ (new-action i-rename old-FN new-FN))
 #+END_SRC
 In case we are renaming directories:
 #+BEGIN_SRC emacs-lisp :tangle generated/main-2.el
@@ -1310,12 +1309,13 @@ In case we are renaming directories:
   (let* ((old-dir (to-dir old-FN)) (LOD (length old-dir))
          (new-dir (to-dir new-FN)))
     (dolist (rec (contained-in old-FN))
-      (let ((FN (aref rec plain)))
+      (let((FN (aref rec plain)))
         (when (and (<= LOD (length FN))
 	     (string= old-FN (substring FN 0 LOD)))
 	  (let ((new-name (concat new-dir (substring FN LOD))))
             (cloud-rename-file FN new-name)
-   (unless(BRDp old-FN)
+   (if(BRDp old-FN)
+ (clog :debug "(BRDp %s) is t!" old-FN)
 	    (new-action i-rename FN new-name)))))))))))
 (advice-add 'dired-rename-file :around #'DRF)
 #+END_SRC
