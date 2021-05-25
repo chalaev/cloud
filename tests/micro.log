@@ -1,29 +1,29 @@
-Loading /home/shalaev/Private/work/cloud/tests/ert.el (source)...
-:debug 19:30:09.000 debug-set:old values -->
-:debug 19:30:09.000 root-test-dir= nil
-:debug 19:30:09.000 updated values -->
-:debug 19:30:09.000 root-test-dir = /tmp/cloud.test.VMl9SN/
-Loading /home/shalaev/Private/work/cloud/tests/common.el (source)...
-Loading /home/shalaev/Private/work/cloud/tests/ert.el (source)...
-:debug 19:30:09.000 debug-set:old values -->
-:debug 19:30:09.000 root-test-dir= /tmp/cloud.test.VMl9SN/
-:debug 19:30:09.000 updated values -->
-:debug 19:30:09.000 root-test-dir = /tmp/cloud.test.VMl9SN/
-Running 1 tests (2021-05-24 19:30:09-0400)
-Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
-:debug 19:30:09.000 debug-set:old values -->
-:debug 19:30:09.000 ~= /home/shalaev/
-:debug 19:30:09.000 localhost= kalinin
-:debug 19:30:09.000 *config-directory*= /home/shalaev/.emacs.d/conf/
-:debug 19:30:09.000 updated values -->
-:debug 19:30:09.000 ~ = /tmp/cloud.test.VMl9SN/hostA/
-:debug 19:30:09.000 localhost = hostA
-:debug 19:30:09.000 *config-directory* = ~/.emacs.d/conf/
-:debug 19:30:09.000 1 local/host/conf= /tmp/cloud.test.VMl9SN/hostA/.emacs.d/conf/cloud/hostA.conf
-:debug 19:30:09.000 1 configured= yes
+Loading /home/shalaev/Private/work/done/cloud/tests/ert.el (source)...
+:debug 18:50:35.000 debug-set:old values -->
+:debug 18:50:35.000 root-test-dir= nil
+:debug 18:50:35.000 updated values -->
+:debug 18:50:35.000 root-test-dir = /tmp/cloud.test.oFPUqq/
+Loading /home/shalaev/Private/work/done/cloud/tests/common.el (source)...
+Loading /home/shalaev/Private/work/done/cloud/tests/ert.el (source)...
+:debug 18:50:35.000 debug-set:old values -->
+:debug 18:50:35.000 root-test-dir= /tmp/cloud.test.oFPUqq/
+:debug 18:50:35.000 updated values -->
+:debug 18:50:35.000 root-test-dir = /tmp/cloud.test.oFPUqq/
+Running 1 tests (2021-05-25 18:50:35-0400)
+Loading /home/shalaev/Private/work/done/cloud/tests/cloud.el (source)...
+:debug 18:50:35.000 debug-set:old values -->
+:debug 18:50:35.000 ~= /home/shalaev/
+:debug 18:50:35.000 localhost= kalinin
+:debug 18:50:35.000 *config-directory*= /home/shalaev/.emacs.d/conf/
+:debug 18:50:35.000 updated values -->
+:debug 18:50:35.000 ~ = /tmp/cloud.test.oFPUqq/hostA/
+:debug 18:50:35.000 localhost = hostA
+:debug 18:50:35.000 *config-directory* = ~/.emacs.d/conf/
+:debug 18:50:35.000 1 local/host/conf= /tmp/cloud.test.oFPUqq/hostA/.emacs.d/conf/cloud/hostA.conf
+:debug 18:50:35.000 1 configured= yes
 entering make-temp-file
 leaving make-temp-file
-:debug 19:30:09.000 2 configured= yes
+:debug 18:50:35.000 2 configured= yes
 entering enc-make-stanza
 leaving enc-make-stanza
 entering enc-make-stanza
@@ -34,10 +34,10 @@ entering enc-make-stanza
 leaving enc-make-stanza
 entering enc-make-stanza
 leaving enc-make-stanza
-:debug 19:30:09.000 leaving hostA with these files in /tmp/cloud.test.VMl9SN/mnt/remote/:
+:debug 18:50:35.000 leaving hostA with these files in /tmp/cloud.test.oFPUqq/mnt/remote/:
 . ..
    passed  1/1  enc-make-stanza
 
-Ran 1 tests, 1 results as expected (2021-05-24 19:30:09-0400)
+Ran 1 tests, 1 results as expected (2021-05-25 18:50:35-0400)
 
-:debug 19:30:09.000 flushing comments before quiting emacs
+:debug 18:50:35.000 flushing comments before quiting emacs

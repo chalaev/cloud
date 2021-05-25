@@ -1,6 +1,6 @@
 (ert-deftest rename-directory-and-files()
   "rename existing directory together with its content"
-(let(DN0 DN1 BN0 BN1)
+(let(DN0 BN0 DN1 BN1)
 (debug-environment
 (host> (car  hostnames) (cloud-start))
 (host> (cadr hostnames) (cloud-start))

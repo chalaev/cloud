@@ -2,7 +2,7 @@ OFNs = cloud 2
 ORGs = $(addsuffix .org, $(OFNs))
 export EMACS = emacs -q --no-site-file --batch
 
-packaged/cloud.el: version.org README.md packaged/ generated/cloud.el generated/from/cloud.org generated/from/2.org tests/micro.log tests/meso.log tests/macro-0.log tests/macro-1.log tests/macro-2.log tests/macro-3.log tests/macro-4.log shell/indices.sh
+packaged/cloud.el: version.org README.md packaged/ generated/cloud.el generated/from/cloud.org generated/from/2.org tests/micro.log tests/meso.log tests/macro-0.log tests/macro-1.log tests/macro-2.log tests/macro-3.log tests/macro-4.log tests/macro-5.log tests/macro-6.log shell/indices.sh
 	sed '/^;;test>;;/d' generated/cloud.el > $@
 	emacsclient -e '(untilde (cdr (assoc "local-packages" package-archives)))' | xargs cp $@
 	-@chgrp tmp $@

@@ -1,6 +1,13 @@
 Change log for the [[https://github.com/chalaev/cloud][cloud synchronizer]].
 
 * Localizing variables
+** fixing problems with actions (rename, delete, etc)
+*** 05/25
+1. improved functions =DRF= and =cloud-rename-file=
+2. now accumulating file records that should be clouded in new variable =tobe-uploaded= before calling =upload= from =save-Makefile=
+3. added macroscopic tests ## 5 and 6
+4. now =dec-make-stanza= requires creating directory for the file when needed
+
 ** code optimization
 *** 04/28
 1. Following [[https://github.com/chalaev/lisp-goodies/blob/master/change-log.org][lisp-goodies' change log]], replaced =update-conf= → =letc=.

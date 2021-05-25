@@ -1,23 +1,23 @@
-Loading /home/shalaev/Private/work/cloud/tests/ert.el (source)...
-:debug 19:30:28.000 debug-set:old values -->
-:debug 19:30:28.000 root-test-dir= nil
-:debug 19:30:28.000 updated values -->
-:debug 19:30:28.000 root-test-dir = /tmp/cloud.test.IJBuqr/
-Running 1 tests (2021-05-24 19:30:28-0400)
-Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
-:debug 19:30:28.000 debug-set:old values -->
-:debug 19:30:28.000 ~= /home/shalaev/
-:debug 19:30:28.000 localhost= kalinin
-:debug 19:30:28.000 *config-directory*= /home/shalaev/.emacs.d/conf/
-:debug 19:30:28.000 updated values -->
-:debug 19:30:28.000 ~ = /tmp/cloud.test.IJBuqr/hostA/
-:debug 19:30:28.000 localhost = hostA
-:debug 19:30:28.000 *config-directory* = ~/.emacs.d/conf/
-:debug 19:30:28.000 1 local/host/conf= /tmp/cloud.test.IJBuqr/hostA/.emacs.d/conf/cloud/hostA.conf
-:debug 19:30:28.000 1 configured= yes
-:debug 19:30:28.000 2 configured= yes
+Loading /home/shalaev/Private/work/done/cloud/tests/ert.el (source)...
+:debug 18:50:59.000 debug-set:old values -->
+:debug 18:50:59.000 root-test-dir= nil
+:debug 18:50:59.000 updated values -->
+:debug 18:50:59.000 root-test-dir = /tmp/cloud.test.yajT6b/
+Running 1 tests (2021-05-25 18:50:59-0400)
+Loading /home/shalaev/Private/work/done/cloud/tests/cloud.el (source)...
+:debug 18:50:59.000 debug-set:old values -->
+:debug 18:50:59.000 ~= /home/shalaev/
+:debug 18:50:59.000 localhost= kalinin
+:debug 18:50:59.000 *config-directory*= /home/shalaev/.emacs.d/conf/
+:debug 18:50:59.000 updated values -->
+:debug 18:50:59.000 ~ = /tmp/cloud.test.yajT6b/hostA/
+:debug 18:50:59.000 localhost = hostA
+:debug 18:50:59.000 *config-directory* = ~/.emacs.d/conf/
+:debug 18:50:59.000 1 local/host/conf= /tmp/cloud.test.yajT6b/hostA/.emacs.d/conf/cloud/hostA.conf
+:debug 18:50:59.000 1 configured= yes
+:debug 18:50:59.000 2 configured= yes
 entering cloud-start
-:debug 19:30:28.000 4 configured= yes
+:debug 18:50:59.000 4 configured= yes
 
  entering add-file
   entering cloud-locate-FN
@@ -26,19 +26,7 @@ entering cloud-start
   leaving cloud-get-file-properties
   entering new-file-in
   leaving new-file-in
-:info 19:30:28.000 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
-  entering upload
-   entering enc-make-stanza
-   leaving enc-make-stanza
-   entering make-cloud-older
-    entering cip-ext
-    leaving cip-ext
-    entering cloud-get-file-properties
-    leaving cloud-get-file-properties
-   leaving make-cloud-older
-   entering cip-ext
-   leaving cip-ext
-  leaving upload
+:info 18:50:59.000 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
  leaving add-file
  entering reset-Makefile
  leaving reset-Makefile
@@ -47,7 +35,7 @@ entering cloud-start
   leaving cloud-connected-p
   entering TS
   leaving TS
-:info 19:30:28.000 first run: creating /tmp/cloud.test.IJBuqr/hostA/.emacs.d/conf/cloud/hostA/all and AbC
+:info 18:50:59.000 first run: creating /tmp/cloud.test.yajT6b/hostA/.emacs.d/conf/cloud/hostA/all and AbC
   entering reset-Makefile
   leaving reset-Makefile
   entering write-all
@@ -64,34 +52,77 @@ entering cloud-start
 (Shell command succeeded with no output)
   leaving gpg-encrypt
   entering save-Makefile
+   entering upload
+    entering enc-make-stanza
+    leaving enc-make-stanza
+    entering make-cloud-older
+     entering cip-ext
+     leaving cip-ext
+     entering cloud-get-file-properties
+     leaving cloud-get-file-properties
+    leaving make-cloud-older
+    entering cip-ext
+    leaving cip-ext
+   leaving upload
    entering reset-Makefile
    leaving reset-Makefile
   leaving save-Makefile
-:debug 19:30:29.000 Makefile is /tmp/cloud.test.IJBuqr/hostA/.emacs.d/conf/cloud/cloud.mk
-:info 19:30:29.000 make started on 19:30:29.304
+:debug 18:51:00.000 Makefile /tmp/cloud.test.yajT6b/hostA/.emacs.d/conf/cloud/cloud.mk
+:debug 18:51:00.000 containing HD=/tmp/cloud.test.yajT6b/hostA/
+# ← home directory
+cloud=/tmp/cloud.test.yajT6b/mnt/remote/
+# ← remote directory
+password="12345"
+gpg=gpg --pinentry-mode loopback --batch --yes
+enc=$(gpg) --symmetric --passphrase $(password) -o
+dec=$(gpg) --decrypt   --passphrase $(password) -o
+localLog=$(HD).emacs.d/conf/cloud/hostA/log
+# ← log file
+MK=$(HD).emacs.d/conf/cloud/cloud.mk
+date=`date '+%m/%d %T'`
+
+%/:
+	[ -d $@ ] || mkdir -p $@
+
+$(HD).emacs.d/conf/cloud/pass.d/updated: $(HD).emacs.d/conf/cloud/individual.passes
+	awk '{print $$2 > "$(HD).emacs.d/conf/cloud/pass.d/"$$1}' $<
+	echo $(date) > $@
+	-chgrp -R tmp $(HD).emacs.d/conf/cloud/pass.d/*
+
+
+$(cloud)uHS.gpg: $(HD).emacs.d/conf/cloud/individual.passes
+	@$(enc) $@ $<
+	-@echo "$$(date): uploaded $<" >> $(localLog)
+
+all: /tmp/cloud.test.yajT6b/mnt/remote/uHS.gpg
+	echo "background (en/de)cryption on hostA finished $(date)" >> /tmp/cloud.test.yajT6b/mnt/remote/history
+	@sed 's/12345/******/g' $(HD).emacs.d/conf/cloud/cloud.mk > $(HD).emacs.d/conf/cloud/cloud.mk.bak
+
+
+:info 18:51:00.000 make started on 18:51:00.052
 (Shell command succeeded with no output)
-:info 19:30:29.000 make finished on 19:30:29.316
-:info 19:30:29.000 done syncing
+:info 18:51:00.000 make finished on 18:51:00.758
+:info 18:51:00.000 done syncing
   entering TS
   leaving TS
  leaving cloud-sync
 leaving cloud-start
-:debug 19:30:29.000 leaving hostA with these files in /tmp/cloud.test.IJBuqr/mnt/remote/:
-. .. AbC.gpg history
-Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
-:debug 19:30:29.000 debug-set:old values -->
-:debug 19:30:29.000 ~= /tmp/cloud.test.IJBuqr/hostA/
-:debug 19:30:29.000 localhost= kalinin
-:debug 19:30:29.000 *config-directory*= ~/.emacs.d/conf/
-:debug 19:30:29.000 updated values -->
-:debug 19:30:29.000 ~ = /tmp/cloud.test.IJBuqr/hostB/
-:debug 19:30:29.000 localhost = hostB
-:debug 19:30:29.000 *config-directory* = ~/.emacs.d/conf/
-:debug 19:30:29.000 1 local/host/conf= /tmp/cloud.test.IJBuqr/hostB/.emacs.d/conf/cloud/hostB.conf
-:debug 19:30:29.000 1 configured= yes
-:debug 19:30:29.000 2 configured= yes
+:debug 18:51:00.000 leaving hostA with these files in /tmp/cloud.test.yajT6b/mnt/remote/:
+. .. AbC.gpg history uHS.gpg
+Loading /home/shalaev/Private/work/done/cloud/tests/cloud.el (source)...
+:debug 18:51:00.000 debug-set:old values -->
+:debug 18:51:00.000 ~= /tmp/cloud.test.yajT6b/hostA/
+:debug 18:51:00.000 localhost= kalinin
+:debug 18:51:00.000 *config-directory*= ~/.emacs.d/conf/
+:debug 18:51:00.000 updated values -->
+:debug 18:51:00.000 ~ = /tmp/cloud.test.yajT6b/hostB/
+:debug 18:51:00.000 localhost = hostB
+:debug 18:51:00.000 *config-directory* = ~/.emacs.d/conf/
+:debug 18:51:00.000 1 local/host/conf= /tmp/cloud.test.yajT6b/hostB/.emacs.d/conf/cloud/hostB.conf
+:debug 18:51:00.000 1 configured= yes
+:debug 18:51:00.000 2 configured= yes
 entering cloud-start
-:debug 19:30:29.000 4 configured= yes
+:debug 18:51:00.000 4 configured= yes
 
  entering add-file
   entering cloud-locate-FN
@@ -100,19 +131,7 @@ entering cloud-start
   leaving cloud-get-file-properties
   entering new-file-in
   leaving new-file-in
-:info 19:30:29.000 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
-  entering upload
-   entering enc-make-stanza
-   leaving enc-make-stanza
-   entering make-cloud-older
-    entering cip-ext
-    leaving cip-ext
-    entering cloud-get-file-properties
-    leaving cloud-get-file-properties
-   leaving make-cloud-older
-   entering cip-ext
-   leaving cip-ext
-  leaving upload
+:info 18:51:00.000 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
  leaving add-file
  entering reset-Makefile
  leaving reset-Makefile
@@ -121,18 +140,23 @@ entering cloud-start
   leaving cloud-connected-p
   entering TS
   leaving TS
-:debug 19:30:29.000 updating /tmp/cloud.test.IJBuqr/hostB/.emacs.d/conf/cloud/hostB/all obsoleted by /tmp/cloud.test.IJBuqr/mnt/remote/AbC.gpg
+:debug 18:51:00.000 updating /tmp/cloud.test.yajT6b/hostB/.emacs.d/conf/cloud/hostB/all obsoleted by /tmp/cloud.test.yajT6b/mnt/remote/AbC.gpg
   entering gpg-decrypt
   leaving gpg-decrypt
   entering read-all
+:debug 18:51:01.000 read-all> file-DB named /tmp/cloud.test.yajT6b/hostB/.emacs.d/conf/cloud/hostB/all containing
+hostA
+
+"~/.emacs.d/conf/cloud/individual.passes" uHS 0 shalaev 432 "2021-05-25 18:50:59 EDT"
+
    entering cloud-host-add
     entering new-action
-:debug 19:30:30.000 new-action> clouded-hosts= hostB hostA
+:debug 18:51:01.000 new-action> clouded-hosts= hostB hostA
      entering format-action
       entering full-TS
       leaving full-TS
      leaving format-action
-:debug 19:30:30.000 new-action> "2021-05-24 19:30:30 EDT" 3 1 "hostB"  hostA
+:debug 18:51:01.000 new-action> "2021-05-25 18:51:01 EDT" 3 1 "hostB"  hostA
     leaving new-action
     entering add-to-actions
     leaving add-to-actions
@@ -166,34 +190,77 @@ entering cloud-start
 (Shell command succeeded with no output)
   leaving gpg-encrypt
   entering save-Makefile
+   entering upload
+    entering enc-make-stanza
+    leaving enc-make-stanza
+    entering make-cloud-older
+     entering cip-ext
+     leaving cip-ext
+     entering cloud-get-file-properties
+     leaving cloud-get-file-properties
+    leaving make-cloud-older
+    entering cip-ext
+    leaving cip-ext
+   leaving upload
    entering reset-Makefile
    leaving reset-Makefile
   leaving save-Makefile
-:debug 19:30:30.000 Makefile is /tmp/cloud.test.IJBuqr/hostB/.emacs.d/conf/cloud/cloud.mk
-:info 19:30:30.000 make started on 19:30:30.741
+:debug 18:51:02.000 Makefile /tmp/cloud.test.yajT6b/hostB/.emacs.d/conf/cloud/cloud.mk
+:debug 18:51:02.000 containing HD=/tmp/cloud.test.yajT6b/hostB/
+# ← home directory
+cloud=/tmp/cloud.test.yajT6b/mnt/remote/
+# ← remote directory
+password="12345"
+gpg=gpg --pinentry-mode loopback --batch --yes
+enc=$(gpg) --symmetric --passphrase $(password) -o
+dec=$(gpg) --decrypt   --passphrase $(password) -o
+localLog=$(HD).emacs.d/conf/cloud/hostB/log
+# ← log file
+MK=$(HD).emacs.d/conf/cloud/cloud.mk
+date=`date '+%m/%d %T'`
+
+%/:
+	[ -d $@ ] || mkdir -p $@
+
+$(HD).emacs.d/conf/cloud/pass.d/updated: $(HD).emacs.d/conf/cloud/individual.passes
+	awk '{print $$2 > "$(HD).emacs.d/conf/cloud/pass.d/"$$1}' $<
+	echo $(date) > $@
+	-chgrp -R tmp $(HD).emacs.d/conf/cloud/pass.d/*
+
+
+$(cloud)PBL.gpg: $(HD).emacs.d/conf/cloud/individual.passes
+	@$(enc) $@ $<
+	-@echo "$$(date): uploaded $<" >> $(localLog)
+
+all: /tmp/cloud.test.yajT6b/mnt/remote/PBL.gpg
+	echo "background (en/de)cryption on hostB finished $(date)" >> /tmp/cloud.test.yajT6b/mnt/remote/history
+	@sed 's/12345/******/g' $(HD).emacs.d/conf/cloud/cloud.mk > $(HD).emacs.d/conf/cloud/cloud.mk.bak
+
+
+:info 18:51:02.000 make started on 18:51:02.195
 (Shell command succeeded with no output)
-:info 19:30:30.000 make finished on 19:30:30.753
-:info 19:30:30.000 done syncing
+:info 18:51:02.000 make finished on 18:51:02.902
+:info 18:51:02.000 done syncing
   entering TS
   leaving TS
  leaving cloud-sync
 leaving cloud-start
-:debug 19:30:30.000 leaving hostB with these files in /tmp/cloud.test.IJBuqr/mnt/remote/:
-. .. AbC.gpg history
-Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
-:debug 19:30:30.000 debug-set:old values -->
-:debug 19:30:30.000 ~= /tmp/cloud.test.IJBuqr/hostB/
-:debug 19:30:30.000 localhost= kalinin
-:debug 19:30:30.000 *config-directory*= ~/.emacs.d/conf/
-:debug 19:30:30.000 updated values -->
-:debug 19:30:30.000 ~ = /tmp/cloud.test.IJBuqr/hostA/
-:debug 19:30:30.000 localhost = hostA
-:debug 19:30:30.000 *config-directory* = ~/.emacs.d/conf/
-:debug 19:30:30.000 1 local/host/conf= /tmp/cloud.test.IJBuqr/hostA/.emacs.d/conf/cloud/hostA.conf
-:debug 19:30:30.000 1 configured= yes
-:debug 19:30:30.000 2 configured= yes
+:debug 18:51:02.000 leaving hostB with these files in /tmp/cloud.test.yajT6b/mnt/remote/:
+. .. AbC.gpg PBL.gpg history uHS.gpg
+Loading /home/shalaev/Private/work/done/cloud/tests/cloud.el (source)...
+:debug 18:51:02.000 debug-set:old values -->
+:debug 18:51:02.000 ~= /tmp/cloud.test.yajT6b/hostB/
+:debug 18:51:02.000 localhost= kalinin
+:debug 18:51:02.000 *config-directory*= ~/.emacs.d/conf/
+:debug 18:51:02.000 updated values -->
+:debug 18:51:02.000 ~ = /tmp/cloud.test.yajT6b/hostA/
+:debug 18:51:02.000 localhost = hostA
+:debug 18:51:02.000 *config-directory* = ~/.emacs.d/conf/
+:debug 18:51:02.000 1 local/host/conf= /tmp/cloud.test.yajT6b/hostA/.emacs.d/conf/cloud/hostA.conf
+:debug 18:51:02.000 1 configured= yes
+:debug 18:51:02.000 2 configured= yes
 entering cloud-start
-:debug 19:30:30.000 4 configured= yes
+:debug 18:51:02.000 4 configured= yes
 
  entering add-file
   entering cloud-locate-FN
@@ -202,23 +269,16 @@ entering cloud-start
   leaving cloud-get-file-properties
   entering new-file-in
   leaving new-file-in
-:info 19:30:30.000 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
-  entering upload
-   entering enc-make-stanza
-   leaving enc-make-stanza
-   entering make-cloud-older
-    entering cip-ext
-    leaving cip-ext
-    entering cloud-get-file-properties
-    leaving cloud-get-file-properties
-   leaving make-cloud-older
-   entering cip-ext
-   leaving cip-ext
-  leaving upload
+:info 18:51:02.000 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
  leaving add-file
  entering reset-Makefile
  leaving reset-Makefile
  entering read-all
+:debug 18:51:02.000 read-all> file-DB named /tmp/cloud.test.yajT6b/hostA/.emacs.d/conf/cloud/hostA/all containing
+hostA
+
+"~/.emacs.d/conf/cloud/individual.passes" uHS 0 shalaev 432 "2021-05-25 18:50:59 EDT"
+
   entering str-to-DBrec
    entering parse-time
    leaving parse-time
@@ -235,11 +295,17 @@ entering cloud-start
   leaving cloud-connected-p
   entering TS
   leaving TS
-:debug 19:30:30.000 updating /tmp/cloud.test.IJBuqr/hostA/.emacs.d/conf/cloud/hostA/all obsoleted by /tmp/cloud.test.IJBuqr/mnt/remote/AbC.gpg
+:debug 18:51:02.000 updating /tmp/cloud.test.yajT6b/hostA/.emacs.d/conf/cloud/hostA/all obsoleted by /tmp/cloud.test.yajT6b/mnt/remote/AbC.gpg
   entering gpg-decrypt
   leaving gpg-decrypt
   entering read-all
-:debug 19:30:31.000 read-all> action string= "2021-05-24 19:30:30 EDT" 3 1 "hostB"  hostB hostA
+:debug 18:51:03.000 read-all> file-DB named /tmp/cloud.test.yajT6b/hostA/.emacs.d/conf/cloud/hostA/all containing
+hostB hostA
+"2021-05-25 18:51:01 EDT" 3 1 "hostB"  hostB hostA
+
+"~/.emacs.d/conf/cloud/individual.passes" PBL 0 shalaev 432 "2021-05-25 18:51:00 EDT"
+
+:debug 18:51:03.000 read-all> action string= "2021-05-25 18:51:01 EDT" 3 1 "hostB"  hostB hostA
    entering parse-action
     entering begins-with
      entering begins-with*
@@ -267,13 +333,13 @@ entering cloud-start
      entering begins-with*
      leaving begins-with*
     leaving begins-with
-:info 19:30:31.000 ... will later be referenced as 05/24 19:30:30
+:info 18:51:03.000 ... will later be referenced as 05/25 18:51:01
    leaving parse-action
    entering format-action
     entering full-TS
     leaving full-TS
    leaving format-action
-:debug 19:30:31.000 read-all> format(parsed action)= "2021-05-24 19:30:30 EDT" 3 1 "hostB"  hostB hostA
+:debug 18:51:03.000 read-all> format(parsed action)= "2021-05-25 18:51:01 EDT" 3 1 "hostB"  hostB hostA
    entering perform
     entering TS
     leaving TS
@@ -282,7 +348,7 @@ entering cloud-start
      leaving full-TS
     leaving format-action
    leaving perform
-:info 19:30:31.000 sucessfully performed action 05/24 19:30:30
+:info 18:51:03.000 sucessfully performed action 05/25 18:51:01
    entering str-to-DBrec
     entering parse-time
     leaving parse-time
@@ -312,23 +378,77 @@ entering cloud-start
 (Shell command succeeded with no output)
   leaving gpg-encrypt
   entering save-Makefile
+   entering upload
+    entering enc-make-stanza
+    leaving enc-make-stanza
+    entering make-cloud-older
+     entering cip-ext
+     leaving cip-ext
+     entering cloud-get-file-properties
+     leaving cloud-get-file-properties
+    leaving make-cloud-older
+    entering cip-ext
+    leaving cip-ext
+   leaving upload
    entering reset-Makefile
    leaving reset-Makefile
   leaving save-Makefile
-:debug 19:30:32.000 Makefile is /tmp/cloud.test.IJBuqr/hostA/.emacs.d/conf/cloud/cloud.mk
-:info 19:30:32.000 make started on 19:30:32.199
+:debug 18:51:04.000 Makefile /tmp/cloud.test.yajT6b/hostA/.emacs.d/conf/cloud/cloud.mk
+:debug 18:51:04.000 containing HD=/tmp/cloud.test.yajT6b/hostA/
+# ← home directory
+cloud=/tmp/cloud.test.yajT6b/mnt/remote/
+# ← remote directory
+password="12345"
+gpg=gpg --pinentry-mode loopback --batch --yes
+enc=$(gpg) --symmetric --passphrase $(password) -o
+dec=$(gpg) --decrypt   --passphrase $(password) -o
+localLog=$(HD).emacs.d/conf/cloud/hostA/log
+# ← log file
+MK=$(HD).emacs.d/conf/cloud/cloud.mk
+date=`date '+%m/%d %T'`
+
+%/:
+	[ -d $@ ] || mkdir -p $@
+
+$(HD).emacs.d/conf/cloud/pass.d/updated: $(HD).emacs.d/conf/cloud/individual.passes
+	awk '{print $$2 > "$(HD).emacs.d/conf/cloud/pass.d/"$$1}' $<
+	echo $(date) > $@
+	-chgrp -R tmp $(HD).emacs.d/conf/cloud/pass.d/*
+
+
+$(cloud)6e2.gpg: $(HD).emacs.d/conf/cloud/individual.passes
+	@$(enc) $@ $<
+	-@echo "$$(date): uploaded $<" >> $(localLog)
+
+all: /tmp/cloud.test.yajT6b/mnt/remote/6e2.gpg
+	echo "background (en/de)cryption on hostA finished $(date)" >> /tmp/cloud.test.yajT6b/mnt/remote/history
+	@sed 's/12345/******/g' $(HD).emacs.d/conf/cloud/cloud.mk > $(HD).emacs.d/conf/cloud/cloud.mk.bak
+
+
+:info 18:51:04.000 make started on 18:51:04.352
 (Shell command succeeded with no output)
-:info 19:30:32.000 make finished on 19:30:32.209
-:info 19:30:32.000 done syncing
+:info 18:51:05.000 make finished on 18:51:05.062
+:info 18:51:05.000 done syncing
   entering TS
   leaving TS
  leaving cloud-sync
 leaving cloud-start
 entering debug-remote-actions
 leaving debug-remote-actions
-:debug 19:30:32.000 test rename-directory> dired-rename-file ~/dir-1a --> ~/dir-1a.1
+:debug 18:51:05.000 test rename-directory> dired-rename-file ~/dir-1a --> ~/dir-1a.1
 entering DRF
-:debug 19:30:32.000 DRF> ~/dir-1a --> ~/dir-1a.1
+:debug 18:51:05.000 DRF> ~/dir-1a --> ~/dir-1a.1
+:debug 18:51:05.000 DRF> ~/dir-1a DOES NOT exist!
+ entering BRDp
+ leaving BRDp
+ entering new-action
+:debug 18:51:05.000 new-action> clouded-hosts= hostB hostA
+  entering format-action
+   entering full-TS
+   leaving full-TS
+  leaving format-action
+:debug 18:51:05.000 new-action> "2021-05-25 18:51:05 EDT" 2 2 "~/dir-1a" "~/dir-1a.1"  hostB
+ leaving new-action
  entering cloud-rename-file
   entering cloud-locate-FN
    entering plain-name
@@ -338,18 +458,9 @@ entering DRF
    entering plain-name
    leaving plain-name
   leaving cloud-locate-FN
-:debug 19:30:32.000 cloud-rename-file> mv ~/dir-1a ~/dir-1a.1
+:debug 18:51:05.000 cloud-rename-file> 0  ~/dir-1a (N/A) -->  ~/dir-1a.1 (N/A)
+:debug 18:51:05.000 cloud-rename-file> mv ~/dir-1a ~/dir-1a.1
  leaving cloud-rename-file
- entering BRDp
- leaving BRDp
- entering new-action
-:debug 19:30:32.000 new-action> clouded-hosts= hostB hostA
-  entering format-action
-   entering full-TS
-   leaving full-TS
-  leaving format-action
-:debug 19:30:32.000 new-action> "2021-05-24 19:30:32 EDT" 2 2 "~/dir-1a" "~/dir-1a.1"  hostB
- leaving new-action
 leaving DRF
 entering debug-remote-actions
 leaving debug-remote-actions
@@ -359,7 +470,7 @@ entering format-action
  entering full-TS
  leaving full-TS
 leaving format-action
-:info 19:30:32.000 test rename-directory> rename actions: "2021-05-24 19:30:32 EDT" 2 2 "~/dir-1a" "~/dir-1a.1"  hostB
+:info 18:51:05.000 test rename-directory> rename actions: "2021-05-25 18:51:05 EDT" 2 2 "~/dir-1a" "~/dir-1a.1"  hostB
 entering cloud-sync
  entering cloud-connected-p
  leaving cloud-connected-p
@@ -386,31 +497,57 @@ entering cloud-sync
   entering reset-Makefile
   leaving reset-Makefile
  leaving save-Makefile
-:debug 19:30:32.000 Makefile is /tmp/cloud.test.IJBuqr/hostA/.emacs.d/conf/cloud/cloud.mk
-:info 19:30:32.000 make started on 19:30:32.915
+:debug 18:51:05.000 Makefile /tmp/cloud.test.yajT6b/hostA/.emacs.d/conf/cloud/cloud.mk
+:debug 18:51:05.000 containing HD=/tmp/cloud.test.yajT6b/hostA/
+# ← home directory
+cloud=/tmp/cloud.test.yajT6b/mnt/remote/
+# ← remote directory
+password="12345"
+gpg=gpg --pinentry-mode loopback --batch --yes
+enc=$(gpg) --symmetric --passphrase $(password) -o
+dec=$(gpg) --decrypt   --passphrase $(password) -o
+localLog=$(HD).emacs.d/conf/cloud/hostA/log
+# ← log file
+MK=$(HD).emacs.d/conf/cloud/cloud.mk
+date=`date '+%m/%d %T'`
+
+%/:
+	[ -d $@ ] || mkdir -p $@
+
+$(HD).emacs.d/conf/cloud/pass.d/updated: $(HD).emacs.d/conf/cloud/individual.passes
+	awk '{print $$2 > "$(HD).emacs.d/conf/cloud/pass.d/"$$1}' $<
+	echo $(date) > $@
+	-chgrp -R tmp $(HD).emacs.d/conf/cloud/pass.d/*
+
+all:
+	echo "background (en/de)cryption on hostA finished $(date)" >> /tmp/cloud.test.yajT6b/mnt/remote/history
+	@sed 's/12345/******/g' $(HD).emacs.d/conf/cloud/cloud.mk > $(HD).emacs.d/conf/cloud/cloud.mk.bak
+
+
+:info 18:51:05.000 make started on 18:51:05.788
 (Shell command succeeded with no output)
-:info 19:30:32.000 make finished on 19:30:32.925
-:info 19:30:32.000 done syncing
+:info 18:51:05.000 make finished on 18:51:05.799
+:info 18:51:05.000 done syncing
  entering TS
  leaving TS
 leaving cloud-sync
-:debug 19:30:32.000 leaving hostA with these files in /tmp/cloud.test.IJBuqr/mnt/remote/:
-. .. AbC.gpg history
-:info 19:30:32.000 finished with host hostA, switching to hostB
-Loading /home/shalaev/Private/work/cloud/tests/cloud.el (source)...
-:debug 19:30:32.000 debug-set:old values -->
-:debug 19:30:32.000 ~= /tmp/cloud.test.IJBuqr/hostA/
-:debug 19:30:32.000 localhost= kalinin
-:debug 19:30:32.000 *config-directory*= ~/.emacs.d/conf/
-:debug 19:30:32.000 updated values -->
-:debug 19:30:32.000 ~ = /tmp/cloud.test.IJBuqr/hostB/
-:debug 19:30:32.000 localhost = hostB
-:debug 19:30:32.000 *config-directory* = ~/.emacs.d/conf/
-:debug 19:30:32.000 1 local/host/conf= /tmp/cloud.test.IJBuqr/hostB/.emacs.d/conf/cloud/hostB.conf
-:debug 19:30:32.000 1 configured= yes
-:debug 19:30:32.000 2 configured= yes
+:debug 18:51:05.000 leaving hostA with these files in /tmp/cloud.test.yajT6b/mnt/remote/:
+. .. 6e2.gpg AbC.gpg PBL.gpg history uHS.gpg
+:info 18:51:05.000 finished with host hostA, switching to hostB
+Loading /home/shalaev/Private/work/done/cloud/tests/cloud.el (source)...
+:debug 18:51:05.000 debug-set:old values -->
+:debug 18:51:05.000 ~= /tmp/cloud.test.yajT6b/hostA/
+:debug 18:51:05.000 localhost= kalinin
+:debug 18:51:05.000 *config-directory*= ~/.emacs.d/conf/
+:debug 18:51:05.000 updated values -->
+:debug 18:51:05.000 ~ = /tmp/cloud.test.yajT6b/hostB/
+:debug 18:51:05.000 localhost = hostB
+:debug 18:51:05.000 *config-directory* = ~/.emacs.d/conf/
+:debug 18:51:05.000 1 local/host/conf= /tmp/cloud.test.yajT6b/hostB/.emacs.d/conf/cloud/hostB.conf
+:debug 18:51:05.000 1 configured= yes
+:debug 18:51:05.000 2 configured= yes
 entering cloud-start
-:debug 19:30:32.000 4 configured= yes
+:debug 18:51:05.000 4 configured= yes
 
  entering add-file
   entering cloud-locate-FN
@@ -419,24 +556,18 @@ entering cloud-start
   leaving cloud-get-file-properties
   entering new-file-in
   leaving new-file-in
-:info 19:30:32.000 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
-  entering upload
-   entering enc-make-stanza
-   leaving enc-make-stanza
-   entering make-cloud-older
-    entering cip-ext
-    leaving cip-ext
-    entering cloud-get-file-properties
-    leaving cloud-get-file-properties
-   leaving make-cloud-older
-   entering cip-ext
-   leaving cip-ext
-  leaving upload
+:info 18:51:05.000 file ~/.emacs.d/conf/cloud/individual.passes is now clouded
  leaving add-file
  entering reset-Makefile
  leaving reset-Makefile
  entering read-all
-:debug 19:30:32.000 read-all> action string= "2021-05-24 19:30:30 EDT" 3 1 "hostB"  hostB hostA
+:debug 18:51:05.000 read-all> file-DB named /tmp/cloud.test.yajT6b/hostB/.emacs.d/conf/cloud/hostB/all containing
+hostB hostA
+"2021-05-25 18:51:01 EDT" 3 1 "hostB"  hostB hostA
+
+"~/.emacs.d/conf/cloud/individual.passes" PBL 0 shalaev 432 "2021-05-25 18:51:00 EDT"
+
+:debug 18:51:05.000 read-all> action string= "2021-05-25 18:51:01 EDT" 3 1 "hostB"  hostB hostA
   entering parse-action
    entering begins-with
     entering begins-with*
@@ -464,13 +595,13 @@ entering cloud-start
     entering begins-with*
     leaving begins-with*
    leaving begins-with
-:info 19:30:32.000 ... will later be referenced as 05/24 19:30:30
+:info 18:51:05.000 ... will later be referenced as 05/25 18:51:01
   leaving parse-action
   entering format-action
    entering full-TS
    leaving full-TS
   leaving format-action
-:debug 19:30:32.000 read-all> format(parsed action)= "2021-05-24 19:30:30 EDT" 3 1 "hostB"  hostB hostA
+:debug 18:51:05.000 read-all> format(parsed action)= "2021-05-25 18:51:01 EDT" 3 1 "hostB"  hostB hostA
   entering perform
    entering TS
    leaving TS
@@ -479,7 +610,7 @@ entering cloud-start
     leaving full-TS
    leaving format-action
   leaving perform
-:info 19:30:32.000 sucessfully performed action 05/24 19:30:30
+:info 18:51:05.000 sucessfully performed action 05/25 18:51:01
   entering str-to-DBrec
    entering parse-time
    leaving parse-time
@@ -496,11 +627,17 @@ entering cloud-start
   leaving cloud-connected-p
   entering TS
   leaving TS
-:debug 19:30:32.000 updating /tmp/cloud.test.IJBuqr/hostB/.emacs.d/conf/cloud/hostB/all obsoleted by /tmp/cloud.test.IJBuqr/mnt/remote/AbC.gpg
+:debug 18:51:05.000 updating /tmp/cloud.test.yajT6b/hostB/.emacs.d/conf/cloud/hostB/all obsoleted by /tmp/cloud.test.yajT6b/mnt/remote/AbC.gpg
   entering gpg-decrypt
   leaving gpg-decrypt
   entering read-all
-:debug 19:30:33.000 read-all> action string= "2021-05-24 19:30:32 EDT" 2 2 "~/dir-1a" "~/dir-1a.1"  hostB
+:debug 18:51:06.000 read-all> file-DB named /tmp/cloud.test.yajT6b/hostB/.emacs.d/conf/cloud/hostB/all containing
+hostB hostA
+"2021-05-25 18:51:05 EDT" 2 2 "~/dir-1a" "~/dir-1a.1"  hostB
+
+"~/.emacs.d/conf/cloud/individual.passes" 6e2 0 shalaev 432 "2021-05-25 18:50:59 EDT"
+
+:debug 18:51:06.000 read-all> action string= "2021-05-25 18:51:05 EDT" 2 2 "~/dir-1a" "~/dir-1a.1"  hostB
    entering parse-action
     entering begins-with
      entering begins-with*
@@ -530,13 +667,13 @@ entering cloud-start
      entering begins-with*
      leaving begins-with*
     leaving begins-with
-:info 19:30:33.000 ... will later be referenced as 05/24 19:30:32
+:info 18:51:06.000 ... will later be referenced as 05/25 18:51:05
    leaving parse-action
    entering format-action
     entering full-TS
     leaving full-TS
    leaving format-action
-:debug 19:30:33.000 read-all> format(parsed action)= "2021-05-24 19:30:32 EDT" 2 2 "~/dir-1a" "~/dir-1a.1"  hostB
+:debug 18:51:06.000 read-all> format(parsed action)= "2021-05-25 18:51:05 EDT" 2 2 "~/dir-1a" "~/dir-1a.1"  hostB
    entering perform
     entering TS
     leaving TS
@@ -544,19 +681,25 @@ entering cloud-start
      entering full-TS
      leaving full-TS
     leaving format-action
-    entering cloud-rename-file
-     entering cloud-locate-FN
-      entering plain-name
-      leaving plain-name
-     leaving cloud-locate-FN
-     entering cloud-locate-FN
-      entering plain-name
-      leaving plain-name
-     leaving cloud-locate-FN
-:debug 19:30:33.000 cloud-rename-file> mv /tmp/cloud.test.IJBuqr/hostB/dir-1a /tmp/cloud.test.IJBuqr/hostB/dir-1a.1
-    leaving cloud-rename-file
+    entering DRF
+:debug 18:51:06.000 DRF> /tmp/cloud.test.yajT6b/hostB/dir-1a --> /tmp/cloud.test.yajT6b/hostB/dir-1a.1
+:debug 18:51:06.000 DRF> /tmp/cloud.test.yajT6b/hostB/dir-1a exists
+     entering BRDp
+     leaving BRDp
+     entering new-action
+:debug 18:51:06.000 new-action> clouded-hosts= hostB hostA
+      entering format-action
+       entering full-TS
+       leaving full-TS
+      leaving format-action
+:debug 18:51:06.000 new-action> "2021-05-25 18:51:06 EDT" 2 2 "~/dir-1a" "~/dir-1a.1"  hostA
+     leaving new-action
+:debug 18:51:06.000 DRF> renaming a directory: /tmp/cloud.test.yajT6b/hostB/dir-1a/ --> /tmp/cloud.test.yajT6b/hostB/dir-1a.1/; loop over files inside it
+     entering contained-in
+     leaving contained-in
+    leaving DRF
    leaving perform
-:info 19:30:33.000 sucessfully performed action 05/24 19:30:32
+:error 18:51:06.000  action 05/25 18:51:05 failed, will NOT retry it
    entering str-to-DBrec
     entering parse-time
     leaving parse-time
@@ -578,6 +721,10 @@ entering cloud-start
      entering full-TS
      leaving full-TS
     leaving format-action
+    entering format-action
+     entering full-TS
+     leaving full-TS
+    leaving format-action
    leaving print-actions
    entering format-file
    leaving format-file
@@ -586,23 +733,66 @@ entering cloud-start
 (Shell command succeeded with no output)
   leaving gpg-encrypt
   entering save-Makefile
+   entering upload
+    entering enc-make-stanza
+    leaving enc-make-stanza
+    entering make-cloud-older
+     entering cip-ext
+     leaving cip-ext
+     entering cloud-get-file-properties
+     leaving cloud-get-file-properties
+    leaving make-cloud-older
+    entering cip-ext
+    leaving cip-ext
+   leaving upload
    entering reset-Makefile
    leaving reset-Makefile
   leaving save-Makefile
-:debug 19:30:34.000 Makefile is /tmp/cloud.test.IJBuqr/hostB/.emacs.d/conf/cloud/cloud.mk
-:info 19:30:34.000 make started on 19:30:34.380
+:debug 18:51:07.000 Makefile /tmp/cloud.test.yajT6b/hostB/.emacs.d/conf/cloud/cloud.mk
+:debug 18:51:07.000 containing HD=/tmp/cloud.test.yajT6b/hostB/
+# ← home directory
+cloud=/tmp/cloud.test.yajT6b/mnt/remote/
+# ← remote directory
+password="12345"
+gpg=gpg --pinentry-mode loopback --batch --yes
+enc=$(gpg) --symmetric --passphrase $(password) -o
+dec=$(gpg) --decrypt   --passphrase $(password) -o
+localLog=$(HD).emacs.d/conf/cloud/hostB/log
+# ← log file
+MK=$(HD).emacs.d/conf/cloud/cloud.mk
+date=`date '+%m/%d %T'`
+
+%/:
+	[ -d $@ ] || mkdir -p $@
+
+$(HD).emacs.d/conf/cloud/pass.d/updated: $(HD).emacs.d/conf/cloud/individual.passes
+	awk '{print $$2 > "$(HD).emacs.d/conf/cloud/pass.d/"$$1}' $<
+	echo $(date) > $@
+	-chgrp -R tmp $(HD).emacs.d/conf/cloud/pass.d/*
+
+
+$(cloud)c8G.gpg: $(HD).emacs.d/conf/cloud/individual.passes
+	@$(enc) $@ $<
+	-@echo "$$(date): uploaded $<" >> $(localLog)
+
+all: /tmp/cloud.test.yajT6b/mnt/remote/c8G.gpg
+	echo "background (en/de)cryption on hostB finished $(date)" >> /tmp/cloud.test.yajT6b/mnt/remote/history
+	@sed 's/12345/******/g' $(HD).emacs.d/conf/cloud/cloud.mk > $(HD).emacs.d/conf/cloud/cloud.mk.bak
+
+
+:info 18:51:07.000 make started on 18:51:07.231
 (Shell command succeeded with no output)
-:info 19:30:34.000 make finished on 19:30:34.392
-:info 19:30:34.000 done syncing
+:info 18:51:07.000 make finished on 18:51:07.965
+:info 18:51:07.000 done syncing
   entering TS
   leaving TS
  leaving cloud-sync
 leaving cloud-start
-:debug 19:30:34.000 leaving hostB with these files in /tmp/cloud.test.IJBuqr/mnt/remote/:
-. .. AbC.gpg history
+:debug 18:51:07.000 leaving hostB with these files in /tmp/cloud.test.yajT6b/mnt/remote/:
+. .. 6e2.gpg AbC.gpg PBL.gpg c8G.gpg history uHS.gpg
    passed  1/1  rename-directory
 
-Ran 1 tests, 1 results as expected (2021-05-24 19:30:34-0400)
+Ran 1 tests, 1 results as expected (2021-05-25 18:51:07-0400)
 
 entering before-exit
  entering cloud-sync
@@ -614,13 +804,39 @@ entering before-exit
    entering reset-Makefile
    leaving reset-Makefile
   leaving save-Makefile
-:debug 19:30:34.000 Makefile is /tmp/cloud.test.IJBuqr/hostB/.emacs.d/conf/cloud/cloud.mk
-:info 19:30:34.000 make started on 19:30:34.398
+:debug 18:51:07.000 Makefile /tmp/cloud.test.yajT6b/hostB/.emacs.d/conf/cloud/cloud.mk
+:debug 18:51:07.000 containing HD=/tmp/cloud.test.yajT6b/hostB/
+# ← home directory
+cloud=/tmp/cloud.test.yajT6b/mnt/remote/
+# ← remote directory
+password="12345"
+gpg=gpg --pinentry-mode loopback --batch --yes
+enc=$(gpg) --symmetric --passphrase $(password) -o
+dec=$(gpg) --decrypt   --passphrase $(password) -o
+localLog=$(HD).emacs.d/conf/cloud/hostB/log
+# ← log file
+MK=$(HD).emacs.d/conf/cloud/cloud.mk
+date=`date '+%m/%d %T'`
+
+%/:
+	[ -d $@ ] || mkdir -p $@
+
+$(HD).emacs.d/conf/cloud/pass.d/updated: $(HD).emacs.d/conf/cloud/individual.passes
+	awk '{print $$2 > "$(HD).emacs.d/conf/cloud/pass.d/"$$1}' $<
+	echo $(date) > $@
+	-chgrp -R tmp $(HD).emacs.d/conf/cloud/pass.d/*
+
+all:
+	echo "background (en/de)cryption on hostB finished $(date)" >> /tmp/cloud.test.yajT6b/mnt/remote/history
+	@sed 's/12345/******/g' $(HD).emacs.d/conf/cloud/cloud.mk > $(HD).emacs.d/conf/cloud/cloud.mk.bak
+
+
+:info 18:51:07.000 make started on 18:51:07.970
 (Shell command succeeded with no output)
-:info 19:30:34.000 make finished on 19:30:34.408
-:info 19:30:34.000 done syncing
+:info 18:51:07.000 make finished on 18:51:07.979
+:info 18:51:07.000 done syncing
   entering TS
   leaving TS
  leaving cloud-sync
 leaving before-exit
-:debug 19:30:34.000 flushing comments before quiting emacs
+:debug 18:51:07.000 flushing comments before quiting emacs

@@ -3,7 +3,7 @@
 ;; Copyright (C) 2021 Oleg Shalaev <oleg@chalaev.com>
 
 ;; Author:     Oleg Shalaev <oleg@chalaev.com>
-;; Version:    2.0.3
+;; Version:    2.1.0
 
 ;; Package-Requires: (cl epg dired-aux timezone diary-lib subr-x shalaev)
 ;; Keywords:   syncronization, cloud, gpg, encryption
@@ -22,7 +22,8 @@
 (mapcar #'require '(cl-lib dired-aux timezone diary-lib subr-x shalaev nadvice))
 ;;(require 'el-debug)
 (let((localhost (system-name))
-file-DB added-files clouded-hosts remote-actions); actions to be saved in the cloud
+file-DB added-files clouded-hosts tobe-uploaded
+remote-actions); actions to be saved in the cloud
 
 (let*(
  (local-dir (need-dir *config-directory* "cloud"))
@@ -271,6 +272,11 @@ important-msgs; these messages will be typically printed at the end of the proce
 (inl "MK=%s" (untilde cloud-mk "$(HD)"))
 (inl "date=`date '+%%m/%%d %%T'`
 ")
+
+(inl "%%/:
+\t[ -d $@ ] || mkdir -p $@
+")
+
 (inl (concat (format "%s: %s
 \tawk '{print $$2 > %S$$1}' $<
 \techo $(date) > $@
@@ -454,21 +460,21 @@ CF)))))
   (clog :debug "read-all/upload: local %s(%s) is younger than %s.gpg(%s)"
   (aref local-file-rec plain) (TS(aref local-file-rec mtime))
   (aref CF cipher) (TS(aref CF mtime)))
-(upload CF)))))))
+(push CF tobe-uploaded)))))))
 t))))); end of read-all
 
 (defun cloud-touch(&rest FNs)
 "called when the files named FNs are changed"
   (interactive)
 (dolist(FN FNs)
-(let((FR (cloud-locate-FN FN)))
+(let((FR(cloud-locate-FN FN)))
 (unless FR
   (auto-add-file FN)
   (setf FR (cloud-locate-FN FN)))
 (when FR
     (aset FR mtime (current-time))
     (clog :debug "touch/upload: %s(%s)" FN (TS(aref FR mtime)))
-    (upload FR)))))
+    (push FR tobe-uploaded)))))
 (defun on-current-buffer-save()
   (when-let ((FN (buffer-file-name)))
     (cloud-touch FN)))
@@ -526,54 +532,54 @@ $(cloud)%s.gpg: %s
 "))))
 
 (defun dec-make-stanza(file-record)
-  (when-let((XYZ(aref file-record cipher)) (FN(h(aref file-record plain))))
-    (let((file-ext(file-name-extension FN)))
+  (when-let((XYZ(aref file-record cipher)) (FN0(aref file-record plain)))
+    (let((file-ext(file-name-extension FN0)) (DN(file-name-directory(untilde FN0))) (FN(h FN0)))
 (concat (cond
 
 ((string= "gpg" file-ext)
 (format "
-%s: $(cloud)%s.gpg
+%s: $(cloud)%s.gpg %s
 \tcp $< $@
-" FN XYZ))
+" FN XYZ DN))
 
 ((member file-ext '("jpg" "jpeg" "png"))
 (format "
-%s: $(cloud)%s.png  %s
+%s: $(cloud)%s.png %s %s
 \tconvert $< -decipher %s%s $@
 "
-FN XYZ (h updated)
+FN XYZ (h updated) DN
 (h pass-d) XYZ))
 
 ((member file-ext '("gz" "tgz"))
-(let ((gunzipped (make-temp-file "emacs-cloud.")))
+(let((gunzipped (make-temp-file "emacs-cloud.")))
   (format "
-%s:$(cloud)%s.gpg
+%s: $(cloud)%s.gpg %s
 \t@$(dec) $@ $<
 
 %s: %s
 \tcat $< | gzip > $@
 \trm $<
 " 
-gunzipped XYZ
+gunzipped XYZ DN
 FN gunzipped)))
 
 ((member file-ext '("bz2" "tbz"))
-(let ((gunzipped (make-temp-file "emacs-cloud.")))
+(let((gunzipped (make-temp-file "emacs-cloud.")))
   (format "
-%s:$(cloud)%s.gpg
+%s: $(cloud)%s.gpg %s
 \t@$(dec) $@ $<
 
 %s: %s
 \tcat $< | bzip2 > $@
 \trm $<
 " 
-gunzipped XYZ
+gunzipped XYZ DN
 FN gunzipped)))
 
 (t (format "
-%s: $(cloud)%s.gpg
+%s: $(cloud)%s.gpg %s
 \t@$(dec) $@ $<
-" FN XYZ)))
+" FN XYZ DN)))
 
 (format "\t-chgrp %s $@
 \t-chmod %o $@
@@ -605,6 +611,7 @@ FN gunzipped)))
 (time-add local-mtime (- -60 (random 6000)))))))
 
 (defun upload(FR)
+"creating stnze with uploaded files"
 (needs ((FN (tilde(aref FR plain)) (clog :error "upload: file lacks plain name"))
 	(CN (aref FR cipher) (clog :error "upload: file %s lacks cipher name" FN))
 	(stanza (enc-make-stanza FR) (clog :error "upload: could not create stanza for %s" FN)))
@@ -617,6 +624,7 @@ FN gunzipped)))
 
 (defun save-Makefile()
 "flushing make file"
+(while tobe-uploaded (upload (pop tobe-uploaded)))
 (inl "all:%s
 \techo \"background (en/de)cryption on %s finished $(date)\" >> %s
 \t@sed 's/%s/******/g' %s > %s.bak
@@ -637,7 +645,6 @@ password (h cloud-mk) (h cloud-mk))
   (set-file-times local/all (current-time)); touch local file DB
   (save-Makefile)
 (let((make (format "HOME=%s make -j%d -ikf %s all &> %s.log" (directory-file-name ~) number-of-CPU-cores (untilde cloud-mk) (untilde cloud-mk))))
-(clog :debug "Makefile is %s" (untilde cloud-mk))
 
 (clog :info "make started on %s" (format-time-string "%H:%M:%S.%3N" (current-time)))
 (ifn(= 0 (shell-command make)) (clog :error "make file %s containing
@@ -700,7 +707,7 @@ nil local/log t)
       (i-host-add (dolist (arg arguments) (push-new clouded-hosts arg)) t)
       (i-forget (cloud-forget-many arguments) t)
       (i-delete (cloud-rm arguments) t)
-      (i-rename (cloud-rename-file (untilde(car arguments)) (untilde(cadr arguments))))
+      (i-rename (dired-rename-file (untilde(car arguments)) (untilde(cadr arguments)) t)); 05/25
 
 (i-share (when (= 1 (length HNs)) (cloud-forget-many arguments)))
 (otherwise (clog :error "unknown action %d" (aref action i-ID))))))
@@ -815,7 +822,7 @@ nil local/log t)
     (push FN added-files)
     (aset GFP cipher CN)
     (push GFP file-DB) (clog :info "file %s is now clouded" FN)
-    (upload GFP)
+    (push GFP tobe-uploaded)
     (when (member (file-name-extension FN) '("jpeg" "png" "jpg"))
 
 (write-region
@@ -877,37 +884,35 @@ nil local/log t)
         (target (cloud-locate-FN new)))
     (cond
      ((and source target); overwriting one cloud file with another one
-      (dolist (property (list mtime modes gname))
+        (dolist (property (list mtime modes gname))
             (aset target property (aref source property)))
-      (drop file-DB source))
-     (source (aset source plain new))
+        (drop file-DB source))
+     (source
+ (aset source plain new)
+)
      (target (setf target (cloud-get-file-properties new))))
-(clog :debug "cloud-rename-file> mv %s %s" old new)
 (when(file-exists-p old)
-  (unless(file-exists-p(file-name-directory new)) (make-directory(file-name-directory new)))
+  (unless(file-exists-p(file-name-directory new)) (make-directory(file-name-directory new))); ← do we really need this?
   (error-in "cloud-rename-file" (rename-file old new t) t))))
 
 (defun DRF(old-function old-FN new-FN ok-if-already-exists)
-(clog :debug "DRF> %s --> %s" old-FN new-FN)
-(let((isDir (file-directory-p old-FN)))
-(error-in "DRF" (funcall old-function (untilde old-FN) (untilde new-FN) ok-if-already-exists)
-(cloud-rename-file old-FN new-FN)
-(if(BRDp old-FN)
+"always called with dired-rename-file"
+(if(BRDp old-FN); 05/25 got doubts about this block
  (clog :debug "(BRDp %s) is t!" old-FN)
  (new-action i-rename old-FN new-FN))
+(let((is-Dir (file-directory-p old-FN))); Now let us finally rename the file (or directory) →
+(error-in "DRF" (funcall old-function (untilde old-FN) (untilde new-FN) ok-if-already-exists))
+(ifn is-Dir
+  (cloud-rename-file old-FN new-FN); cloud-rename-file is for files only
 
-(when isDir
-  (let* ((old-dir (to-dir old-FN)) (LOD (length old-dir))
-         (new-dir (to-dir new-FN)))
-    (dolist (rec (contained-in old-FN))
-      (let((FN (aref rec plain)))
-        (when (and (<= LOD (length FN))
-	     (string= old-FN (substring FN 0 LOD)))
-	  (let ((new-name (concat new-dir (substring FN LOD))))
-            (cloud-rename-file FN new-name)
-   (if(BRDp old-FN)
- (clog :debug "(BRDp %s) is t!" old-FN)
-	    (new-action i-rename FN new-name)))))))))))
+(let* ((old-dir (to-dir old-FN)) (LOD (length old-dir))
+       (new-dir (to-dir new-FN)))
+  (dolist (rec(contained-in old-FN))
+    (let((FN(aref rec plain)))
+      (when (and (<= LOD (length FN))
+                 (string= old-FN (substring FN 0 (1- LOD))))
+	  (let((new-name(concat new-dir (substring FN LOD))))
+            (cloud-rename-file FN new-name)))))))))
 (advice-add 'dired-rename-file :around #'DRF)
 
 (defun cloud-start()
